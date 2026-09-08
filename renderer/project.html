@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>專案計畫</title>
+  <link rel="stylesheet" href="renderer.css" />
+  <link rel="stylesheet" href="project.css" />
+</head>
+<body>
+  <div id="proj-list-pane">
+    <div id="proj-list-toolbar">
+      <button id="btn-new-project" class="primary" data-i18n="project.newProject">新增專案</button>
+    </div>
+    <div id="proj-list"></div>
+  </div>
+
+  <div id="proj-empty" data-i18n="project.selectPrompt">從左側選擇一個專案，或點「新增專案」建立新的</div>
+
+  <div id="proj-editor" style="display:none;">
+    <div class="field">
+      <label class="label" data-i18n="project.name">專案名稱</label>
+      <input type="text" id="proj-name" />
+    </div>
+
+    <div class="row">
+      <div class="field" style="flex:1;">
+        <label class="label" data-i18n="project.status">狀態</label>
+        <select id="proj-status">
+          <option value="planning" data-i18n="project.statusPlanning">規劃中</option>
+          <option value="active" data-i18n="project.statusActive">進行中</option>
+          <option value="onhold" data-i18n="project.statusOnhold">暫停</option>
+          <option value="done" data-i18n="project.statusDone">已完成</option>
+        </select>
+      </div>
+      <div class="field" style="flex:1;">
+        <label class="label" data-i18n="project.startDate">開始日期</label>
+        <input type="date" id="proj-start" />
+      </div>
+      <div class="field" style="flex:1;">
+        <label class="label" data-i18n="project.endDate">結束日期</label>
+        <input type="date" id="proj-end" />
+      </div>
+    </div>
+
+    <div class="field">
+      <label class="label" data-i18n="project.description">專案說明</label>
+      <textarea id="proj-description" style="min-height:56px;"></textarea>
+    </div>
+
+    <div class="field" style="flex:1; display:flex; flex-direction:column;">
+      <div class="row" style="justify-content:space-between; margin-bottom:4px;">
+        <label class="label" style="margin:0;" data-i18n="project.tasks">任務清單</label>
+        <span id="proj-task-progress" class="settings-hint" style="margin:0;"></span>
+      </div>
+      <div id="proj-task-list"></div>
+      <div class="row" style="margin-top:8px;">
+        <input type="text" id="proj-new-task-input" data-i18n-placeholder="project.taskTitlePlaceholder" />
+        <button id="btn-add-task">＋</button>
+      </div>
+    </div>
+
+    <div id="proj-editor-actions">
+      <button id="btn-delete-project" class="danger" data-i18n="project.delete">刪除專案</button>
+      <button id="btn-save-project" class="primary" data-i18n="project.save">儲存專案</button>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="project.js"></script>
+</body>
+</html>

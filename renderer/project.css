@@ -1,0 +1,126 @@
+body { display: flex; height: 100vh; overflow: hidden; }
+
+#proj-list-pane {
+  width: 280px;
+  min-width: 240px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+#proj-list-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+}
+#proj-list-toolbar button { width: 100%; }
+
+#proj-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.proj-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.proj-item:hover { background: var(--bg-hover); }
+.proj-item.active { background: var(--bg-active); }
+.proj-item .proj-name {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.proj-item .proj-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  background: var(--bg-hover);
+}
+.status-badge.planning { color: #9a9a9a; }
+.status-badge.active { color: #4f8cff; }
+.status-badge.onhold { color: #f5a623; }
+.status-badge.done { color: #2ecc71; }
+
+#proj-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+#proj-editor .field { margin-bottom: 14px; }
+
+#proj-editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+#proj-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+#proj-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.task-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+.task-row .task-title {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.task-row .task-title:focus { outline: none; border-bottom: 1px solid var(--accent); }
+.task-row select {
+  width: auto;
+  max-width: 108px;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-row input[type="date"] {
+  width: auto;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-row .task-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.task-row .task-remove:hover { color: var(--danger); }
+
+#proj-new-task-input { flex: 1; }

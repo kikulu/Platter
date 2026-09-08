@@ -1,0 +1,18 @@
+{
+  "claude": {
+    "turn": "[data-testid=\"user-message\"], [data-testid=\"conversation-turn\"]",
+    "userHint": "data-testid=user-message"
+  },
+  "chatgpt": {
+    "turn": "[data-message-author-role]",
+    "userHint": "user"
+  },
+  "gemini": {
+    "turn": "user-query, model-response",
+    "userHint": "user-query"
+  },
+  "grok": {
+    "turn": "[data-testid=\"conversation-turn\"]",
+    "userHint": "user"
+  }
+}

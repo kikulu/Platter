@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>設定</title>
+  <link rel="stylesheet" href="renderer.css" />
+  <link rel="stylesheet" href="settings.css" />
+</head>
+<body>
+
+  <!-- 1. 語言 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.language">語言</div>
+    <select id="lang-select">
+      <option value="zh-TW">繁體中文</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <!-- 2. 設定檔存放位置 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.dataDir.title">設定檔存放位置</div>
+    <div class="path-display" id="data-dir-display">-</div>
+    <div class="row">
+      <button id="btn-choose-datadir" data-i18n="settings.dataDir.choose">選擇外部資料夾</button>
+      <button id="btn-reset-datadir" data-i18n="settings.dataDir.reset" style="display:none;">還原為預設位置</button>
+    </div>
+  </div>
+
+  <!-- 3. 擴充功能 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.extensions.title">擴充功能</div>
+    <div class="settings-hint" data-i18n="settings.extensions.hint">僅支援「已解壓縮」格式（資料夾內需包含 manifest.json）</div>
+    <div id="ext-list"></div>
+    <div class="row" style="margin-top:10px;">
+      <button id="btn-add-ext" data-i18n="settings.extensions.add">新增擴充功能</button>
+    </div>
+  </div>
+
+  <!-- 帳號角色機制 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.roles.title">帳號角色管理</div>
+    <div class="settings-hint" data-i18n="settings.roles.hint">為帳號指定一個角色（名稱 + 角色提示詞），可重複套用到多個帳號，側邊欄會用顏色標示。</div>
+    <div id="role-list"></div>
+
+    <div class="field" style="margin-top:14px;">
+      <label class="label" data-i18n="settings.roles.name">角色名稱</label>
+      <input type="text" id="role-name-input" data-i18n-placeholder="settings.roles.namePlaceholder" />
+    </div>
+    <div class="field">
+      <label class="label" data-i18n="settings.roles.description">角色提示詞 / 說明</label>
+      <textarea id="role-desc-input" data-i18n-placeholder="settings.roles.descriptionPlaceholder"></textarea>
+    </div>
+    <div class="field">
+      <label class="label" data-i18n="settings.roles.color">顏色</label>
+      <div id="role-color-palette"></div>
+    </div>
+    <div class="row">
+      <button id="btn-role-cancel-edit" data-i18n="common.cancel" style="display:none;"></button>
+      <span class="spacer"></span>
+      <button id="btn-save-role" class="primary" data-i18n="settings.roles.save">儲存角色</button>
+    </div>
+  </div>
+
+  <!-- 4. 檔案預設儲存路徑 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.savePath.title">檔案預設儲存路徑</div>
+    <div class="path-display" id="save-path-display">-</div>
+    <button id="btn-choose-savepath" data-i18n="settings.savePath.choose">選擇資料夾</button>
+    <div class="checkbox-row">
+      <input type="checkbox" id="skip-dialog-checkbox" />
+      <label for="skip-dialog-checkbox" data-i18n="settings.savePath.skipDialog">使用預設路徑時不再詢問，直接存檔</label>
+    </div>
+  </div>
+
+  <!-- 5. 備份與還原 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.backup.title">備份與還原</div>
+    <div class="row">
+      <button id="btn-export-backup" data-i18n="settings.backup.export">匯出備份</button>
+      <button id="btn-import-backup" data-i18n="settings.backup.import">匯入備份</button>
+    </div>
+  </div>
+
+  <!-- 6. 選擇器設定 -->
+  <div class="section">
+    <div class="settings-section-title" data-i18n="settings.selectors.title">選擇器設定</div>
+    <div class="selector-platform-tabs" id="selector-tabs">
+      <button data-platform="claude" class="active">Claude</button>
+      <button data-platform="chatgpt">ChatGPT</button>
+      <button data-platform="gemini">Gemini</button>
+      <button data-platform="grok">Grok</button>
+    </div>
+
+    <div class="field" style="margin-bottom:10px;">
+      <label class="label" data-i18n="settings.selectors.turnSelector">訊息容器 selector</label>
+      <input type="text" id="selector-turn" />
+    </div>
+    <div class="field" style="margin-bottom:10px;">
+      <label class="label" data-i18n="settings.selectors.userHint">使用者訊息判斷關鍵字</label>
+      <input type="text" id="selector-user-hint" />
+    </div>
+
+    <div class="row" style="margin-bottom:10px;">
+      <button id="btn-pick-user" data-i18n="settings.selectors.pickUser">選取範例：使用者訊息</button>
+      <button id="btn-pick-ai" data-i18n="settings.selectors.pickAi">選取範例：AI 回覆</button>
+    </div>
+
+    <div class="row">
+      <button id="btn-reset-selector" data-i18n="settings.selectors.reset">重設此平台為預設值</button>
+      <span class="spacer"></span>
+      <button id="btn-save-selector" class="primary" data-i18n="settings.selectors.save">儲存</button>
+    </div>
+  </div>
+
+  <!-- 7. 疑難排解 -->
+  <div class="section" style="border-bottom:none;">
+    <div class="settings-section-title" data-i18n="settings.troubleshoot.title">疑難排解</div>
+    <button id="btn-open-devtools" data-i18n="settings.troubleshoot.openDevTools">開啟目前帳號 DevTools</button>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="settings.js"></script>
+</body>
+</html>
