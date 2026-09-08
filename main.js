@@ -820,6 +820,7 @@ function registerIpcHandlers() {
       item.updatedAt = new Date().toISOString();
     }
     saveKnowledgeBase(kb);
+    broadcastToAllWindows('knowledge:changed');
     return kb;
   });
 
@@ -849,6 +850,7 @@ function registerIpcHandlers() {
       kb.groups.push(group);
     }
     saveKnowledgeBase(kb);
+    broadcastToAllWindows('knowledge:changed');
     return kb;
   });
 
@@ -856,6 +858,7 @@ function registerIpcHandlers() {
     const kb = loadKnowledgeBase();
     kb.groups = kb.groups.filter((g) => g.id !== id);
     saveKnowledgeBase(kb);
+    broadcastToAllWindows('knowledge:changed');
     return kb;
   });
 
@@ -869,6 +872,7 @@ function registerIpcHandlers() {
       group.updatedAt = new Date().toISOString();
     }
     saveKnowledgeBase(kb);
+    broadcastToAllWindows('knowledge:changed');
     return kb;
   });
 
@@ -881,6 +885,7 @@ function registerIpcHandlers() {
       group.updatedAt = new Date().toISOString();
     }
     saveKnowledgeBase(kb);
+    broadcastToAllWindows('knowledge:changed');
     return kb;
   });
 
@@ -1186,7 +1191,7 @@ function registerIpcHandlers() {
     const backupKnowledge = backup.knowledge || { items: [], groups: [] };
     (backupKnowledge.items || []).forEach((it) => {
       if (!existingItemIds.has(it.id)) {
-        kb.items.push({ checklist: [], ...it });
+        kb.items.push({ checklist: [], roleIds: [], ...it });
       }
     });
     const existingGroupIds = new Set(kb.groups.map((g) => g.id));
@@ -1218,6 +1223,8 @@ function registerIpcHandlers() {
     saveDocuments(documents);
 
     broadcastToAllWindows('accounts:changed');
+    broadcastToAllWindows('knowledge:changed');
+    broadcastToAllWindows('documents:changed');
     return { ok: true };
   });
 

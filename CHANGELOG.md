@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.6.1]
+
+### 修正：知識庫/備份還原的即時刷新事件遺漏
+- 對照 `BUILD_PLAN.md` 檢核表逐項驗證現有實作時發現：
+  1. `knowledge:toggleChecklistEntry`、`knowledge:group:save/delete/
+     toggleStep/resetChecklist` 沒有廣播 `knowledge:changed`，已補上。
+  2. `settings:importBackup` 還原備份時會改動知識庫/專案/文件庫，但只
+     廣播了 `accounts:changed`，已補上 `knowledge:changed` 與
+     `documents:changed`；同時修正還原知識庫項目時 `roleIds` 缺少預設值
+     的問題。
+- 新增 `PROJECT_SPEC.md`（完整專案規格，可供其他 AI 重現整個專案）與
+  `BUILD_PLAN.md`（拆成 8 個階段的建置計畫，每階段附可操作的檢核表，
+  並記錄本次對照現有程式碼的驗證結果）。
+
 ## [1.6.0]
 
 ### 新增：側邊欄「預設提示詞」區塊 + 知識庫提示詞的角色配置

@@ -66,6 +66,8 @@ AI做越多，人需要喝的咖啡就越少。
 | ⚡ 懶載入 | 開機只載入上次選中的帳號，其他帳號等你點了才載入，帳號多也不會拖慢開機 |
 | 📐 側邊欄摺疊 | 可摺成只顯示 icon 的窄版 |
 | 📚 知識庫（獨立視窗） | 儲存常用的提示詞 / skill 範本，支援標籤篩選，可匯出成 Markdown 或 JSON |
+| 🧩 虛擬團隊主控台 | 把帳號依角色組織成團隊組織圖，並在「專案計畫管理」裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度。 |
+| 🗃️ 文件管理 |統一保存對話匯出的檔案與手動匯入的任意檔案。 |
 | ➕ 新增帳號（獨立視窗） | 選平台、取自訂名稱，新增完直接切過去 |
 | ⬇️ 對話匯出 | 把畫面上目前看得到的對話存成 Markdown 或 JSON，可設定自動存檔不跳對話框 |
 | ⚙️ 設定（獨立視窗） | 語言切換、設定檔存放位置、擴充功能、預設匯出路徑、備份還原、選擇器設定、滑鼠選取工具、疑難排解 |
@@ -162,7 +164,7 @@ npm test          # 單元測試（lib/utils.js，node:test，不需要額外套
 npm run lint       # ESLint
 npm run format     # Prettier 自動排版
 ```
-
+<!-- 
 `lib/utils.js` 放不依賴 Electron API 的純函式（字串處理、檔案系統輔助
 函式），跟 `main.js` 分開才能直接用 `node --test` 測。這是把
 `main.js`（目前已經破千行）拆成模組的第一步，完整模組化見
@@ -171,6 +173,7 @@ npm run format     # Prettier 自動排版
 Push / PR 時 [GitHub Actions](./.github/workflows/ci.yml) 會自動跑語法
 檢查、lint、單元測試——不含實際啟動 Electron App 互動的測試（CI 環境沒有
 顯示器），那部分要自己 `npm start` 手動驗證。
+-->
 
 ## 打包發布
 
@@ -191,14 +194,10 @@ npm run build:dir     # 免安裝資料夾，快速測試用
 ## 專案結構
 
 ```
-ai-workspace-aggregator/
+Platter/
 ├── main.js                # 主程序：視窗、Session、IPC、設定持久化
 ├── preload.js              # contextBridge，所有視窗共用
-├── lib/utils.js             # 不依賴 Electron 的純函式（可單元測試）
-├── test/utils.test.js        # 單元測試
 ├── package.json              # npm scripts + electron-builder 設定
-├── .eslintrc.json / .prettierrc.json
-├── .github/workflows/ci.yml
 ├── extractors/
 │   ├── domCapture.js         # 注入頁面的對話擷取腳本
 │   ├── selectorPicker.js      # 注入頁面的滑鼠選取工具
@@ -208,6 +207,9 @@ ai-workspace-aggregator/
 │   ├── account.html / account.js                 # 新增帳號（獨立視窗）
 │   ├── knowledge.html / knowledge.js / knowledge.css  # 知識庫（獨立視窗）
 │   ├── settings.html / settings.js / settings.css     # 設定（獨立視窗）
+│   ├── team.html, team.js, team.css              # 虛擬團隊主控台
+│   ├── project.html, project.js, project.css     # 專案計畫管理
+│   ├── documents.html, documents.js, documents.css # 文件管理
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json
 └── assets/                    # App 圖示與生成提示詞
