@@ -1,0 +1,442 @@
+body { display: flex; height: 100vh; overflow: hidden; }
+
+#proj-list-pane {
+  width: 280px;
+  min-width: 240px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+#proj-list-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#proj-list-toolbar button { width: 100%; }
+#proj-list-toolbar button.active {
+  background: var(--bg-active);
+  border-color: var(--accent);
+  color: var(--text-primary);
+}
+
+#proj-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.proj-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.proj-item:hover { background: var(--bg-hover); }
+.proj-item.active { background: var(--bg-active); }
+.proj-item .proj-name {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.proj-item .proj-meta {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.status-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  background: var(--bg-hover);
+}
+.status-badge.planning { color: #9a9a9a; }
+.status-badge.active { color: #4f8cff; }
+.status-badge.onhold { color: #f5a623; }
+.status-badge.done { color: #2ecc71; }
+
+#proj-editor, #proj-overview {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+#proj-editor .field { margin-bottom: 14px; }
+
+/* --- 分頁（任務清單／月曆／甘特圖／Issue 管理，單一專案版和跨專案總覽版共用） --- */
+.tabbar {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 12px;
+}
+.tabbar .tab-btn {
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 12px;
+  color: var(--text-secondary);
+}
+.tabbar .tab-btn.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+.tab-panel {
+  display: none;
+  flex: 1;
+  flex-direction: column;
+  min-height: 260px;
+}
+.tab-panel.active { display: flex; }
+
+#proj-editor-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+#proj-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+#proj-task-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.task-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+.task-row .task-title {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.task-row .task-title:focus { outline: none; border-bottom: 1px solid var(--accent); }
+.task-row select {
+  width: auto;
+  max-width: 108px;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-row input[type="date"] {
+  width: auto;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-row .task-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.task-row .task-remove:hover { color: var(--danger); }
+
+#proj-new-task-input { flex: 1; }
+
+/* ------------------------------------------------------------------ */
+/* 月曆檢視                                                            */
+/* ------------------------------------------------------------------ */
+.cal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+.cal-toolbar button { width: auto; padding: 4px 10px; }
+#cal-month-label {
+  flex: 1;
+  text-align: center;
+  font-size: 13px;
+}
+
+#cal-weekdays, #cal-grid, #ov-cal-weekdays, #ov-cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+}
+#cal-weekdays, #ov-cal-weekdays {
+  margin-bottom: 4px;
+}
+.cal-weekday {
+  text-align: center;
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding-bottom: 2px;
+}
+
+.cal-cell {
+  min-height: 58px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.cal-cell:hover { background: var(--bg-hover); }
+.cal-cell.selected { background: var(--bg-active); }
+.cal-cell-empty { visibility: hidden; cursor: default; }
+.cal-cell-today { border-color: var(--accent); }
+.cal-cell-date { font-size: 11px; color: var(--text-secondary); }
+.cal-cell-dots { display: flex; flex-wrap: wrap; gap: 3px; }
+.cal-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
+.cal-dot-task-todo { background: #6b7280; }
+.cal-dot-task-doing { background: #4f8cff; }
+.cal-dot-task-done { background: #2ecc71; }
+.cal-dot-issue-low { background: #9a9a9a; }
+.cal-dot-issue-medium { background: #f5a623; }
+.cal-dot-issue-high { background: #e5484d; }
+.cal-dot-issue-urgent { background: #c0392b; }
+.cal-more { font-size: 9px; color: var(--text-secondary); }
+
+#cal-day-detail, #ov-cal-day-detail {
+  margin-top: 10px;
+  border-top: 1px solid var(--border);
+  padding-top: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+}
+.cal-day-detail-heading { font-size: 12px; font-weight: 600; margin-bottom: 4px; }
+.cal-day-detail-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  padding: 3px 0;
+}
+.cal-day-detail-row .cal-dot { flex-shrink: 0; }
+.cal-day-detail-row.clickable { cursor: pointer; border-radius: 4px; padding: 3px 4px; }
+.cal-day-detail-row.clickable:hover { background: var(--bg-hover); }
+
+/* ------------------------------------------------------------------ */
+/* 甘特圖                                                              */
+/* ------------------------------------------------------------------ */
+#gantt-empty, #ov-gantt-empty {
+  color: var(--text-secondary);
+  font-size: 12px;
+  padding: 12px 0;
+}
+#gantt-container, #ov-gantt-container {
+  flex: 1;
+  overflow: auto;
+}
+.gantt-header, .gantt-row {
+  display: grid;
+  grid-template-columns: 140px 1fr;
+  align-items: center;
+  min-width: 480px;
+}
+.gantt-header {
+  padding-bottom: 6px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 8px;
+}
+.gantt-label {
+  font-size: 12px;
+  padding-right: 8px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.gantt-header-track, .gantt-track {
+  position: relative;
+  height: 26px;
+}
+.gantt-header-track { height: 18px; }
+.gantt-track { background: var(--bg-hover); border-radius: 4px; }
+.gantt-month-marker {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  font-size: 10px;
+  color: var(--text-secondary);
+  border-left: 1px dashed var(--border);
+  padding-left: 3px;
+  white-space: nowrap;
+}
+.gantt-row { margin-bottom: 6px; }
+.gantt-bar {
+  position: absolute;
+  top: 3px;
+  bottom: 3px;
+  border-radius: 4px;
+  min-width: 6px;
+}
+.gantt-bar-todo { background: #6b7280; }
+.gantt-bar-doing { background: #4f8cff; }
+.gantt-bar-done { background: #2ecc71; }
+.gantt-today-line {
+  position: absolute;
+  top: -18px;
+  bottom: 0;
+  width: 1px;
+  background: var(--danger);
+  z-index: 1;
+}
+
+/* ------------------------------------------------------------------ */
+/* Issue 管理                                                          */
+/* ------------------------------------------------------------------ */
+#proj-issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-y: auto;
+}
+.issue-card {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px;
+  background: var(--bg-hover);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.issue-card-top { display: flex; align-items: center; gap: 6px; }
+.issue-title {
+  flex: 1;
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.issue-title:focus { outline: none; border-bottom: 1px solid var(--accent); }
+.issue-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  padding: 2px 6px;
+}
+.issue-remove:hover { color: var(--danger); }
+.issue-desc {
+  min-height: 36px;
+  font-size: 12px;
+  resize: vertical;
+}
+.issue-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.issue-card-meta select,
+.issue-card-meta input[type="date"] {
+  width: auto;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.issue-tags { font-size: 12px; }
+.issue-priority-flag { font-size: 11px; }
+
+#issue-filter-status { width: auto; font-size: 12px; }
+
+/* ------------------------------------------------------------------ */
+/* 跨專案總覽                                                          */
+/* ------------------------------------------------------------------ */
+.overview-title {
+  font-size: 16px;
+  margin: 0 0 12px;
+  font-weight: 600;
+}
+
+#ov-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+.ov-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  cursor: pointer;
+  color: var(--text-secondary);
+}
+.ov-legend-item:hover { color: var(--text-primary); }
+.ov-legend-swatch {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+}
+
+#ov-issue-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  overflow-y: auto;
+}
+.ov-issue-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+  cursor: pointer;
+  font-size: 12px;
+}
+.ov-issue-row:hover { background: var(--bg-active); }
+.ov-issue-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.ov-issue-project {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  max-width: 100px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-issue-title {
+  flex: 1;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.ov-issue-due { color: var(--text-secondary); flex-shrink: 0; }
+
+.issue-priority-badge {
+  display: inline-block;
+  padding: 1px 6px;
+  border-radius: 10px;
+  font-size: 10px;
+  flex-shrink: 0;
+  background: var(--bg-active);
+}
+.issue-priority-low { color: #9a9a9a; }
+.issue-priority-medium { color: #f5a623; }
+.issue-priority-high { color: #e5484d; }
+.issue-priority-urgent { color: #c0392b; font-weight: 600; }

@@ -1,0 +1,111 @@
+:root {
+  --bg-main: #1e1e1e;
+  --bg-sidebar: #171717;
+  --bg-hover: #2a2a2a;
+  --bg-active: #2f3b52;
+  --text-primary: #e6e6e6;
+  --text-secondary: #9a9a9a;
+  --accent: #4f8cff;
+  --danger: #e5484d;
+  --border: #2c2c2c;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: var(--bg-main);
+  color: var(--text-primary);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang TC", "Microsoft JhengHei", sans-serif;
+  font-size: 14px;
+  user-select: none;
+}
+
+input, textarea, select {
+  user-select: text;
+}
+
+button {
+  font-family: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 8px 12px;
+  transition: background 0.15s ease;
+}
+
+button:hover {
+  background: var(--bg-active);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+button.primary:hover {
+  filter: brightness(1.1);
+}
+
+button.danger {
+  background: transparent;
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+button.danger:hover {
+  background: var(--danger);
+  color: #fff;
+}
+
+input[type="text"], input[type="search"], textarea, select {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 6px;
+  padding: 8px 10px;
+  outline: none;
+  width: 100%;
+}
+
+input:focus, textarea:focus, select:focus {
+  border-color: var(--accent);
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--bg-active);
+  border-radius: 4px;
+}
+
+.label {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 4px;
+  display: block;
+}
+
+.section {
+  border-bottom: 1px solid var(--border);
+  padding: 20px;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.spacer {
+  flex: 1;
+}
