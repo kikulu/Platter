@@ -63,19 +63,19 @@ bundled into a backup file.
 
 ## Features
 
-| Feature | Description |
-|---|---|
-| 🗂️ Multi-account aggregation | Claude / ChatGPT / Gemini / Grok, each account fully isolated, instant switching |
-| 🔐 Persistent login | No need to log in again after restarting the app |
-| ⚡ Lazy loading | Only the last-active account loads on startup; others load on first click, so more accounts won't slow down startup |
-| 📐 Collapsible sidebar | Collapses to an icon-only strip |
-| 📚 Knowledge base (separate window) | Store your go-to prompts / skill templates, filterable by tags, exportable as Markdown or JSON |
-| ➕ Add account (separate window) | Pick a platform, give it a custom name, and switch to it immediately |
-| ⬇️ Conversation export | Save what's currently visible on screen as Markdown or JSON; can be set to auto-save without a dialog |
-| ⚙️ Settings (separate window) | Language switcher, config storage location, extensions, default export path, backup/restore, selector settings, an element picker tool, troubleshooting |
-| 🌐 Internationalization | Traditional Chinese / English, easy to extend |
-| 🧩 Extensions | Globally applies "unpacked" Chrome extensions to every account |
-| 🛡️ Data safety | Atomic writes with automatic backup before overwrite, strict import validation |
+| Feature                             | Description                                                                                                                                             |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🗂️ Multi-account aggregation        | Claude / ChatGPT / Gemini / Grok, each account fully isolated, instant switching                                                                        |
+| 🔐 Persistent login                 | No need to log in again after restarting the app                                                                                                        |
+| ⚡ Lazy loading                     | Only the last-active account loads on startup; others load on first click, so more accounts won't slow down startup                                     |
+| 📐 Collapsible sidebar              | Collapses to an icon-only strip                                                                                                                         |
+| 📚 Knowledge base (separate window) | Store your go-to prompts / skill templates, filterable by tags, exportable as Markdown or JSON                                                          |
+| ➕ Add account (separate window)    | Pick a platform, give it a custom name, and switch to it immediately                                                                                    |
+| ⬇️ Conversation export              | Save what's currently visible on screen as Markdown or JSON; can be set to auto-save without a dialog                                                   |
+| ⚙️ Settings (separate window)       | Language switcher, config storage location, extensions, default export path, backup/restore, selector settings, an element picker tool, troubleshooting |
+| 🌐 Internationalization             | Traditional Chinese / English, easy to extend                                                                                                           |
+| 🧩 Extensions                       | Globally applies "unpacked" Chrome extensions to every account                                                                                          |
+| 🛡️ Data safety                      | Atomic writes with automatic backup before overwrite, strict import validation                                                                          |
 
 ## Installation
 
@@ -280,16 +280,16 @@ actual login cookies/localStorage.
 
 ## Documentation Index
 
-| Document | What's in it |
-|---|---|
-| [CHANGELOG.md](./CHANGELOG.md) | Version history — what was added each round |
-| [ROADMAP.md](./ROADMAP.md) | Not-yet-done directions worth considering |
-| [PROJECT_SPEC.md](./PROJECT_SPEC.md) | A full spec prompt, best suited for agents with filesystem tools (Claude Code / Cursor) to reproduce the whole project |
-| [BUILD_PLAN.md](./BUILD_PLAN.md) | An 8-phase build prompt sequence, best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
-| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md) | Prompt template for adding a new feature once all existing phases are done |
-| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature |
-| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md) | Prompt template for starting a new chat with only the docs attached, no source code |
-| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md) | Prompt template for starting a new chat with the spec plus only a specific subset of files, not the whole codebase |
+| Document                                                           | What's in it                                                                                                                      |
+| ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| [CHANGELOG.md](./CHANGELOG.md)                                     | Version history — what was added each round                                                                                       |
+| [ROADMAP.md](./ROADMAP.md)                                         | Not-yet-done directions worth considering                                                                                         |
+| [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | A full spec prompt, best suited for agents with filesystem tools (Claude Code / Cursor) to reproduce the whole project            |
+| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | An 8-phase build prompt sequence, best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
+| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | Prompt template for adding a new feature once all existing phases are done                                                        |
+| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature                                                                       |
+| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | Prompt template for starting a new chat with only the docs attached, no source code                                               |
+| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | Prompt template for starting a new chat with the spec plus only a specific subset of files, not the whole codebase                |
 
 ## Contributing
 

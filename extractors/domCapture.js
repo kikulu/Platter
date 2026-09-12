@@ -19,7 +19,12 @@ function capturePlatformConversation(platform, selectorConfig) {
         title: document.title || platform,
         messages: [],
         capturedAt: new Date().toISOString(),
-        debug: { selectorUsed: null, matchedNodeCount: 0, nonEmptyMessageCount: 0, pageUrl: location.href },
+        debug: {
+          selectorUsed: null,
+          matchedNodeCount: 0,
+          nonEmptyMessageCount: 0,
+          pageUrl: location.href,
+        },
       };
     }
 

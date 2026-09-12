@@ -12,7 +12,9 @@
 
   async function refreshDataDir() {
     const { dataDir, isDefault } = await window.workspaceAPI.getDataDir();
-    dataDirDisplay.textContent = window.i18n.t('settings.dataDir.current', { path: dataDir });
+    dataDirDisplay.textContent = window.i18n.t('settings.dataDir.current', {
+      path: dataDir,
+    });
     btnResetDataDir.style.display = isDefault ? 'none' : 'inline-block';
   }
 
@@ -80,8 +82,11 @@
   const skipDialogCheckbox = document.getElementById('skip-dialog-checkbox');
 
   async function refreshSavePath() {
-    const { defaultSavePath, skipSaveDialog } = await window.workspaceAPI.getSavePathConfig();
-    savePathDisplay.textContent = window.i18n.t('settings.savePath.current', { path: defaultSavePath });
+    const { defaultSavePath, skipSaveDialog } =
+      await window.workspaceAPI.getSavePathConfig();
+    savePathDisplay.textContent = window.i18n.t('settings.savePath.current', {
+      path: defaultSavePath,
+    });
     skipDialogCheckbox.checked = skipSaveDialog;
   }
 
@@ -97,7 +102,8 @@
   // --- 備份與還原 ---
   document.getElementById('btn-export-backup').addEventListener('click', async () => {
     const result = await window.workspaceAPI.exportBackup();
-    if (result.ok) alert(window.i18n.t('settings.backup.exportSuccess', { path: result.filePath }));
+    if (result.ok)
+      alert(window.i18n.t('settings.backup.exportSuccess', { path: result.filePath }));
   });
 
   document.getElementById('btn-import-backup').addEventListener('click', async () => {
@@ -136,7 +142,9 @@
 
   selectorTabs.querySelectorAll('button').forEach((btn) => {
     btn.addEventListener('click', () => {
-      selectorTabs.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      selectorTabs
+        .querySelectorAll('button')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       currentPlatform = btn.getAttribute('data-platform');
       pendingUserSample = null;
@@ -251,7 +259,10 @@
     };
 
     try {
-      const result = await window.workspaceAPI.testCaptureSelector(currentPlatform, selector);
+      const result = await window.workspaceAPI.testCaptureSelector(
+        currentPlatform,
+        selector
+      );
       renderTestResult(result);
     } finally {
       testCaptureInFlight = false;
@@ -260,7 +271,10 @@
 
   async function tryDeriveAndFill() {
     if (!pendingUserSample || !pendingAiSample) return;
-    const derived = await window.workspaceAPI.deriveSelector(pendingUserSample, pendingAiSample);
+    const derived = await window.workspaceAPI.deriveSelector(
+      pendingUserSample,
+      pendingAiSample
+    );
     selectorTurnInput.value = derived.turn || '';
     selectorUserHintInput.value = derived.userHint || '';
     hideTestResult();
@@ -303,8 +317,14 @@
 
   // --- 帳號角色機制 ---
   const ROLE_COLOR_PALETTE = [
-    '#4f8cff', '#e5484d', '#f5a623', '#2ecc71',
-    '#9b59b6', '#1abc9c', '#e91e8c', '#95a5a6',
+    '#4f8cff',
+    '#e5484d',
+    '#f5a623',
+    '#2ecc71',
+    '#9b59b6',
+    '#1abc9c',
+    '#e91e8c',
+    '#95a5a6',
   ];
 
   const roleListEl = document.getElementById('role-list');
@@ -322,7 +342,8 @@
     ROLE_COLOR_PALETTE.forEach((color) => {
       const swatch = document.createElement('button');
       swatch.type = 'button';
-      swatch.className = 'color-swatch' + (color === selectedRoleColor ? ' selected' : '');
+      swatch.className =
+        'color-swatch' + (color === selectedRoleColor ? ' selected' : '');
       swatch.style.background = color;
       swatch.addEventListener('click', () => {
         selectedRoleColor = color;
@@ -395,7 +416,9 @@
       deleteBtn.className = 'danger';
       deleteBtn.textContent = window.i18n.t('settings.roles.delete');
       deleteBtn.addEventListener('click', async () => {
-        const ok = window.confirm(window.i18n.t('settings.roles.deleteConfirm', { name: role.name }));
+        const ok = window.confirm(
+          window.i18n.t('settings.roles.deleteConfirm', { name: role.name })
+        );
         if (!ok) return;
         await window.workspaceAPI.deleteRole(role.id);
         if (editingRoleId === role.id) resetRoleForm();
@@ -435,7 +458,10 @@
   // data-i18n 靜態字串替換，因為裡面要內插版本號）
   document.addEventListener('i18n:updated', async () => {
     const version = await window.workspaceAPI.getAppVersion();
-    document.getElementById('about-version').textContent = window.i18n.t('settings.about.version', { version });
+    document.getElementById('about-version').textContent = window.i18n.t(
+      'settings.about.version',
+      { version }
+    );
   });
 
   // --- 初始化 ---
@@ -450,6 +476,9 @@
     await refreshRoles();
 
     const version = await window.workspaceAPI.getAppVersion();
-    document.getElementById('about-version').textContent = window.i18n.t('settings.about.version', { version });
+    document.getElementById('about-version').textContent = window.i18n.t(
+      'settings.about.version',
+      { version }
+    );
   })();
 })();

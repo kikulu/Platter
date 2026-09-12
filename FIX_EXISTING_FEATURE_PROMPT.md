@@ -1,6 +1,7 @@
 # FIX_EXISTING_FEATURE_PROMPT.md — 既有功能修正提示詞模板
 
 > 跟 `NEW_FEATURE_BUILD_PROMPT.md` 是一組的兩份文件，差別在於：
+>
 > - `NEW_FEATURE_BUILD_PROMPT.md`：**加東西**——會在 `BUILD_PLAN.md` 新增
 >   一個 Stage，是「規格擴張」。
 > - 本文件：**修東西**——目標是讓「已經寫在 `PROJECT_SPEC.md` / 已經被
@@ -13,14 +14,14 @@
 
 ## 什麼時候用這份、什麼時候用 `NEW_FEATURE_BUILD_PROMPT.md`
 
-| 情境 | 用哪份 |
-|---|---|
-| 「複製提示詞按鈕沒反應」「刪除角色後某處還殘留舊 id」 | 本文件（修正） |
-| 「我想要帳號清單可以拖曳排序」 | `NEW_FEATURE_BUILD_PROMPT.md`（新功能） |
-| 「知識庫匯出的 Markdown 格式跟規格寫的不一樣」 | 本文件（修正，順便檢查是規格錯還是程式錯） |
-| 「想加一個新平台」 | 介於兩者之間：如果只是照 `PLATFORM_URLS` 既有模式加設定值，
-  比較接近修正／小幅擴充，可以直接用本文件；如果連帶要改 UI 結構，
-  用新功能模板 |
+| 情境                                                             | 用哪份                                                      |
+| ---------------------------------------------------------------- | ----------------------------------------------------------- |
+| 「複製提示詞按鈕沒反應」「刪除角色後某處還殘留舊 id」            | 本文件（修正）                                              |
+| 「我想要帳號清單可以拖曳排序」                                   | `NEW_FEATURE_BUILD_PROMPT.md`（新功能）                     |
+| 「知識庫匯出的 Markdown 格式跟規格寫的不一樣」                   | 本文件（修正，順便檢查是規格錯還是程式錯）                  |
+| 「想加一個新平台」                                               | 介於兩者之間：如果只是照 `PLATFORM_URLS` 既有模式加設定值， |
+| 比較接近修正／小幅擴充，可以直接用本文件；如果連帶要改 UI 結構， |
+| 用新功能模板                                                     |
 
 ---
 
@@ -32,8 +33,8 @@
 2. **廣播 IPC 別漏掉**：如果修正牽涉到「A 視窗改了資料，B 視窗沒有跟著
    刷新」這類問題，检查對應動作後面有沒有呼叫
    `broadcastToAllWindows('accounts:changed' | 'knowledge:changed' |
-   'documents:changed' | 'conversations:changed' | 'logs:changed' |
-   'console:entry' | 'language:changed', ...)`。這正是 `CHANGELOG.md`
+'documents:changed' | 'conversations:changed' | 'logs:changed' |
+'console:entry' | 'language:changed', ...)`。這正是 `CHANGELOG.md`
    `[1.6.1]` 那次修正的典型案例（`knowledge:group:*` 系列原本漏了廣播）。
 3. **懸空引用清理**：如果修正牽涉到刪除某筆資料（角色/帳號/知識庫項目/
    套餐步驟），確認相關的反向引用（`roleIds`、`assigneeId`、

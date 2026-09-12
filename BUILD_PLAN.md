@@ -9,6 +9,7 @@
 > 下一階段。
 >
 > **給另一個 AI／開發者的使用方式（這就是「接續開發」的入口文件）**：
+>
 > 1. 先讀 `PROJECT_SPEC.md` 建立整體認知。
 > 2. 讀這份文件確認目前做到哪個 Stage、還有哪些檢核表項目沒打勾
 >    （特別注意 Stage 9～16 裡標示「待手動驗證」的項目——這些是邏輯上
@@ -20,7 +21,7 @@
 > 4. 檢核表沒有全部打勾之前，不要跳到下一階段——後面階段大多依賴前面
 >    階段的資料結構或 IPC 慣例（例如共用 `openChildWindow` helper、
 >    `accounts:changed` 廣播模式）。
-> 4. 每個階段結束建議跑一次 `npm start` 實際操作驗證，而不是只看程式碼。
+> 5. 每個階段結束建議跑一次 `npm start` 實際操作驗證，而不是只看程式碼。
 
 ## 驗證紀錄（對照目前程式碼跑過一次檢核表）
 
@@ -73,12 +74,15 @@
 ## Stage 1：專案骨架與 Session 隔離核心
 
 ### 目標
+
 產生一個可以開啟多個 AI 平台頁面、彼此登入狀態互不影響的最小可行產品。
 
 ### 前置需求
+
 無（起始階段）。
 
 ### 交付項目
+
 - `package.json`（`main: main.js`，`electron` + `electron-builder` 依賴，
   `build` 欄位打包設定，npm scripts：`start`/`build`/`build:win`/
   `build:mac`/`build:linux`/`build:dir`）
@@ -100,6 +104,7 @@
   - 側邊欄摺疊成 56px icon 版的 CSS 與互動
 
 ### 檢核表
+
 - [x] `npm start` 可以正常開啟一個空的主視窗
 - [x] 側邊欄可以摺疊成 56px / 展開回 220px，且重啟後記得上次的狀態
 - [x] 能建立至少 2 個不同平台的帳號（先用最陽春的 UI，例如暫時的
@@ -115,16 +120,19 @@
 ## Stage 2：帳號管理三視窗化 + 持久化
 
 ### 目標
+
 把「新增帳號」變成正式的獨立子視窗，並補齊刪除帳號的完整互動。確立
 **共用子視窗 helper** 與 **IPC 廣播刷新** 這兩個貫穿全專案的模式。
 
 ### 前置需求
+
 Stage 1 完成。
 
 ### 交付項目
+
 - `main.js` 新增：
   - `openChildWindow({ getWindow, setWindow, htmlFile, width, height,
-    minWidth, minHeight })` 共用 helper（`parent: mainWindow`，
+minWidth, minHeight })` 共用 helper（`parent: mainWindow`，
     **`modal: false`**，共用 `preload.js`）
   - `openAccountWindow()`
   - `broadcastToAllWindows(channel, ...args)` helper
@@ -137,6 +145,7 @@ Stage 1 完成。
   帳號名稱），確認後才真的刪除
 
 ### 檢核表
+
 - [x] 點側邊欄「新增帳號」會開一個**獨立視窗**（不是疊在主視窗裡的 DOM
       彈窗），視窗有 `parent` 但不是 modal（可以切回主視窗操作）
 - [x] 新增帳號視窗重複點擊「新增帳號」不會開出第二個視窗（`focus()` 既有
@@ -153,16 +162,19 @@ Stage 1 完成。
 ## Stage 3：對話匯出機制（DOM 擷取 + selector 設定資料層）
 
 ### 目標
+
 做出「手動觸發、只讀取當前畫面 DOM」的對話匯出功能，並把 selector 存成
 可讀寫的設定檔（UI 留到 Stage 4 一起做）。
 
 ### 前置需求
+
 Stage 1、2 完成。
 
 ### 交付項目
+
 - `extractors/default-selectors.json`：四個平台的出廠預設 selector
 - `extractors/domCapture.js`：`capturePlatformConversation(platform,
-  selectorConfig)`——**不內建任何 selector**，只讀取當前 DOM，回傳
+selectorConfig)`——**不內建任何 selector**，只讀取當前 DOM，回傳
   `{ ok, error, title, messages: [{role, text}], capturedAt }`
 - `main.js` 新增：
   - `loadSelectors()`/`saveSelectors()`（`selectors.json`，第一次啟動從
@@ -177,6 +189,7 @@ Stage 1、2 完成。
 - 側邊欄「匯出當前對話」按鈕，串接上述流程，並用 `alert` 顯示成功/失敗
 
 ### 檢核表
+
 - [x] 在一個已經有對話內容的帳號頁面點「匯出當前對話」，能選 Markdown
       或 JSON 並成功存檔
 - [x] 存出來的 Markdown 檔案內容可讀，使用者/AI 訊息有區分（🧑/🤖）
@@ -191,14 +204,17 @@ Stage 1、2 完成。
 ## Stage 4：設定視窗完整功能
 
 ### 目標
+
 把「設定」變成正式獨立子視窗，補齊語言、資料目錄搬移、擴充功能、預設
 儲存路徑、備份還原、選擇器設定 UI（含滑鼠選取工具）、疑難排解。這個
 階段做完，PROJECT_SPEC 裡描述的「基礎版 App」就完整了。
 
 ### 前置需求
+
 Stage 1～3 完成。
 
 ### 交付項目
+
 - `renderer/i18n.js` + `renderer/locales/zh-TW.json`、`en.json`：
   `t()`/`applyToDOM()`/`init()`/`setLanguage()`，`language:changed` 廣播 +
   `i18n:updated` DOM 事件
@@ -219,6 +235,7 @@ Stage 1～3 完成。
 - `renderer/settings.html/js/css`：對應以上所有功能的 UI
 
 ### 檢核表
+
 - [x] 語言可以切換繁體中文/English，所有已開啟視窗（含正在開著的知識庫/
       設定視窗）文字即時更新
 - [x] 「選擇外部資料夾」選好後跳確認對話框，確認後 App 自動重啟並套用
@@ -241,14 +258,17 @@ Stage 1～3 完成。
 ## Stage 5：知識庫——提示詞 + 群組套餐 + 檢核表機制
 
 ### 目標
+
 做出完整的知識庫：一般提示詞項目、可附帶的獨立檢核表、群組順序提示詞
 套餐（含步驟層級的檢核表機制）。
 
 ### 前置需求
+
 Stage 1～4 完成（需要 `openChildWindow` helper 與 `accounts:changed`
 廣播模式已經確立）。
 
 ### 交付項目
+
 - `main.js` 新增 `knowledge-base.json` 資料層：`loadKnowledgeBase()`/
   `saveKnowledgeBase()`（回傳/接受 `{ items, groups }`，含舊格式相容）
 - IPC：`knowledge:list`/`save`/`delete`/`toggleChecklistEntry`/
@@ -267,6 +287,7 @@ Stage 1～4 完成（需要 `openChildWindow` helper 與 `accounts:changed`
   備份物件（項目與套餐都是「已存在 id 略過」）
 
 ### 檢核表
+
 - [x] 可以新增/編輯/刪除提示詞項目，標籤篩選正常運作
 - [x] 提示詞項目可以附加檢核表項目，勾選狀態隨「儲存」一起寫入
 - [x] 可以建立套餐，從既有提示詞裡挑選多個組成有序步驟
@@ -287,12 +308,15 @@ Stage 1～4 完成（需要 `openChildWindow` helper 與 `accounts:changed`
 ## Stage 6：帳號角色機制 + 虛擬團隊主控台
 
 ### 目標
+
 讓帳號可以有「角色」身份，並提供一個視覺化主控台管理團隊組織。
 
 ### 前置需求
+
 Stage 1～5 完成。
 
 ### 交付項目
+
 - `main.js`：`appState.roles: []`（`{id,name,description,color}`），
   帳號物件新增 `roleId`；IPC：`roles:list`/`save`/`delete`、
   `accounts:setRole`；角色刪除時清掉套用它的帳號的 `roleId`
@@ -300,13 +324,14 @@ Stage 1～5 完成。
   8 色色票、複製提示詞到剪貼簿）
 - `renderer/account.html/js`：新增「角色（可選）」下拉選單
 - `renderer/index.html/renderer.js`：帳號項目內嵌角色下拉選單（即時切換）
-  + 頭像用角色顏色描邊
+  - 頭像用角色顏色描邊
 - 新增 `renderer/team.html/js/css`：虛擬團隊主控台——依角色分組的組織圖
   版面，每張帳號卡片可直接重新指派角色
 - `main.js`：`openTeamWindow()`，側邊欄新增對應按鈕
 - 更新備份匯出/匯入，把 `roles` 併入 `settings` 區塊
 
 ### 檢核表
+
 - [x] 設定視窗可以新增角色（名稱+描述+顏色），列表正確顯示
 - [x] 新增帳號時可以選擇角色（或留空）
 - [x] 側邊欄帳號項目可以直接用下拉選單改角色，不用開設定視窗
@@ -323,13 +348,16 @@ Stage 1～5 完成。
 ## Stage 7：專案計畫管理 + 文件管理
 
 ### 目標
+
 補齊任務追蹤與檔案收納這兩個生產力工具，並讓文件管理跟對話匯出自動
 串接。
 
 ### 前置需求
+
 Stage 1～6 完成（任務指派需要 Stage 6 的帳號清單）。
 
 ### 交付項目
+
 - `main.js`：`projects.json` 資料層（`loadProjects`/`saveProjects`），
   IPC：`projects:list`/`save`/`delete`/`task:setStatus`；
   `openProjectWindow()`
@@ -348,6 +376,7 @@ Stage 1～6 完成（任務指派需要 Stage 6 的帳號清單）。
 - 更新備份匯出/匯入，把 `projects`、`documents` 併入備份物件
 
 ### 檢核表
+
 - [x] 可以新增專案，設定狀態與起訖日期
 - [x] 可以在專案裡新增任務、指派給某個已存在的帳號
 - [x] 切換任務狀態（待辦/進行中/已完成）**不用點儲存**就立即持久化
@@ -366,14 +395,17 @@ Stage 1～6 完成（任務指派需要 Stage 6 的帳號清單）。
 ## Stage 8：側邊欄多層選單重構 + 角色預設提示詞整合
 
 ### 目標
+
 把側邊欄從平面按鈕列表改成可收合的多層清單，並讓知識庫的角色配置跟
 側邊欄串起來，形成「選對話中的帳號 → 自動看到這個角色的常用提示詞 →
 一鍵複製」的完整體驗。這是目前規劃的最後一個階段。
 
 ### 前置需求
+
 Stage 1～7 全部完成。
 
 ### 交付項目
+
 - `main.js`：`DEFAULT_UI_STATE.sidebarGroups`（`accounts`/`prompts`/
   `content`/`team`，預設全部展開），深合併邏輯避免舊資料檔缺欄位；
   IPC：`ui:setGroupExpanded`
@@ -397,6 +429,7 @@ Stage 1～7 全部完成。
   勾選框區塊（列出所有角色，可複選），存進 `item.roleIds`
 
 ### 檢核表
+
 - [x] 側邊欄呈現「群組標題 + 子項目」的兩層結構，不是原本的平面按鈕列
 - [x] 點群組標題可以展開/收合，chevron 方向跟著變
 - [x] 收合某個群組、重開 App，那個群組還是收合的（狀態有持久化）
@@ -419,15 +452,18 @@ Stage 1～7 全部完成。
 ## Stage 9：對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 
 ### 目標
+
 補一個跟「文件管理」互補的模組：文件庫存的是「檔案」，對話庫存的是
 「對話內容本身」（Markdown 全文直接存在資料庫裡），兩者用多對多關聯
 互相串起來。
 
 ### 前置需求
+
 Stage 1～8 完成（需要 `openChildWindow` helper、`documents.json` 資料層、
 `registerDocument()`）。
 
 ### 交付項目
+
 - `main.js`：`conversations.json` 資料層（`loadConversations`/
   `saveConversations`），IPC：`conversations:list`/`save`/`delete`/
   `captureCurrent`/`export`/`linkDocument`/`unlinkDocument`；
@@ -442,6 +478,7 @@ Stage 1～8 完成（需要 `openChildWindow` helper、`documents.json` 資料�
 - 備份匯出/匯入把 `conversations` 併入備份物件
 
 ### 檢核表
+
 - [x] 可以「新增對話」手動輸入標題/標籤/Markdown 內容並儲存
 - [x] 「擷取目前對話」能把目前作用中帳號畫面的對話轉成 Markdown 帶入
       編輯器（不會立刻寫檔，只是預填內容）
@@ -460,13 +497,16 @@ Stage 1～8 完成（需要 `openChildWindow` helper、`documents.json` 資料�
 ## Stage 10：專案計畫進階功能（月曆／甘特圖／Issue 管理／跨專案總覽）
 
 ### 目標
+
 把「專案計畫管理」從單純的任務清單，擴充成含時間軸視覺化跟問題追蹤的
 完整專案工具。
 
 ### 前置需求
+
 Stage 7 完成（`projects.json`、`project.html` 既有任務清單）。
 
 ### 交付項目
+
 - `main.js`：task 新增 `startDate` 欄位；`project.issues` 陣列（`id`/
   `title`/`description`/`type`/`priority`/`status`/`assigneeId`/
   `dueDate`/`tags`）；IPC 新增 `projects:issue:setStatus`
@@ -483,6 +523,7 @@ Stage 7 完成（`projects.json`、`project.html` 既有任務清單）。
 - 備份匯出/匯入涵蓋 `issues`（沿用既有 `projects` 備份，一起打包）
 
 ### 檢核表
+
 - [x] 任務清單新增「開始日期」欄位，跟原本的「到期日」並存
 - [x] 月曆分頁能看到當月每天的任務/issue 到期狀況，點某天能看明細
 - [x] 甘特圖分頁能看到有日期的任務畫成橫向色塊，顏色對應任務狀態
@@ -504,24 +545,27 @@ Stage 7 完成（`projects.json`、`project.html` 既有任務清單）。
 ## Stage 11：日誌主控台（錯誤日誌／稽核日誌／即時主控台）
 
 ### 目標
+
 提供一個集中的地方查看「App 內部發生了什麼事」：結構化的錯誤/稽核紀錄
 （會落地存檔），加上即時的原始 console 輸出（只存在記憶體，App 關掉
 就沒了），特別是要能診斷「AI 平台對話擷取/匯出失敗」這種常見問題。
 
 ### 前置需求
+
 Stage 1～10 完成（需要 `openChildWindow` helper；沿用第 12 節
 `extractors/domCapture.js` 的擷取機制）。
 
 ### 交付項目
+
 - `main.js`：`logError(scope, message, err)`/`logAudit(category, action,
-  detail)`（Stage 13 之後改存 SQLite，見下）；全域
+detail)`（Stage 13 之後改存 SQLite，見下）；全域
   `process.on('uncaughtException'/'unhandledRejection')`；既有的
   `console.error` 錯誤點（擴充功能載入失敗、對話擷取/選取器失敗、文件
   匯入/刪除失敗）都改接 `logError`；帳號新增/移除、專案建立/刪除、文件
   匯入/刪除、對話新增/刪除/匯出/匯出失敗、備份匯出/匯入、設定檔搬遷、
   擴充功能安裝/移除都加上 `logAudit`
   - `extractors/domCapture.js` 回傳結果一律帶 `debug: { selectorUsed,
-    matchedNodeCount, nonEmptyMessageCount, pageUrl }`，`main.js` 每次
+matchedNodeCount, nonEmptyMessageCount, pageUrl }`，`main.js` 每次
     擷取都印一行診斷到主控台，失敗時的提示視窗也直接顯示這組數字
   - `createAccountView()` 幫每個帳號的 `WebContentsView` 接
     `did-fail-load`/`console-message`，轉送進即時主控台
@@ -537,6 +581,7 @@ Stage 1～10 完成（需要 `openChildWindow` helper；沿用第 12 節
   HTTP 快取，不登出帳號）
 
 ### 檢核表
+
 - [x] 觸發一個已知會失敗的動作（例如在空白頁面匯出對話），錯誤日誌
       分頁能看到對應紀錄
 - [x] 帳號新增/刪除、文件匯入/刪除、備份匯出等動作，稽核日誌分頁都有
@@ -557,14 +602,17 @@ Stage 1～10 完成（需要 `openChildWindow` helper；沿用第 12 節
 ## Stage 12：App 穩定性修正（單一實例鎖、快取損毀成因、打包設定漏洞）
 
 ### 目標
+
 修正三個會實際影響使用體驗、但不是「新功能」而是「既有邏輯有隱患」的
 問題：啟動時的 Chromium 快取錯誤、`app.exit()` 造成的資料庫損毀風險、
 打包設定漏掉 `lib/` 資料夾。
 
 ### 前置需求
+
 Stage 1～11 完成。
 
 ### 交付項目
+
 - `main.js`：`app.requestSingleInstanceLock()` + `second-instance` 事件
   （focus 既有視窗，不開第二個進程搶同一份 userData 快取）
 - `settings:chooseDataDir`/`settings:resetDataDir` 的「立即重新啟動」
@@ -576,6 +624,7 @@ Stage 1～11 完成。
   一啟動就崩潰）
 
 ### 檢核表
+
 - [x] 同時開兩次 App，第二次會自動退出並把第一個視窗 focus 到最前面，
       不會真的開出兩個視窗
 - [x] 設定裡切換/還原設定檔存放位置，重啟流程改用 `app.quit()`
@@ -589,21 +638,24 @@ Stage 1～11 完成。
 ## Stage 13：日誌主控台改用 SQLite（sql.js）
 
 ### 目標
+
 把日誌主控台的資料層從 JSON 檔換成真正的 SQLite 資料庫，作為這個專案
 第一個 SQLite 應用範例；技術選型（sql.js vs better-sqlite3）的完整取捨
 說明見 `PROJECT_SPEC.md` 第 9.7 節。
 
 ### 前置需求
+
 Stage 11 完成（日誌主控台既有的 `logError`/`logAudit`/IPC 介面）。
 
 ### 交付項目
+
 - 新增 `sql.js` npm 依賴（純 WebAssembly，沒有原生模組，不需要
   `electron-rebuild`）
 - 新增 `lib/sqlite.js`：`openDatabaseFile()`/`saveDatabaseFile()`/
   `queryAll()` 最小包裝
 - `main.js`：`initLogsDatabase()`（app 啟動時建表）、`errors`/`audits`
   兩張表取代原本的 JSON 陣列、`trimLogTable()`（SQL `DELETE ... ORDER
-  BY timestamp DESC LIMIT 500`）、`migrateLegacyJsonLogsIfNeeded()`
+BY timestamp DESC LIMIT 500`）、`migrateLegacyJsonLogsIfNeeded()`
   （偵測舊版 `logs.json`、資料庫是空的才搬遷，搬完舊檔改名
   `.migrated`）；`app.on('before-quit')` 補存檔當保險
 - `package.json`：`build.files` 排除 `node_modules/sql.js/dist/` 裡
@@ -612,6 +664,7 @@ Stage 11 完成（日誌主控台既有的 `logError`/`logAudit`/IPC 介面）�
   舊版 JSON 搬遷共 5 項測試
 
 ### 檢核表
+
 - [x] `npm install` 後 `npm test` 全部通過（含新增的 5 項 SQLite 測試）
 - [x] 手動放一份舊版 `logs.json` 到 DATA_DIR，重啟後資料正確搬進
       `logs.sqlite`，舊檔被改名成 `.migrated`
@@ -628,18 +681,21 @@ Stage 11 完成（日誌主控台既有的 `logError`/`logAudit`/IPC 介面）�
 ## Stage 14：知識庫／對話庫新增「匯入 Markdown 檔案」
 
 ### 目標
+
 讓知識庫（提示詞項目）跟對話庫都能直接匯入現成的 `.md` 檔案（例如
 之前用其他工具匯出的對話紀錄），不用手動複製貼上內容，匯入完可以直接
 在既有編輯器裡檢視/編輯。
 
 ### 前置需求
+
 Stage 5（知識庫）、Stage 9（對話庫）完成。
 
 ### 交付項目
+
 - `main.js`：`knowledge:importMarkdown`、`conversations:importMarkdown`
   兩個 IPC handler——都用 `dialog.showOpenDialog({ properties: ['openFile',
-  'multiSelections'], filters: [{ extensions: ['md','markdown','txt'] }]
-  })` 可一次多選，每個檔案讀成一筆新項目（檔名去掉副檔名當標題，檔案
+'multiSelections'], filters: [{ extensions: ['md','markdown','txt'] }]
+})` 可一次多選，每個檔案讀成一筆新項目（檔名去掉副檔名當標題，檔案
   全文塞進 `content`），直接存檔（不像「擷取目前對話」是先預填編輯器
   等使用者確認），回傳 `{ kb/conversations, importedIds }`；失敗的檔案
   各自 `logError`，成功至少一個檔案就記一筆 `logAudit`
@@ -654,6 +710,7 @@ Stage 5（知識庫）、Stage 9（對話庫）完成。
   完全獨立的按鈕/IPC，處理不同的檔案格式，UI 上不要合併成一個按鈕
 
 ### 檢核表
+
 - [x] 知識庫「提示詞」分頁能看到「匯入 Markdown」按鈕，切到「套餐」
       分頁時按鈕隱藏
 - [x] 選一個 `.md` 檔案匯入，清單裡多一筆項目，標題是檔名（不含副檔名），
@@ -676,14 +733,17 @@ Stage 5（知識庫）、Stage 9（對話庫）完成。
 ## Stage 15：App 版本號顯示 + 安裝程式預設路徑改到應用程式資料夾
 
 ### 目標
+
 兩件小事但都跟「使用者實際感受到的體驗」有關：畫面上要看得到目前是
 第幾版（回報問題時才問得出來），Windows 安裝程式預設路徑改成不用
 系統管理員權限的使用者 AppData 資料夾。
 
 ### 前置需求
+
 Stage 1～14 完成。
 
 ### 交付項目
+
 - `main.js`：新增 `app:getVersion` IPC，回傳 `app.getVersion()`
   （直接讀 `package.json` 的 `version`，不用自己手動維護一份）
 - `preload.js`：曝露 `getAppVersion`
@@ -691,7 +751,7 @@ Stage 1～14 完成。
   （極小字級，側邊欄摺疊成純 icon 版時隱藏）
 - `renderer/renderer.js`：初始化時抓版本號填進 `#app-version-label`
 - `renderer/settings.html/js`：新增「關於」區塊（第 9 項，`settings.
-  about.title`/`settings.about.version`），語言切換時（`i18n:updated`
+about.title`/`settings.about.version`），語言切換時（`i18n:updated`
   事件）重新套用版本號文字格式
 - `package.json`：新增 `build.nsis` 設定——
   `perMachine: false`（預設安裝到 `%LOCALAPPDATA%\Programs\Platter`，
@@ -700,6 +760,7 @@ Stage 1～14 完成。
   仍然可以自己改路徑）、桌面/開始選單捷徑設定
 
 ### 檢核表
+
 - [x] 主視窗側邊欄「設定」按鈕下方能看到一行小小的版本號文字
       （`v1.14.0` 這種格式）
 - [x] 側邊欄摺疊成純 icon 版時，版本號文字跟著隱藏，不會擠版面
@@ -709,7 +770,7 @@ Stage 1～14 完成。
 - [x] `package.json` 的 `build.nsis.perMachine` 是 `false`
 - [ ] **待手動驗證**：實際在 Windows 上跑一次 `npm run build:win`，
       安裝時確認精靈預設顯示的安裝路徑是 `%LOCALAPPDATA%\Programs\
-      Platter`（不是 `C:\Program Files\Platter`），而且不需要 UAC
+Platter`（不是 `C:\Program Files\Platter`），而且不需要 UAC
       系統管理員權限提示就能完成安裝
 
 ---
@@ -717,12 +778,15 @@ Stage 1～14 完成。
 ## Stage 16：帳號清單拖曳排序
 
 ### 目標
+
 讓使用者可以自己決定側邊欄帳號清單的顯示順序，不用被迫照新增順序排。
 
 ### 前置需求
+
 Stage 2（帳號管理三視窗化 + 持久化）完成。
 
 ### 交付項目
+
 - `main.js`：新增 `accounts:reorder` IPC——接收前端算好的新順序（完整
   帳號 id 陣列），用 Map 查表重組 `appState.accounts`，找不到對應帳號的
   id 忽略；反過來如果 `appState.accounts` 有帳號沒出現在傳入的順序裡
@@ -737,6 +801,7 @@ Stage 2（帳號管理三視窗化 + 持久化）完成。
   `.account-item.drag-over`（頂部藍色邊框標示插入位置）樣式
 
 ### 檢核表
+
 - [x] 用滑鼠拖曳某個帳號項目到另一個位置放開，清單順序照預期改變
 - [x] 拖曳過程中，滑鼠懸停的目標項目有明顯的視覺提示（頂部邊框）
 - [x] 拖曳中的項目本身呈現半透明樣式

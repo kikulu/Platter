@@ -41,22 +41,23 @@
   > ⚠️ **Stage 9～16 目前只做過 `node --check` 語法檢查跟邏輯層面的
   > 單元測試，還沒有在真正的 Electron 視窗環境（`npm start`）操作驗證
   > 過**。接續開發前，第一件事應該是先跑一次 `npm install && npm
-  > start`，照 `BUILD_PLAN.md` Stage 9～16 的檢核表實際操作一遍，確認
+start`，照 `BUILD_PLAN.md` Stage 9～16 的檢核表實際操作一遍，確認
   > 沒有語法檢查抓不到的執行期問題，再開始加新功能——不要假設這幾個
   > 階段「跟前 8 個階段一樣已經驗收過」。
+
 - **權威規格文件**：`PROJECT_SPEC.md`（19 節，完整最終狀態規格，每次加新
   功能都應該回頭補進對應章節，讓它永遠代表「目前最新」的樣貌）。
 - **既有文件分工**：
-  | 檔案 | 用途 |
-  |---|---|
-  | `PROJECT_SPEC.md` | 目前為止的完整規格（唯一真相來源） |
-  | `BUILD_PLAN.md` | 把規格拆成可驗收的階段＋檢核表，**接續開發的第一站** |
-  | `CHANGELOG.md` | 逐版本紀錄「做了什麼」 |
-  | `ROADMAP.md` | 明確排除的功能／未來可能方向 |
-  | `NEW_FEATURE_BUILD_PROMPT.md`（本檔） | 新功能開發提示詞模板 |
-  | `FIX_EXISTING_FEATURE_PROMPT.md` | 既有功能修正提示詞模板 |
-  | `SPEC_ONLY_BUILD_PROMPT.md` | 只附文件、不附原始碼時的提示詞模板 |
-  | `CHECKLIST.md` | ⚠️ 舊草稿、階段命名跟目前 `BUILD_PLAN.md` 不一致，僅供歷史參考，**新開發不要照抄這份，以 `BUILD_PLAN.md` 為準** |
+  | 檔案                                  | 用途                                                                                                            |
+  | ------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+  | `PROJECT_SPEC.md`                     | 目前為止的完整規格（唯一真相來源）                                                                              |
+  | `BUILD_PLAN.md`                       | 把規格拆成可驗收的階段＋檢核表，**接續開發的第一站**                                                            |
+  | `CHANGELOG.md`                        | 逐版本紀錄「做了什麼」                                                                                          |
+  | `ROADMAP.md`                          | 明確排除的功能／未來可能方向                                                                                    |
+  | `NEW_FEATURE_BUILD_PROMPT.md`（本檔） | 新功能開發提示詞模板                                                                                            |
+  | `FIX_EXISTING_FEATURE_PROMPT.md`      | 既有功能修正提示詞模板                                                                                          |
+  | `SPEC_ONLY_BUILD_PROMPT.md`           | 只附文件、不附原始碼時的提示詞模板                                                                              |
+  | `CHECKLIST.md`                        | ⚠️ 舊草稿、階段命名跟目前 `BUILD_PLAN.md` 不一致，僅供歷史參考，**新開發不要照抄這份，以 `BUILD_PLAN.md` 為準** |
 
 ---
 
@@ -69,7 +70,7 @@
    - 不把 cookie / localStorage / session token 打包進任何備份／匯出／
      文件庫檔案；可攜資料只放中繼資料與使用者自產內容。
 2. **子視窗一律用共用 helper**：`main.js` 的 `openChildWindow({ getWindow,
-   setWindow, htmlFile, width, height, minWidth, minHeight })`，
+setWindow, htmlFile, width, height, minWidth, minHeight })`，
    `parent: mainWindow`、**`modal: false`**（modal 會鎖死主視窗，跟
    selector 選取工具這類需要切回主視窗互動的功能衝突）。
 3. **跨視窗即時同步一律用廣播 IPC**，不要用輪詢：新增/修改任何會影響

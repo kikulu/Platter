@@ -1,4 +1,8 @@
-body { display: flex; height: 100vh; overflow: hidden; }
+body {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
 #log-page {
   flex: 1;
@@ -43,7 +47,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   flex-direction: column;
   min-height: 0;
 }
-.tab-panel.active { display: flex; }
+.tab-panel.active {
+  display: flex;
+}
 
 .log-filter-row {
   display: flex;
@@ -52,12 +58,25 @@ body { display: flex; height: 100vh; overflow: hidden; }
   margin-bottom: 10px;
   flex-shrink: 0;
 }
-.log-filter-row select { width: auto; font-size: 12px; }
-.log-filter-row input[type="text"] { flex: 1; font-size: 12px; }
-.log-spacer { flex: 1; }
-.log-count { font-size: 11px; color: var(--text-secondary); white-space: nowrap; }
+.log-filter-row select {
+  width: auto;
+  font-size: 12px;
+}
+.log-filter-row input[type='text'] {
+  flex: 1;
+  font-size: 12px;
+}
+.log-spacer {
+  flex: 1;
+}
+.log-count {
+  font-size: 11px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
 
-#error-list, #audit-list {
+#error-list,
+#audit-list {
   flex: 1;
   overflow-y: auto;
   display: flex;
@@ -92,14 +111,30 @@ body { display: flex; height: 100vh; overflow: hidden; }
   color: var(--text-secondary);
   white-space: nowrap;
 }
-.log-badge.category-account { color: #4f8cff; }
-.log-badge.category-project { color: #2ecc71; }
-.log-badge.category-document { color: #f5a623; }
-.log-badge.category-conversation { color: #9b59b6; }
-.log-badge.category-backup { color: #1abc9c; }
-.log-badge.category-settings { color: #3498db; }
-.log-badge.category-extension { color: #e67e22; }
-.log-badge.error { color: var(--danger); }
+.log-badge.category-account {
+  color: #4f8cff;
+}
+.log-badge.category-project {
+  color: #2ecc71;
+}
+.log-badge.category-document {
+  color: #f5a623;
+}
+.log-badge.category-conversation {
+  color: #9b59b6;
+}
+.log-badge.category-backup {
+  color: #1abc9c;
+}
+.log-badge.category-settings {
+  color: #3498db;
+}
+.log-badge.category-extension {
+  color: #e67e22;
+}
+.log-badge.error {
+  color: var(--danger);
+}
 
 .log-message {
   flex: 1;
@@ -111,9 +146,17 @@ body { display: flex; height: 100vh; overflow: hidden; }
 .log-row.expanded .log-message {
   white-space: normal;
 }
-.log-row-head { cursor: default; }
-.log-row.has-stack .log-row-head { cursor: pointer; }
-.log-expand-hint { color: var(--text-secondary); flex-shrink: 0; font-size: 10px; }
+.log-row-head {
+  cursor: default;
+}
+.log-row.has-stack .log-row-head {
+  cursor: pointer;
+}
+.log-expand-hint {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  font-size: 10px;
+}
 
 .log-stack {
   display: none;
@@ -128,7 +171,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   max-height: 220px;
   overflow-y: auto;
 }
-.log-row.expanded .log-stack { display: block; }
+.log-row.expanded .log-stack {
+  display: block;
+}
 
 #log-empty-hint {
   color: var(--text-secondary);
@@ -158,7 +203,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   white-space: nowrap;
   cursor: pointer;
 }
-.console-autoscroll-label input { width: auto; }
+.console-autoscroll-label input {
+  width: auto;
+}
 
 #console-output {
   flex: 1;
@@ -191,13 +238,32 @@ body { display: flex; height: 100vh; overflow: hidden; }
   padding: 0 2px;
   height: fit-content;
 }
-.console-level-log .console-level-badge { background: #263041; color: #9ca3af; }
-.console-level-info .console-level-badge { background: #16324a; color: #7dd3fc; }
-.console-level-warn .console-level-badge { background: #4a3a12; color: #fbbf24; }
-.console-level-error .console-level-badge { background: #4a1717; color: #f87171; }
-.console-level-warn.console-line { color: #fbbf24; }
-.console-level-error.console-line { color: #f87171; }
-.console-text { flex: 1; min-width: 0; }
+.console-level-log .console-level-badge {
+  background: #263041;
+  color: #9ca3af;
+}
+.console-level-info .console-level-badge {
+  background: #16324a;
+  color: #7dd3fc;
+}
+.console-level-warn .console-level-badge {
+  background: #4a3a12;
+  color: #fbbf24;
+}
+.console-level-error .console-level-badge {
+  background: #4a1717;
+  color: #f87171;
+}
+.console-level-warn.console-line {
+  color: #fbbf24;
+}
+.console-level-error.console-line {
+  color: #f87171;
+}
+.console-text {
+  flex: 1;
+  min-width: 0;
+}
 #console-output #log-empty-hint {
   color: #6b7280;
 }
