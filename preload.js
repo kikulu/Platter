@@ -84,6 +84,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   pickAiSample: () => ipcRenderer.invoke('settings:pickAiSample'),
   deriveSelector: (userSample, aiSample) =>
     ipcRenderer.invoke('settings:deriveSelector', { userSample, aiSample }),
+  testCaptureSelector: (platform, selector) =>
+    ipcRenderer.invoke('settings:testCaptureSelector', { platform, selector }),
 
   // 設定：疑難排解
   openCurrentDevTools: () => ipcRenderer.invoke('settings:openCurrentDevTools'),

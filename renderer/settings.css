@@ -47,6 +47,40 @@ body { height: 100vh; overflow-y: auto; }
   color: #fff;
 }
 
+.selector-test-result {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.selector-test-summary {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.selector-test-error {
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.selector-test-msg {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+.selector-test-msg:first-of-type {
+  border-top: none;
+}
+.selector-test-msg-role {
+  flex-shrink: 0;
+}
+
 .checkbox-row {
   display: flex;
   align-items: center;

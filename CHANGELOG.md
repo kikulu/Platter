@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.18.0]
+
+### 新功能：選擇器「測試擷取」預覽
+- 「設定 → 選擇器設定」新增「測試擷取」按鈕：不用先按「儲存」，直接用
+  表單裡目前填的 selector 值，對「目前選擇的這個平台」跑一次真正的
+  `extractors/domCapture.js` 擷取，結果就地顯示在設定視窗裡——成功的話
+  列出擷取到的訊息數量與前 5 則預覽（🧑/🤖 + 截斷文字），失敗的話顯示
+  錯誤原因跟 `matchedNodeCount`/`nonEmptyMessageCount` 診斷數字，不用真的
+  匯出成檔案就能反覆調整、確認 selector 抓得對不對。
+- 會優先用「目前作用中的帳號」（如果剛好是選擇的那個平台），不是的話
+  找第一個開著的同平台帳號；一個都沒開會提示先新增/切換帳號，不會誤用
+  其他平台的頁面去測試。
+- 新增 IPC 頻道 `settings:testCaptureSelector`（`lib/ipc/settings.js` →
+  `lib/conversationCapture.js` 新增的 `testCaptureSelector()`）。刻意
+  **不寫檔、不登記文件庫、不記錯誤/稽核日誌**：調整 selector 本來就會
+  反覆試錯，每次失敗都記錄只會洗版日誌表、稀釋掉真正該注意的錯誤。
+- 新增 `settings.selectors.testCapture` 等 9 組 i18n 字串（zh-TW / en）。
+- 詳見 `PROJECT_SPEC.md` 第 10 節「選擇器設定與滑鼠選取工具」。
+- 驗證方式：對修改到的每個檔案跑 `node --check`；在 mock 過 `electron`
+  的 Node 環境下重新跑一次 IPC 頻道註冊，確認新頻道存在、且原本 79 個
+  頻道都還在（沒有改壞既有功能）；JSON 格式驗證兩份 locale 檔。受限於
+  純文字環境沒有真正的視窗可以操作，仍建議實機開一個 Claude/ChatGPT 帳號
+  後手動點一次「測試擷取」，確認畫面顯示如預期。
+
 ## [1.17.0]
 
 ### 重構：main.js 模組化
