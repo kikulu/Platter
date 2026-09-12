@@ -1,8 +1,28 @@
 # Changelog
 
+## [1.21.0]
+
+### 整批套用 Prettier 排版
+
+- 對整個專案跑了一次 `npm run format`（`prettier --write .`），純排版
+  變動，不含任何邏輯修改。順便修掉這次一連串重構過程中不小心混進來的
+  換行字元不一致問題：`.prettierrc.json` 設定 `endOfLine: "crlf"`，但
+  之前用終端機工具新建/編輯的檔案（`main.js`、整個 `lib/**`、
+  `.github/workflows/ci.yml`，以及少數用字串取代編輯過的既有檔案）都是
+  純 LF 或 CRLF/LF 混雜，現在統一成 CRLF，跟專案其他檔案一致。
+- `npm run format:check` 現在會回報「All matched files use Prettier
+  code style!」。
+- 驗證方式：排版前後都重新跑過 `npm run lint`（0 錯誤，
+  `extractors/domCapture.js` 原本就有的 1 筆既有警告不受影響）跟
+  `npm test`（17 個測試全過），確認純排版變動沒有改壞任何行為；也對每個
+  `.js` 檔重新跑過 `node --check`，並在 mock 過 `electron` 的環境下重新
+  `require` 過整條 `main.js`/`lib/ipc/**` 模組鏈，確認 80 個 IPC 頻道
+  都還在。
+
 ## [1.20.0]
 
 ### 新增：GitHub Actions CI
+
 - 新增 `.github/workflows/ci.yml`：`push`／`pull_request` 到 `main`
   分支時，在 Node `18.x`／`20.x` 兩個版本上各自跑一次
   `npm install`（設定 `ELECTRON_SKIP_BINARY_DOWNLOAD=1` 跳過 Electron
@@ -22,6 +42,7 @@
 ## [1.19.0]
 
 ### 新功能：知識庫全文搜尋
+
 - 知識庫視窗（提示詞／套餐兩個分頁）工具列新增搜尋框，輸入時即時篩選
   （`input` 事件，不用按 Enter），跟既有的標籤篩選下拉選單是 AND 關係，
   可以同時使用兩者縮小範圍。純前端記憶體內篩選，不需要新的 IPC 頻道。
@@ -43,6 +64,7 @@
 ## [1.18.0]
 
 ### 新功能：選擇器「測試擷取」預覽
+
 - 「設定 → 選擇器設定」新增「測試擷取」按鈕：不用先按「儲存」，直接用
   表單裡目前填的 selector 值，對「目前選擇的這個平台」跑一次真正的
   `extractors/domCapture.js` 擷取，結果就地顯示在設定視窗裡——成功的話
@@ -67,6 +89,7 @@
 ## [1.17.0]
 
 ### 重構：main.js 模組化
+
 - `main.js` 原本是單一檔案、逼近 2200 行，拆成 `lib/**` 底下 17 個依
   職責分組的模組：`constants`（靜態設定值）、`state`（共用可變狀態單例）、
   `dataDir`（DATA_DIR 讀寫）、`broadcast`（跨視窗同步）、`console`（主控台
@@ -93,6 +116,7 @@
 ## [1.16.0]
 
 ### 新增：帳號清單拖曳排序
+
 - 側邊欄帳號清單每個項目現在可以直接拖曳調整順序（原生 HTML5 drag &
   drop，沒有引入額外套件）：拖曳中的項目半透明顯示，滑鼠懸停的目標
   項目用頂部藍色邊框標示「放開後會插入這裡」。
@@ -105,6 +129,7 @@
 ## [1.15.0]
 
 ### 新增：App 版本號顯示
+
 - 主視窗側邊欄「設定」按鈕下方新增一行小字顯示目前版本號（側邊欄摺疊
   成純 icon 版時自動隱藏）；設定視窗最下面新增「關於」區塊，顯示完整
   版本號文字，語言切換時同步更新格式。
@@ -112,6 +137,7 @@
   `package.json` 的 `version`），不用在畫面上寫死版本字串。
 
 ### 修正：Windows 安裝程式預設路徑改到使用者應用程式資料夾
+
 - `package.json` 新增 `build.nsis` 設定：`perMachine: false` 讓安裝程式
   預設安裝到 `%LOCALAPPDATA%\Programs\Platter`（使用者自己的 AppData
   底下），不再是需要系統管理員權限的 `C:\Program Files\Platter`；
@@ -124,6 +150,7 @@
 ## [1.14.0]
 
 ### 新增：知識庫／對話庫可以匯入現成的 Markdown 檔案
+
 - 知識庫「提示詞」分頁新增「匯入 Markdown」按鈕（切到「套餐」分頁時
   自動隱藏），對話庫新增「匯入 Markdown 檔案」按鈕：都可以一次多選
   `.md`/`.markdown`/`.txt` 檔案，每個檔案直接變成一則新項目（檔名去掉
@@ -142,6 +169,7 @@
 ## [1.13.0]
 
 ### 新增：日誌主控台改用 SQLite（sql.js）
+
 - 「日誌主控台」的錯誤日誌/稽核日誌從 `logs.json` 改存進 `logs.sqlite`
   （用 `sql.js`——純 WebAssembly 版 SQLite，沒有原生模組，不需要
   `electron-rebuild`，選型取捨詳見 `PROJECT_SPEC.md` 第 9.7 節）。
@@ -159,6 +187,7 @@
   當保險。
 
 ### 修正：electron-builder 打包設定漏掉 `lib/**/*`
+
 - `package.json` 的 `build.files` 陣列一直沒列到 `lib/` 資料夾，
   `main.js` 卻用 `require('./lib/utils')`／現在也用
   `require('./lib/sqlite')`——這代表照舊設定打包出來的成品，理論上啟動
@@ -170,11 +199,12 @@
 ## [1.12.0]
 
 ### 修正：App 啟動時 Chromium 磁碟快取錯誤（`disk_cache` / `quota_database`）
+
 - 新增單一實例鎖（`app.requestSingleInstanceLock()`）：兩個 Platter 進程
   同時指向同一個 `userData` 資料夾，共用同一份 Chromium 磁碟快取時，其中
   一個對快取檔案的讀寫會被另一個鎖住，這是 `Unable to create cache` /
   `Unable to move the cache`（Windows 常見錯誤碼 `0x5`）/ `Could not open
-  the quota database, resetting` 這類錯誤最常見的成因。現在拿不到鎖的
+the quota database, resetting` 這類錯誤最常見的成因。現在拿不到鎖的
   進程會直接退出，並把已經開著的視窗 focus 過去。
 - 「設定 → 設定檔存放位置」切換/還原後「立即重新啟動」的流程，把
   `app.exit()`（立刻強制終止，跳過正常收尾）改成 `app.quit()`（正常關閉
@@ -187,6 +217,7 @@
 ## [1.11.0]
 
 ### 修正：對話匯出失敗完全沒有記錄
+
 - 「匯出當前對話」跟「對話庫 → 匯出檔案」失敗時，現在會記一筆
   `conversation` / `exportFailed` 稽核紀錄，並在 `logError` 留一筆對應的
   錯誤日誌；寫檔本身失敗（例如權限不足）也補了 try/catch + `logError`。
@@ -194,6 +225,7 @@
   什麼事。
 
 ### 新增：日誌主控台加入「主控台」分頁（即時 console 輸出）
+
 - 新增一個「主控台」分頁：即時攔截 main process 的
   `console.log/info/warn/error`，逐行显示成終端機風格的即時輸出，只存在
   記憶體（上限 300 筆，不落地存檔、不算進備份），有「自動捲動」開關跟
@@ -204,9 +236,10 @@
 - 新增 `console:list` / `console:clear` IPC 跟 `console:entry` 即時事件。
 
 ### 修正：對話擷取失敗診斷資訊不足（「各 AI 平台還是不能匯出對話」）
+
 - `extractors/domCapture.js` 的擷取結果現在一律帶
   `debug: { selectorUsed, matchedNodeCount, nonEmptyMessageCount,
-  pageUrl }`：`matchedNodeCount = 0` 代表 selector 本身沒選到任何節點
+pageUrl }`：`matchedNodeCount = 0` 代表 selector 本身沒選到任何節點
   （網站 DOM 結構跟預設值對不上，需要用「設定 → 選擇器設定」重新框選）；
   `matchedNodeCount > 0` 但 `nonEmptyMessageCount = 0` 代表選到的是空容器
   而不是實際訊息氣泡。
@@ -223,6 +256,7 @@
 ## [1.10.0]
 
 ### 新增：跨專案總覽（補完 1.9.0 的功能）
+
 - 專案計畫視窗左側工具列新增「跨專案總覽」按鈕，把所有專案的月曆／
   甘特圖／Issue 疊在一起看（唯讀彙總畫面，資料來源是已存檔的專案，正在
   編輯中還沒儲存的變更不會出現）。
@@ -231,11 +265,12 @@
   直接跳回該專案的編輯畫面（並自動切到對應分頁）。
 
 ### 新增：日誌主控台（錯誤日誌／稽核日誌）
+
 - 側邊欄「內容工具」群組新增「日誌主控台」按鈕，開新視窗，兩個分頁：
   - **錯誤日誌**：main process 原本只寫進終端機的 `console.error`（擴充
     功能載入失敗、對話擷取失敗、選取器工具失敗、文件匯入/刪除失敗等）
     改成同時寫進 `logs.json`；另外掛了 `process.on('uncaughtException'/
-    'unhandledRejection')`，main process 任何沒被接住的例外也會自動記
+'unhandledRejection')`，main process 任何沒被接住的例外也會自動記
     錄，不會只留在終端機。可依來源篩選、關鍵字搜尋，帶堆疊的項目可點開
     展開完整 stack trace。
   - **稽核日誌**：記錄關鍵動作——帳號新增/移除、專案建立/刪除、文件
@@ -251,6 +286,7 @@
 ## [1.9.0]
 
 ### 新增：專案計畫加入月曆、甘特圖、Issue 管理
+
 - 專案編輯畫面新增分頁：**任務清單／月曆／甘特圖／Issue 管理**，四個
   分頁共用同一份還沒儲存的編輯狀態，切分頁不會遺失正在編輯的內容。
 - 任務新增 `startDate`（開始日期）欄位，跟原本的 `dueDate`（到期日）
@@ -274,10 +310,11 @@
 ## [1.8.0]
 
 ### 新增：對話庫（`conversation.html`）
+
 - 新視窗（側邊欄「內容工具」群組，新增「對話庫」按鈕開啟），新增
   `conversations.json` 資料檔：`{ id, title, tags, content(Markdown),
-  sourceAccountId, sourcePlatform, linkedDocumentIds, createdAt,
-  updatedAt }`。
+sourceAccountId, sourcePlatform, linkedDocumentIds, createdAt,
+updatedAt }`。
 - **新增對話 Markdown**：可「新增對話」手動輸入標題/標籤/貼上或編寫
   Markdown 內容；也可「擷取目前對話」重用既有的 DOM 擷取機制
   （`captureCurrentConversation` + `toMarkdown`）把目前作用中帳號畫面上
@@ -295,6 +332,7 @@
 ## [1.7.0]
 
 ### 新增：真正可用的 `npm test` / `npm run lint` / `npm run format`
+
 - 之前 `README.md` 的「開發」「貢獻」段落就已經寫著 `npm test`、
   `npm run lint`（還有藏在 HTML 註解裡、沒有渲染出來的 `npm run format`
   跟 GitHub Actions CI 說明），但 `package.json` 其實完全沒有對應的
@@ -321,6 +359,7 @@
     scripts，`devDependencies` 補上 `eslint`、`prettier`。
 
 ### 修正：`deriveSelectorFromSamples` 誤用瀏覽器專屬 API 導致的潛在崩潰
+
 - 在幫 `deriveSelectorFromSamples` 補單元測試時發現：原本的實作用了
   `CSS.escape` 來跳脫樣本元素的 `id`，但這段程式碼實際執行在 Electron
   **主程序**（Node.js 環境），並沒有 `CSS` 這個全域物件——一旦使用者用
@@ -332,13 +371,15 @@
   之後再度引入同樣的問題。
 
 ### 修正：`extractors/domCapture.js` 的 `no-inner-declarations` 問題
+
 - 導入 ESLint 之後抓到 `isUserMessage` 是在 `try` 區塊內用
   `function isUserMessage(el) {...}` 宣告，屬於區塊內函式宣告，在不同
   JS 引擎的行為可能不一致。改成 `const isUserMessage = function (el) {
-  ... }` 函式表達式，執行順序與行為完全不變（原本就是先宣告、後在同一個
+... }` 函式表達式，執行順序與行為完全不變（原本就是先宣告、後在同一個
   區塊內使用，不依賴 hoisting）。
 
 ### 文件：`CHECKLIST.md` 標記為棄用
+
 - `CHECKLIST.md` 是專案早期的草稿式檢核表，階段編號/內容跟現行
   `BUILD_PLAN.md`（8 階段、已全部驗收）對不起來，且從建立以來所有檢核框
   都沒有被更新過。已在檔案開頭加上明確的棄用警示並指向正確的替代文件
@@ -351,6 +392,7 @@
   CI 說明（改記錄在 `ROADMAP.md` 當作未來可能方向）。
 
 ### 新增文件
+
 - `NEW_FEATURE_BUILD_PROMPT.md`：8 階段建置計畫完成後，要繼續加新功能時
   使用的提示詞模板，內含既有慣例清單與可直接複製貼上的提示詞本體。
 - `FIX_EXISTING_FEATURE_PROMPT.md`：修正既有功能問題時使用的提示詞
@@ -359,9 +401,10 @@
 ## [1.6.1]
 
 ### 修正：知識庫/備份還原的即時刷新事件遺漏
+
 - 對照 `BUILD_PLAN.md` 檢核表逐項驗證現有實作時發現：
   1. `knowledge:toggleChecklistEntry`、`knowledge:group:save/delete/
-     toggleStep/resetChecklist` 沒有廣播 `knowledge:changed`，已補上。
+toggleStep/resetChecklist` 沒有廣播 `knowledge:changed`，已補上。
   2. `settings:importBackup` 還原備份時會改動知識庫/專案/文件庫，但只
      廣播了 `accounts:changed`，已補上 `knowledge:changed` 與
      `documents:changed`；同時修正還原知識庫項目時 `roleIds` 缺少預設值
@@ -373,6 +416,7 @@
 ## [1.6.0]
 
 ### 新增：側邊欄「預設提示詞」區塊 + 知識庫提示詞的角色配置
+
 - 知識庫提示詞項目編輯器新增「角色配置」區塊：勾選這個提示詞要當成
   哪些角色（沿用帳號角色機制）的預設提示詞，一個提示詞可以同時配置給
   多個角色，一個角色也可以配置多組預設提示詞。存在 `item.roleIds`。
@@ -391,6 +435,7 @@
 ## [1.5.0]
 
 ### 變更：側邊欄改為多層可收合清單
+
 - 側邊欄從一排平面按鈕改成「群組標題 + 可展開/收合子項目」的兩層清單：
   - **帳號**：新增帳號、帳號清單
   - **內容工具**：匯出當前對話、知識庫、文件管理
@@ -406,6 +451,7 @@
 ## [1.4.0]
 
 ### 新增：文件管理（儲存對話中產生的文件或檔案的管理庫）
+
 - 新視窗 `documents.html`（側邊欄「文件管理」按鈕開啟），新增
   `documents.json` 中繼資料檔 + `documents/` 檔案存放資料夾（都在
   DATA_DIR 底下，跟著設定檔存放位置一起搬移）。
@@ -430,6 +476,7 @@
 ## [1.3.0]
 
 ### 新增：虛擬團隊主控台
+
 - 新視窗 `team.html`（側邊欄「虛擬團隊」按鈕開啟）：把帳號依「角色」
   （沿用既有帳號角色機制）分組顯示成組織圖 —— 頂端「虛擬團隊」節點，
   下方一排角色欄位，每欄底下是套用該角色的帳號卡片；沒有角色的帳號
@@ -439,9 +486,10 @@
 - 提供「新增帳號」「管理角色」快捷按鈕。
 
 ### 新增：專案計畫管理
+
 - 新視窗 `project.html`（側邊欄「專案計畫」按鈕開啟），新增 `projects.json`
   資料檔：`project { id, name, description, status, startDate, endDate,
-  tasks: [...] }`、`task { id, title, assigneeId, status, dueDate }`。
+tasks: [...] }`、`task { id, title, assigneeId, status, dueDate }`。
 - 左側專案清單（含狀態徽章與任務完成度）、右側編輯表單：名稱/狀態
   （規劃中/進行中/暫停/已完成）/起訖日期/說明，以及任務清單（可新增、
   行內編輯標題、指派給團隊裡的帳號、設定到期日、移除）。
@@ -454,6 +502,7 @@
 ## [1.2.0]
 
 ### 新增：帳號角色機制
+
 - 角色是可重複套用到多個帳號的共用定義：`{ id, name, description, color }`，
   `description` 可當成角色提示詞 / system prompt 使用。
 - 設定視窗新增「帳號角色管理」區塊：新增/編輯/刪除角色、8 色色票、
@@ -471,6 +520,7 @@
 ## [1.1.0]
 
 ### 新增：知識庫 —— 群組順序提示詞套餐 + 檢核表機制
+
 - 知識庫視窗新增「提示詞 / 套餐」分頁切換。
 - **群組順序提示詞套餐**：可將多個已存在的提示詞項目依指定順序組成一個
   「套餐」（`groups`），每個套餐有名稱、說明、標籤，內含依序排列的
@@ -492,6 +542,7 @@
 ## [1.0.0]
 
 ### 新增
+
 - 主視窗左側側邊欄，可摺疊為純 icon 版（220px / 56px）。
 - 每個帳號使用 `session.fromPartition('persist:<accountId>')` 完全隔離
   Cookie / LocalStorage / IndexedDB，並用 `WebContentsView` 疊加顯示。
@@ -514,6 +565,7 @@
   `selectors.json` 讀出後當參數傳入，只讀取當前 DOM。
 
 ### 設計決策記錄
+
 - 彈窗改成獨立視窗而非疊在主視窗裡：`WebContentsView` 是原生疊層，不受
   CSS z-index 控制。
 - 子視窗 `modal: false`：modal 視窗會在 OS 層級鎖住主視窗，跟「滑鼠選取

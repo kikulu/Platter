@@ -1,4 +1,8 @@
-body { display: flex; height: 100vh; overflow: hidden; }
+body {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
 #kb-list-pane {
   width: 320px;
@@ -26,8 +30,12 @@ body { display: flex; height: 100vh; overflow: hidden; }
   border-bottom: 1px solid var(--border);
   cursor: pointer;
 }
-.kb-item:hover { background: var(--bg-hover); }
-.kb-item.active { background: var(--bg-active); }
+.kb-item:hover {
+  background: var(--bg-hover);
+}
+.kb-item.active {
+  background: var(--bg-active);
+}
 .kb-item .kb-title {
   font-size: 13px;
   white-space: nowrap;
@@ -53,7 +61,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   display: flex;
   gap: 8px;
 }
-#kb-list-footer button { flex: 1; }
+#kb-list-footer button {
+  flex: 1;
+}
 
 #kb-tabs {
   display: flex;
@@ -74,7 +84,8 @@ body { display: flex; height: 100vh; overflow: hidden; }
   border-bottom-color: var(--accent);
 }
 
-#kb-editor, #kb-group-editor {
+#kb-editor,
+#kb-group-editor {
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -82,7 +93,8 @@ body { display: flex; height: 100vh; overflow: hidden; }
   overflow-y: auto;
 }
 
-#kb-editor .field, #kb-group-editor .field {
+#kb-editor .field,
+#kb-group-editor .field {
   margin-bottom: 14px;
 }
 
@@ -94,7 +106,8 @@ body { display: flex; height: 100vh; overflow: hidden; }
   line-height: 1.5;
 }
 
-#kb-editor-actions, #kb-group-editor-actions {
+#kb-editor-actions,
+#kb-group-editor-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
@@ -125,7 +138,10 @@ body { display: flex; height: 100vh; overflow: hidden; }
   gap: 8px;
   padding: 4px 0;
 }
-.checklist-row input[type="checkbox"] { width: auto; flex-shrink: 0; }
+.checklist-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
 .checklist-text {
   flex: 1;
   font-size: 13px;
@@ -141,7 +157,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   padding: 2px 6px;
   flex-shrink: 0;
 }
-.checklist-remove:hover { color: var(--danger); }
+.checklist-remove:hover {
+  color: var(--danger);
+}
 
 /* --- 角色配置（提示詞屬於哪些角色的預設提示詞） --- */
 #kb-role-config-list {
@@ -157,7 +175,10 @@ body { display: flex; height: 100vh; overflow: hidden; }
   padding: 4px 0;
   font-size: 13px;
 }
-.role-config-row input[type="checkbox"] { width: auto; flex-shrink: 0; }
+.role-config-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
 .role-config-row .role-color-dot {
   width: 9px;
   height: 9px;
@@ -186,7 +207,10 @@ body { display: flex; height: 100vh; overflow: hidden; }
   border-radius: 6px;
   background: var(--bg-hover);
 }
-.step-row input[type="checkbox"] { width: auto; flex-shrink: 0; }
+.step-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
 .step-order {
   color: var(--text-secondary);
   font-size: 12px;
@@ -210,8 +234,17 @@ body { display: flex; height: 100vh; overflow: hidden; }
   color: var(--text-secondary);
   flex-shrink: 0;
 }
-.step-icon-btn:hover { color: var(--text-primary); }
-.step-icon-btn:disabled { opacity: 0.3; cursor: default; }
-.step-icon-btn.danger-text:hover { color: var(--danger); }
+.step-icon-btn:hover {
+  color: var(--text-primary);
+}
+.step-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.step-icon-btn.danger-text:hover {
+  color: var(--danger);
+}
 
-#grp-add-step-select { flex: 1; }
+#grp-add-step-select {
+  flex: 1;
+}

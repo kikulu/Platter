@@ -269,7 +269,9 @@
     }
     const role = rolesById.get(activeAccount.roleId);
     const kb = await window.workspaceAPI.listKnowledge();
-    const matched = kb.items.filter((it) => (it.roleIds || []).includes(activeAccount.roleId));
+    const matched = kb.items.filter((it) =>
+      (it.roleIds || []).includes(activeAccount.roleId)
+    );
 
     if (matched.length === 0) {
       renderPromptEmptyHint(
@@ -327,4 +329,3 @@
     document.getElementById('app-version-label').textContent = `v${version}`;
   })();
 })();
-

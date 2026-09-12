@@ -3,13 +3,16 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('workspaceAPI', {
   // 帳號
   listAccounts: () => ipcRenderer.invoke('accounts:list'),
-  addAccount: (platform, name, roleId) => ipcRenderer.invoke('accounts:add', { platform, name, roleId }),
+  addAccount: (platform, name, roleId) =>
+    ipcRenderer.invoke('accounts:add', { platform, name, roleId }),
   switchAccount: (id) => ipcRenderer.invoke('accounts:switch', id),
   removeAccount: (id) => ipcRenderer.invoke('accounts:remove', id),
   setSidebarCollapsed: (collapsed) =>
     ipcRenderer.invoke('accounts:setSidebarCollapsed', collapsed),
-  setGroupExpanded: (key, expanded) => ipcRenderer.invoke('ui:setGroupExpanded', { key, expanded }),
-  setAccountRole: (accountId, roleId) => ipcRenderer.invoke('accounts:setRole', { accountId, roleId }),
+  setGroupExpanded: (key, expanded) =>
+    ipcRenderer.invoke('ui:setGroupExpanded', { key, expanded }),
+  setAccountRole: (accountId, roleId) =>
+    ipcRenderer.invoke('accounts:setRole', { accountId, roleId }),
   reorderAccounts: (orderedIds) => ipcRenderer.invoke('accounts:reorder', orderedIds),
   onAccountsChanged: (cb) => {
     const handler = () => cb();
@@ -54,7 +57,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   deleteKnowledgeGroup: (id) => ipcRenderer.invoke('knowledge:group:delete', id),
   toggleGroupStep: (groupId, stepId, checked) =>
     ipcRenderer.invoke('knowledge:group:toggleStep', { groupId, stepId, checked }),
-  resetGroupChecklist: (groupId) => ipcRenderer.invoke('knowledge:group:resetChecklist', groupId),
+  resetGroupChecklist: (groupId) =>
+    ipcRenderer.invoke('knowledge:group:resetChecklist', groupId),
 
   // 設定：資料目錄
   getDataDir: () => ipcRenderer.invoke('settings:getDataDir'),
@@ -64,7 +68,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   // 設定：擴充功能
   getExtensions: () => ipcRenderer.invoke('settings:getExtensions'),
   addExtension: () => ipcRenderer.invoke('settings:addExtension'),
-  toggleExtension: (id, enabled) => ipcRenderer.invoke('settings:toggleExtension', { id, enabled }),
+  toggleExtension: (id, enabled) =>
+    ipcRenderer.invoke('settings:toggleExtension', { id, enabled }),
   removeExtension: (id) => ipcRenderer.invoke('settings:removeExtension', id),
 
   // 設定：儲存路徑
@@ -78,7 +83,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
 
   // 設定：選擇器
   getSelectors: () => ipcRenderer.invoke('settings:getSelectors'),
-  saveSelector: (platform, selector) => ipcRenderer.invoke('settings:saveSelector', { platform, selector }),
+  saveSelector: (platform, selector) =>
+    ipcRenderer.invoke('settings:saveSelector', { platform, selector }),
   resetSelector: (platform) => ipcRenderer.invoke('settings:resetSelector', platform),
   pickUserSample: () => ipcRenderer.invoke('settings:pickUserSample'),
   pickAiSample: () => ipcRenderer.invoke('settings:pickAiSample'),
@@ -115,8 +121,10 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   // 文件管理
   listDocuments: () => ipcRenderer.invoke('documents:list'),
   importDocuments: () => ipcRenderer.invoke('documents:import'),
-  saveDocument: (id, name, tags, notes) => ipcRenderer.invoke('documents:save', { id, name, tags, notes }),
-  deleteDocument: (id, alsoDeleteFile) => ipcRenderer.invoke('documents:delete', { id, alsoDeleteFile }),
+  saveDocument: (id, name, tags, notes) =>
+    ipcRenderer.invoke('documents:save', { id, name, tags, notes }),
+  deleteDocument: (id, alsoDeleteFile) =>
+    ipcRenderer.invoke('documents:delete', { id, alsoDeleteFile }),
   openDocumentFile: (id) => ipcRenderer.invoke('documents:openFile', id),
   showDocumentInFolder: (id) => ipcRenderer.invoke('documents:showInFolder', id),
   onDocumentsChanged: (cb) => {
@@ -130,8 +138,10 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   saveConversation: (conv) => ipcRenderer.invoke('conversations:save', conv),
   deleteConversation: (id) => ipcRenderer.invoke('conversations:delete', id),
   importConversationMarkdown: () => ipcRenderer.invoke('conversations:importMarkdown'),
-  captureCurrentConversationDraft: () => ipcRenderer.invoke('conversations:captureCurrent'),
-  exportConversation: (id, format) => ipcRenderer.invoke('conversations:export', { id, format }),
+  captureCurrentConversationDraft: () =>
+    ipcRenderer.invoke('conversations:captureCurrent'),
+  exportConversation: (id, format) =>
+    ipcRenderer.invoke('conversations:export', { id, format }),
   linkConversationDocument: (conversationId, documentId) =>
     ipcRenderer.invoke('conversations:linkDocument', { conversationId, documentId }),
   unlinkConversationDocument: (conversationId, documentId) =>

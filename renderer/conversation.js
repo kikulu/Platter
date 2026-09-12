@@ -163,7 +163,10 @@
       unlinkBtn.textContent = '✕';
       unlinkBtn.title = window.i18n.t('conversations.unlink');
       unlinkBtn.addEventListener('click', async () => {
-        allConversations = await window.workspaceAPI.unlinkConversationDocument(currentConvId, docId);
+        allConversations = await window.workspaceAPI.unlinkConversationDocument(
+          currentConvId,
+          docId
+        );
         rebuildTagOptions();
         renderList();
         selectConversation(currentConvId);
@@ -233,7 +236,9 @@
               nonEmpty: debug.nonEmptyMessageCount,
             })
           : '';
-      alert(`${window.i18n.t('conversations.captureFail')}${detail ? '\n\n' + detail : ''}`);
+      alert(
+        `${window.i18n.t('conversations.captureFail')}${detail ? '\n\n' + detail : ''}`
+      );
       return;
     }
     currentConvId = null;

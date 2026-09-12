@@ -1,4 +1,8 @@
-body { display: flex; height: 100vh; overflow: hidden; }
+body {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
 
 #conv-list-pane {
   width: 320px;
@@ -15,7 +19,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   flex-direction: column;
   gap: 8px;
 }
-#conv-list-toolbar .row button { flex: 1; }
+#conv-list-toolbar .row button {
+  flex: 1;
+}
 
 #conv-list {
   flex: 1;
@@ -27,8 +33,12 @@ body { display: flex; height: 100vh; overflow: hidden; }
   border-bottom: 1px solid var(--border);
   cursor: pointer;
 }
-.conv-item:hover { background: var(--bg-hover); }
-.conv-item.active { background: var(--bg-active); }
+.conv-item:hover {
+  background: var(--bg-hover);
+}
+.conv-item.active {
+  background: var(--bg-active);
+}
 .conv-item .conv-item-title {
   font-size: 13px;
   white-space: nowrap;
@@ -54,7 +64,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   padding: 20px;
   overflow-y: auto;
 }
-#conv-editor .field { margin-bottom: 14px; }
+#conv-editor .field {
+  margin-bottom: 14px;
+}
 
 #conv-content {
   flex: 1;
@@ -104,7 +116,10 @@ body { display: flex; height: 100vh; overflow: hidden; }
   border-radius: 6px;
   background: var(--bg-hover);
 }
-.linked-doc-icon { flex-shrink: 0; font-size: 14px; }
+.linked-doc-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
 .linked-doc-name {
   flex: 1;
   min-width: 0;
@@ -113,7 +128,9 @@ body { display: flex; height: 100vh; overflow: hidden; }
   overflow: hidden;
   text-overflow: ellipsis;
 }
-.linked-doc-name.missing { color: var(--danger); }
+.linked-doc-name.missing {
+  color: var(--danger);
+}
 .linked-doc-actions {
   display: flex;
   gap: 4px;
@@ -125,11 +142,17 @@ body { display: flex; height: 100vh; overflow: hidden; }
   color: var(--text-secondary);
   padding: 2px 6px;
 }
-.linked-doc-actions button:hover { color: var(--text-primary); }
-.linked-doc-actions button.danger-text:hover { color: var(--danger); }
+.linked-doc-actions button:hover {
+  color: var(--text-primary);
+}
+.linked-doc-actions button.danger-text:hover {
+  color: var(--danger);
+}
 .linked-doc-empty {
   font-size: 12px;
   color: var(--text-secondary);
 }
 
-#conv-link-select { flex: 1; }
+#conv-link-select {
+  flex: 1;
+}

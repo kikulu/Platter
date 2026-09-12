@@ -120,7 +120,9 @@
     });
 
     if (filtered.length === 0) {
-      renderListEmptyHint(allItems.length === 0 ? 'knowledge.selectPrompt' : 'knowledge.searchNoResult');
+      renderListEmptyHint(
+        allItems.length === 0 ? 'knowledge.selectPrompt' : 'knowledge.searchNoResult'
+      );
       return;
     }
 
@@ -137,7 +139,10 @@
       const tagText = (it.tags || []).map((t) => `#${t}`).join(' ');
       const checklistTotal = (it.checklist || []).length;
       const checklistDone = (it.checklist || []).filter((c) => c.checked).length;
-      meta.textContent = [tagText, checklistTotal ? `☑ ${checklistDone}/${checklistTotal}` : '']
+      meta.textContent = [
+        tagText,
+        checklistTotal ? `☑ ${checklistDone}/${checklistTotal}` : '',
+      ]
         .filter(Boolean)
         .join('  ');
 
@@ -168,7 +173,11 @@
     });
 
     if (filtered.length === 0) {
-      renderListEmptyHint(allGroups.length === 0 ? 'knowledge.selectGroupPrompt' : 'knowledge.searchNoResult');
+      renderListEmptyHint(
+        allGroups.length === 0
+          ? 'knowledge.selectGroupPrompt'
+          : 'knowledge.searchNoResult'
+      );
       return;
     }
 
@@ -202,7 +211,10 @@
     if ((g.title || '').toLowerCase().includes(query)) return true;
     if ((g.description || '').toLowerCase().includes(query)) return true;
     if ((g.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
-    if ((g.steps || []).some((s) => itemTitleById(s.itemId).toLowerCase().includes(query))) return true;
+    if (
+      (g.steps || []).some((s) => itemTitleById(s.itemId).toLowerCase().includes(query))
+    )
+      return true;
     return false;
   }
 
@@ -355,7 +367,9 @@
       return;
     }
     const item = allItems.find((i) => i.id === currentItemId);
-    const ok = window.confirm(window.i18n.t('knowledge.deleteConfirm', { title: item ? item.title : '' }));
+    const ok = window.confirm(
+      window.i18n.t('knowledge.deleteConfirm', { title: item ? item.title : '' })
+    );
     if (!ok) return;
     const kb = await window.workspaceAPI.deleteKnowledge(currentItemId);
     allItems = kb.items;
@@ -401,7 +415,11 @@
         renderList();
         // 檢核表機制：套餐的勾選狀態即時持久化，不用等按「儲存套餐」
         if (currentGroupId) {
-          const kb = await window.workspaceAPI.toggleGroupStep(currentGroupId, step.id, step.checked);
+          const kb = await window.workspaceAPI.toggleGroupStep(
+            currentGroupId,
+            step.id,
+            step.checked
+          );
           allGroups = kb.groups;
         }
       });
@@ -419,7 +437,10 @@
       upBtn.textContent = '↑';
       upBtn.disabled = idx === 0;
       upBtn.addEventListener('click', () => {
-        [editingSteps[idx - 1], editingSteps[idx]] = [editingSteps[idx], editingSteps[idx - 1]];
+        [editingSteps[idx - 1], editingSteps[idx]] = [
+          editingSteps[idx],
+          editingSteps[idx - 1],
+        ];
         renderSteps();
       });
 
@@ -428,7 +449,10 @@
       downBtn.textContent = '↓';
       downBtn.disabled = idx === editingSteps.length - 1;
       downBtn.addEventListener('click', () => {
-        [editingSteps[idx + 1], editingSteps[idx]] = [editingSteps[idx], editingSteps[idx + 1]];
+        [editingSteps[idx + 1], editingSteps[idx]] = [
+          editingSteps[idx],
+          editingSteps[idx + 1],
+        ];
         renderSteps();
       });
 
@@ -542,7 +566,9 @@
       return;
     }
     const group = allGroups.find((g) => g.id === currentGroupId);
-    const ok = window.confirm(window.i18n.t('knowledge.deleteGroupConfirm', { title: group ? group.title : '' }));
+    const ok = window.confirm(
+      window.i18n.t('knowledge.deleteGroupConfirm', { title: group ? group.title : '' })
+    );
     if (!ok) return;
     const kb = await window.workspaceAPI.deleteKnowledgeGroup(currentGroupId);
     allGroups = kb.groups;
