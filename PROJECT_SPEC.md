@@ -723,8 +723,28 @@ sqlite3` 那種一定要解壓縮出來才能載入的原生模組不一樣。
 
 ```
 main.js / preload.js / package.json
-lib/utils.js            # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
-lib/sqlite.js           # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
+main.js                  # 只保留 App 生命週期（單一實例鎖、whenReady、視窗全關/啟用），
+                         # 其餘邏輯都拆進 lib/**（1.17.0 模組化，之前是單一檔案近 2200 行）
+lib/constants.js         # 靜態設定值：平台網址、側邊欄寬度、UI 狀態預設值
+lib/state.js             # 共用可變狀態單例：視窗參照、帳號 View、appState、console 緩衝區……
+lib/dataDir.js           # DATA_DIR 讀寫/搬移、各資料檔路徑、readJSONSafe/writeJSONSafe
+lib/broadcast.js         # broadcastToAllWindows（跨視窗即時同步）
+lib/console.js           # 主控台（Console）：攔截全域 console.*，即時緩衝區
+lib/logs.js              # 日誌主控台：錯誤日誌 + 稽核日誌（sql.js/SQLite）
+lib/stores.js            # 資料層：app-state/knowledge-base/selectors/projects/documents/conversations 的 loadX()/saveX()
+lib/windows.js           # 視窗與帳號 WebContentsView 管理：主視窗、各子視窗、openChildWindow helper
+lib/conversationCapture.js # 對話擷取/匯出（executeJavaScript 注入 extractors/domCapture.js）、選取器工具
+lib/ipc/index.js         # 匯總註冊所有 IPC handlers
+lib/ipc/accounts.js      # accounts:* / roles:* / ui:* IPC
+lib/ipc/knowledge.js     # knowledge:* IPC
+lib/ipc/settings.js      # settings:* IPC（資料目錄/擴充功能/儲存路徑/備份還原/選取器/疑難排解）
+lib/ipc/windows.js       # window:* / app:getVersion IPC
+lib/ipc/projects.js      # projects:* IPC
+lib/ipc/documents.js     # documents:* IPC
+lib/ipc/conversations.js # conversations:* / export:current IPC
+lib/ipc/logs.js          # logs:* / console:* IPC
+lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
+lib/sqlite.js            # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
 assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
@@ -743,6 +763,25 @@ renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤�
 renderer/i18n.js
 renderer/locales/zh-TW.json, en.json
 ```
+
+`lib/**` 模組之間的共用慣例（新增功能或修 bug 時務必遵守，避免破壞這個
+拆分方式）：
+- 所有跨模組共用的可變狀態（視窗參照、帳號 View、appState、console 緩衝區、
+  logsDb 連線……）都放在 `lib/state.js` 這個單例物件裡，其他模組一律用
+  `state.appState.xxx`、`state.mainWindow` 這種「每次都重新讀取屬性」的
+  寫法存取，不要在檔案頂層解構快取一份（`appState` 本身會在
+  `loadAppState()` 整個被換掉，解構出來的參照會跟著失去同步）。
+- `lib/broadcast.js` 故意獨立、不依賴其他 `lib/**` 模組，是為了讓
+  `lib/logs.js`、`lib/console.js`、`lib/windows.js` 都能直接引用它廣播事件，
+  不會互相循環依賴。新增模組如果也需要廣播，直接引用這個檔案就好，不要
+  改成依賴 `lib/windows.js`。
+- `lib/ipc/*.js` 每個檔案對應一個 `registerXxxIpc(ipcMain)` 函式，只負責
+  註冊 IPC handler、呼叫其他 `lib/**` 模組已經寫好的函式，handler 內部
+  不要再塞入本來該放在 `lib/windows.js`／`lib/stores.js`／
+  `lib/conversationCapture.js` 的商業邏輯。
+- 新增一種資料類型（例如未來的 XXX 資料）時，照現有慣例：`lib/stores.js`
+  加一組 `loadXxx()`/`saveXxx()`，`lib/ipc/` 底下新增或擴充對應的
+  `registerXxxIpc()`，不要直接寫進 `main.js`。
 
 資料檔（存在 DATA_DIR，預設是 Electron `userData`，可搬到外部資料夾）：
 

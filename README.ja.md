@@ -192,12 +192,16 @@ npm run lint        # ESLint
 npm run format      # Prettier による自動整形
 ```
 
+`main.js` のモジュール化は完了しました。現在は App のライフサイクル
+（単一インスタンスロック、`whenReady`、window-all-closed/activate）だけを
+残した約 70 行のファイルです。データストア、ウィンドウ管理、会話の
+キャプチャ/エクスポート、IPC ハンドラはすべて `lib/**` 以下に分割され
+（IPC ハンドラはさらに業務領域ごとに `lib/ipc/` 以下へ分割）ています。
 `lib/utils.js` には Electron API に依存しない純粋関数（文字列処理、
-ファイルシステム関連のヘルパー）を置いており、`main.js` とは分離する
-ことで `node --test` で直接テストできるようにしています。これは
-（すでに 1000 行を超えている）`main.js` をモジュール分割する最初の
-ステップで、完全なモジュール化については [ROADMAP.md](./ROADMAP.md) を
-参照してください。
+ファイルシステム関連のヘルパー）を置いており、分離することで
+`node --test` で直接テストできます。各モジュールの役割分担と共有状態の
+扱い方の慣例は `PROJECT_SPEC.md` の第 15 節「ファイル構成」を参照して
+ください。
 
 push / PR 時には [GitHub Actions](./.github/workflows/ci.yml) が構文
 チェック・lint・ユニットテストを自動実行します——ただし実際に Electron
@@ -227,9 +231,21 @@ npm run build:dir     # インストーラーなし、動作確認用のフォ�
 
 ```
 ai-workspace-aggregator/
-├── main.js                # メインプロセス：ウィンドウ、セッション、IPC、設定の永続化
+├── main.js                # App のライフサイクルのみを担当。それ以外は lib/** 以下に分割
 ├── preload.js              # contextBridge、すべてのウィンドウで共有
-├── lib/utils.js             # Electron に依存しない純粋関数（ユニットテスト可能）
+├── lib/
+│   ├── constants.js           # プラットフォーム URL、サイドバー幅、UI 既定値
+│   ├── state.js                # 共有可変状態のシングルトン（ウィンドウ参照、appState、コンソールバッファ……）
+│   ├── dataDir.js               # DATA_DIR の読み書き/移動、各データファイルのパス
+│   ├── broadcast.js              # broadcastToAllWindows（ウィンドウ間のリアルタイム同期）
+│   ├── console.js                 # コンソールキャプチャ：グローバル console.* を上書き
+│   ├── logs.js                     # ログコンソール：エラーログ + 監査ログ（sql.js/SQLite）
+│   ├── stores.js                    # データ層：各データファイルの loadX()/saveX()
+│   ├── windows.js                    # ウィンドウとアカウントごとの WebContentsView の管理
+│   ├── conversationCapture.js         # 会話のキャプチャ/エクスポート、セレクタピッカーツール
+│   ├── utils.js                        # Electron に依存しない純粋関数
+│   ├── sqlite.js                        # sql.js の薄いラッパー：開く/保存/クエリ
+│   └── ipc/                              # 業務領域ごとに分割された IPC ハンドラ登録（8 ファイル + index.js）
 ├── test/utils.test.js        # ユニットテスト
 ├── package.json              # npm スクリプト + electron-builder 設定
 ├── .eslintrc.json / .prettierrc.json
@@ -273,7 +289,10 @@ Cookie・localStorage は**含まれません**。
 | [ROADMAP.md](./ROADMAP.md) | まだ未着手の、今後検討する価値のある方向性 |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md) | プロジェクト全体を再現するための完全な仕様プロンプト。ファイルシステム操作ツールを持つエージェント（Claude Code / Cursor）向け |
 | [BUILD_PLAN.md](./BUILD_PLAN.md) | 8 段階に分けたビルド用プロンプト集。ファイルシステム操作ツールを持たないモデル（Gemini / Grok / ChatGPT）でゼロから構築する場合向け |
-| [CHECKLIST.md](./CHECKLIST.md) | `BUILD_PLAN.md` と組み合わせて使う、全段階を横断したマスターチェックリスト |
+| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md) | 既存の全段階が完了した後、新機能を追加する際に使うプロンプトテンプレート |
+| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 既存機能の不具合を修正する際に使うプロンプトテンプレート |
+| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md) | ソースコードを添付せず、ドキュメントのみで新しい会話を始める際に使うプロンプトテンプレート |
+| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md) | 仕様書に加えて、プロジェクト全体ではなく該当する一部のファイルのみを添付して新しい会話を始める際に使うプロンプトテンプレート |
 
 ## コントリビューション
 

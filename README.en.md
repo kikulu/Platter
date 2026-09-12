@@ -192,11 +192,15 @@ npm run lint        # ESLint
 npm run format      # Prettier auto-formatting
 ```
 
-`lib/utils.js` holds pure functions with no Electron dependency (string
-processing, filesystem helpers), kept separate from `main.js` so they can
-be tested directly with `node --test`. This is the first step toward
-breaking up `main.js` (already over a thousand lines) into modules; see
-[ROADMAP.md](./ROADMAP.md) for the full plan.
+`main.js` has now been fully modularized: it's down to roughly 70 lines
+holding just the App lifecycle (single-instance lock, `whenReady`,
+window-all-closed/activate). Data stores, window management, conversation
+capture/export, and IPC handlers all live under `lib/**` (IPC handlers are
+further split by domain under `lib/ipc/`). `lib/utils.js` holds pure
+functions with no Electron dependency (string processing, filesystem
+helpers), kept separate so they can be tested directly with `node --test`.
+See `PROJECT_SPEC.md` section 15 ("File Structure") for how the modules
+divide responsibilities and the shared-state convention.
 
 [GitHub Actions](./.github/workflows/ci.yml) runs syntax checks, lint,
 and unit tests automatically on push/PR — it does not cover actually
@@ -224,9 +228,21 @@ are in place — that's expected.
 
 ```
 ai-workspace-aggregator/
-├── main.js                # Main process: windows, sessions, IPC, config persistence
+├── main.js                # App lifecycle entry point only; everything else lives under lib/**
 ├── preload.js              # contextBridge, shared by every window
-├── lib/utils.js             # Pure functions with no Electron dependency (unit-testable)
+├── lib/
+│   ├── constants.js           # Platform URLs, sidebar widths, default UI state
+│   ├── state.js                # Shared mutable state singleton (window refs, appState, console buffer...)
+│   ├── dataDir.js               # DATA_DIR read/write/relocate, per-file paths
+│   ├── broadcast.js              # broadcastToAllWindows (cross-window sync)
+│   ├── console.js                 # Console capture: overrides global console.*
+│   ├── logs.js                     # Log console: error + audit logs (sql.js/SQLite)
+│   ├── stores.js                    # Data layer: loadX()/saveX() for each data file
+│   ├── windows.js                    # Window and per-account WebContentsView management
+│   ├── conversationCapture.js         # Conversation capture/export, selector picker tool
+│   ├── utils.js                        # Pure functions with no Electron dependency
+│   ├── sqlite.js                        # Thin wrapper around sql.js: open/save/query
+│   └── ipc/                              # IPC handler registration, split by domain (8 files + index.js)
 ├── test/utils.test.js        # Unit tests
 ├── package.json              # npm scripts + electron-builder config
 ├── .eslintrc.json / .prettierrc.json
@@ -270,7 +286,10 @@ actual login cookies/localStorage.
 | [ROADMAP.md](./ROADMAP.md) | Not-yet-done directions worth considering |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md) | A full spec prompt, best suited for agents with filesystem tools (Claude Code / Cursor) to reproduce the whole project |
 | [BUILD_PLAN.md](./BUILD_PLAN.md) | An 8-phase build prompt sequence, best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
-| [CHECKLIST.md](./CHECKLIST.md) | A master checklist spanning every phase, meant to pair with `BUILD_PLAN.md` |
+| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md) | Prompt template for adding a new feature once all existing phases are done |
+| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature |
+| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md) | Prompt template for starting a new chat with only the docs attached, no source code |
+| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md) | Prompt template for starting a new chat with the spec plus only a specific subset of files, not the whole codebase |
 
 ## Contributing
 
