@@ -115,10 +115,18 @@
   const selectorTurnInput = document.getElementById('selector-turn');
   const selectorUserHintInput = document.getElementById('selector-user-hint');
 
+  const selectorTestResultEl = document.getElementById('selector-test-result');
+
   let allSelectors = {};
   let currentPlatform = 'claude';
   let pendingUserSample = null;
   let pendingAiSample = null;
+  let testCaptureInFlight = false;
+
+  function hideTestResult() {
+    selectorTestResultEl.style.display = 'none';
+    selectorTestResultEl.innerHTML = '';
+  }
 
   function loadSelectorIntoForm(platform) {
     const sel = allSelectors[platform] || { turn: '', userHint: '' };
@@ -134,6 +142,7 @@
       pendingUserSample = null;
       pendingAiSample = null;
       loadSelectorIntoForm(currentPlatform);
+      hideTestResult();
     });
   });
 
@@ -153,6 +162,100 @@
   document.getElementById('btn-reset-selector').addEventListener('click', async () => {
     allSelectors = await window.workspaceAPI.resetSelector(currentPlatform);
     loadSelectorIntoForm(currentPlatform);
+    hideTestResult();
+  });
+
+  // --- 選擇器設定：測試擷取預覽 ---
+  // 用表單裡目前填的內容（不管有沒有按過「儲存」）直接測試擷取，方便
+  // 邊調整 selector 邊確認結果，不用真的匯出一次才知道有沒有抓對。
+  function renderTestResult(result) {
+    selectorTestResultEl.innerHTML = '';
+    selectorTestResultEl.style.display = 'block';
+
+    if (!result || result.error === 'NO_ACCOUNT_FOR_PLATFORM') {
+      const err = document.createElement('div');
+      err.className = 'selector-test-error';
+      err.textContent = window.i18n.t('settings.selectors.testNoAccount');
+      selectorTestResultEl.appendChild(err);
+      return;
+    }
+
+    if (!result.ok) {
+      const debug = result.debug || {};
+      const err = document.createElement('div');
+      err.className = 'selector-test-error';
+      err.textContent = window.i18n.t('settings.selectors.testFailed', {
+        error: result.error || 'UNKNOWN',
+      });
+      selectorTestResultEl.appendChild(err);
+
+      const hint = document.createElement('div');
+      hint.className = 'settings-hint';
+      hint.textContent = window.i18n.t('settings.selectors.testDebug', {
+        matched: debug.matchedNodeCount != null ? debug.matchedNodeCount : '?',
+        nonEmpty: debug.nonEmptyMessageCount != null ? debug.nonEmptyMessageCount : '?',
+      });
+      selectorTestResultEl.appendChild(hint);
+      return;
+    }
+
+    const summary = document.createElement('div');
+    summary.className = 'selector-test-summary';
+    summary.textContent = window.i18n.t('settings.selectors.testSuccess', {
+      count: result.messages.length,
+    });
+    selectorTestResultEl.appendChild(summary);
+
+    const previewCount = 5;
+    result.messages.slice(0, previewCount).forEach((m) => {
+      const row = document.createElement('div');
+      row.className = 'selector-test-msg';
+
+      const roleSpan = document.createElement('span');
+      roleSpan.className = 'selector-test-msg-role';
+      roleSpan.textContent = m.role === 'user' ? '🧑' : '🤖';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'selector-test-msg-text';
+      textSpan.textContent = m.text.length > 80 ? `${m.text.slice(0, 80)}…` : m.text;
+
+      row.appendChild(roleSpan);
+      row.appendChild(textSpan);
+      selectorTestResultEl.appendChild(row);
+    });
+
+    if (result.messages.length > previewCount) {
+      const more = document.createElement('div');
+      more.className = 'settings-hint';
+      more.textContent = window.i18n.t('settings.selectors.testMore', {
+        count: result.messages.length - previewCount,
+      });
+      selectorTestResultEl.appendChild(more);
+    }
+  }
+
+  document.getElementById('btn-test-capture').addEventListener('click', async () => {
+    if (testCaptureInFlight) return;
+    testCaptureInFlight = true;
+
+    selectorTestResultEl.innerHTML = '';
+    selectorTestResultEl.style.display = 'block';
+    const loading = document.createElement('div');
+    loading.className = 'settings-hint';
+    loading.textContent = window.i18n.t('settings.selectors.testing');
+    selectorTestResultEl.appendChild(loading);
+
+    const selector = {
+      turn: selectorTurnInput.value.trim(),
+      userHint: selectorUserHintInput.value.trim(),
+    };
+
+    try {
+      const result = await window.workspaceAPI.testCaptureSelector(currentPlatform, selector);
+      renderTestResult(result);
+    } finally {
+      testCaptureInFlight = false;
+    }
   });
 
   async function tryDeriveAndFill() {
@@ -160,6 +263,7 @@
     const derived = await window.workspaceAPI.deriveSelector(pendingUserSample, pendingAiSample);
     selectorTurnInput.value = derived.turn || '';
     selectorUserHintInput.value = derived.userHint || '';
+    hideTestResult();
     if (!derived.userHint) {
       alert(window.i18n.t('settings.selectors.derivedNoHint'));
     }
