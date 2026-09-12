@@ -166,10 +166,12 @@ npm run format        # Prettier 自動排版（會直接覆寫檔案，跑之�
 npm run format:check  # 只檢查格式，不覆寫檔案
 ```
 
-`lib/utils.js` 放不依賴 Electron API 的純函式（字串處理、檔案系統輔助
-函式），跟 `main.js` 分開才能直接用 `node --test` 測，不需要啟動
-Electron。這是把 `main.js`（目前已經破千行）拆成模組的第一步，完整
-模組化方向見 [ROADMAP.md](./ROADMAP.md)。
+`main.js` 已經模組化完成：現在只剩 App 生命週期本身（約 70 行），資料層、
+視窗管理、對話擷取/匯出、IPC handlers 都拆進 `lib/**`（依業務領域分成
+`lib/ipc/` 底下 8 個檔案）。`lib/utils.js` 放不依賴 Electron API 的純函式
+（字串處理、檔案系統輔助函式），跟其他模組分開才能直接用 `node --test`
+測，不需要啟動 Electron。各模組職責分工、跨模組共用狀態的慣例見
+`PROJECT_SPEC.md` 第 15 節「檔案結構」。
 
 `lib/sqlite.js` 包了 `sql.js`（純 WebAssembly 版 SQLite，沒有原生模組、
 不需要 `electron-rebuild`）的最小存取介面，目前給「日誌主控台」的
@@ -201,9 +203,22 @@ npm run build:dir     # 免安裝資料夾，快速測試用
 
 ```
 Platter/
-├── main.js                # 主程序：視窗、Session、IPC、設定持久化
+├── main.js                # App 生命週期入口（單一實例鎖、視窗全關/啟用），其餘邏輯拆進 lib/**
 ├── preload.js              # contextBridge，所有視窗共用
 ├── package.json              # npm scripts + electron-builder 設定
+├── lib/
+│   ├── constants.js           # 平台網址、側邊欄寬度、UI 狀態預設值
+│   ├── state.js                # 共用可變狀態單例（視窗參照、appState、console 緩衝區……）
+│   ├── dataDir.js               # DATA_DIR 讀寫/搬移、各資料檔路徑
+│   ├── broadcast.js              # broadcastToAllWindows（跨視窗即時同步）
+│   ├── console.js                 # 主控台：攔截全域 console.*
+│   ├── logs.js                     # 日誌主控台：錯誤日誌 + 稽核日誌（sql.js/SQLite）
+│   ├── stores.js                    # 資料層：各資料檔的 loadX()/saveX()
+│   ├── windows.js                    # 視窗與帳號 WebContentsView 管理
+│   ├── conversationCapture.js         # 對話擷取/匯出、選取器工具
+│   ├── utils.js                        # 不依賴 Electron API 的純函式
+│   ├── sqlite.js                        # sql.js 的最小包裝：開檔/存檔/查詢
+│   └── ipc/                              # 依業務領域分組的 IPC handler 註冊檔（8 個 + index.js）
 ├── extractors/
 │   ├── domCapture.js         # 注入頁面的對話擷取腳本
 │   ├── selectorPicker.js      # 注入頁面的滑鼠選取工具
@@ -248,6 +263,7 @@ extensions.json         # 已安裝的擴充功能清單
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md) | 既有階段都做完之後，要加新功能時用的提示詞模板 |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板 |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md) | 開新對話只附文件、不附原始碼時用的提示詞模板 |
+| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md) | 開新對話只附規格文件＋指定的部分檔案（不是整包原始碼）時用的提示詞模板 |
 
 ## 貢獻
 
