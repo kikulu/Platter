@@ -44,7 +44,9 @@
   // 錯誤日誌
   // ---------------------------------------------------------------------
   function rebuildErrorScopeFilter() {
-    const scopes = Array.from(new Set(allErrors.map((e) => e.scope).filter(Boolean))).sort();
+    const scopes = Array.from(
+      new Set(allErrors.map((e) => e.scope).filter(Boolean))
+    ).sort();
     const currentValue = errorScopeFilterEl.value;
     errorScopeFilterEl.innerHTML = `<option value="">${window.i18n.t('logs.filterAllScopes')}</option>`;
     scopes.forEach((scope) => {
@@ -65,7 +67,9 @@
       .slice()
       .reverse(); // 最新的排最上面
 
-    errorCountEl.textContent = window.i18n.t('logs.countLabel', { count: filtered.length });
+    errorCountEl.textContent = window.i18n.t('logs.countLabel', {
+      count: filtered.length,
+    });
     errorListEl.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -135,7 +139,9 @@
   // 稽核日誌
   // ---------------------------------------------------------------------
   function rebuildAuditCategoryFilter() {
-    const categories = Array.from(new Set(allAudits.map((a) => a.category).filter(Boolean))).sort();
+    const categories = Array.from(
+      new Set(allAudits.map((a) => a.category).filter(Boolean))
+    ).sort();
     const currentValue = auditCategoryFilterEl.value;
     auditCategoryFilterEl.innerHTML = `<option value="">${window.i18n.t('logs.filterAllCategories')}</option>`;
     categories.forEach((category) => {
@@ -156,7 +162,9 @@
       .slice()
       .reverse();
 
-    auditCountEl.textContent = window.i18n.t('logs.countLabel', { count: filtered.length });
+    auditCountEl.textContent = window.i18n.t('logs.countLabel', {
+      count: filtered.length,
+    });
     auditListEl.innerHTML = '';
 
     if (filtered.length === 0) {
@@ -237,7 +245,9 @@
   }
 
   function renderConsole() {
-    consoleCountEl.textContent = window.i18n.t('logs.countLabel', { count: consoleEntries.length });
+    consoleCountEl.textContent = window.i18n.t('logs.countLabel', {
+      count: consoleEntries.length,
+    });
     consoleOutputEl.innerHTML = '';
     if (consoleEntries.length === 0) {
       const empty = document.createElement('div');
@@ -267,7 +277,9 @@
     // 切過去分頁時 switchTab 不會重新抓資料，所以這裡改成不論在哪個分頁都
     // 直接增量渲染一行，成本很低（比整份重畫便宜），也不會漏看即時訊息。
     consoleOutputEl.appendChild(renderConsoleEntry(entry));
-    consoleCountEl.textContent = window.i18n.t('logs.countLabel', { count: consoleEntries.length });
+    consoleCountEl.textContent = window.i18n.t('logs.countLabel', {
+      count: consoleEntries.length,
+    });
     if (consoleAutoscrollEl.checked) {
       consoleOutputEl.scrollTop = consoleOutputEl.scrollHeight;
     }

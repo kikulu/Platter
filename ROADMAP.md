@@ -34,9 +34,13 @@
   `main.js` 拆成 `lib/**` 底下 17 個模組（含 `lib/ipc/` 依業務領域分組
   的 8 個 IPC handler 註冊檔），`main.js` 本身只剩約 70 行的 App 生命
   週期，見 `PROJECT_SPEC.md` 第 15 節「檔案結構」。
-- `npm run format` 目前只有腳本本身可以正確執行，`main.js`/`preload.js`/
+- ~~`npm run format` 目前只有腳本本身可以正確執行，`main.js`/`preload.js`/
   `renderer/**` 都還沒有整批套用過 Prettier 排版（會是一次性的大量非
-  功能性 diff，刻意獨立處理，不跟其他修改混在一起）。
+  功能性 diff，刻意獨立處理，不跟其他修改混在一起）。~~ → 已在 `1.20.0`
+  完成：整個專案跑過一次 `npm run format`（`prettier --write .`），
+  `npm run format:check` 現在會回報「All matched files use Prettier
+  code style!」。跑完後重新驗證過 `npm run lint`（0 錯誤）跟 `npm test`
+  （17 個測試全過），確認純排版變動沒有改壞任何行為。
 - **評估是否把其他模組的資料也搬進 SQLite**：目前只有日誌主控台
   （`logs.sqlite`）用 sql.js，帳號/知識庫/專案/文件庫/對話庫仍然是
   JSON 檔。如果之後這些模組的資料量或查詢需求明顯變複雜（例如想要

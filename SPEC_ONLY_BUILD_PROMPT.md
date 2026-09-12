@@ -29,11 +29,11 @@
 
 ## 該附上哪些文件（依情境挑選）
 
-| 情境 | 一定要附 | 建議附 | 不用附 |
-|---|---|---|---|
-| 討論新功能規劃、還沒要真的寫程式 | `PROJECT_SPEC.md` | `BUILD_PLAN.md`、`ROADMAP.md` | `CHANGELOG.md` |
-| 新功能，要 AI 生出具體程式碼片段 | `PROJECT_SPEC.md`、`BUILD_PLAN.md` | `CHANGELOG.md`（近期幾筆）、`ROADMAP.md` | — |
-| 修正某個功能的問題 | `PROJECT_SPEC.md`、`CHANGELOG.md`（近期幾筆） | `BUILD_PLAN.md` 對應階段 | — |
+| 情境                             | 一定要附                                      | 建議附                                   | 不用附         |
+| -------------------------------- | --------------------------------------------- | ---------------------------------------- | -------------- |
+| 討論新功能規劃、還沒要真的寫程式 | `PROJECT_SPEC.md`                             | `BUILD_PLAN.md`、`ROADMAP.md`            | `CHANGELOG.md` |
+| 新功能，要 AI 生出具體程式碼片段 | `PROJECT_SPEC.md`、`BUILD_PLAN.md`            | `CHANGELOG.md`（近期幾筆）、`ROADMAP.md` | —              |
+| 修正某個功能的問題               | `PROJECT_SPEC.md`、`CHANGELOG.md`（近期幾筆） | `BUILD_PLAN.md` 對應階段                 | —              |
 
 不用附 `CHECKLIST.md`——它已經標記棄用，內容跟現況不一致，附了只會誤導。
 `README.en.md`/`README.ja.md` 通常也不需要，除非你要討論的剛好是多語系

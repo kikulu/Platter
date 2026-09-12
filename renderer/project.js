@@ -38,7 +38,16 @@
   // 跨專案總覽用的獨立狀態（跟單一專案編輯畫面互不影響）
   let overviewCalMonth = startOfMonth(new Date());
   let overviewSelectedDate = null;
-  const PROJECT_COLORS = ['#4f8cff', '#2ecc71', '#f5a623', '#e5484d', '#9b59b6', '#1abc9c', '#e67e22', '#3498db'];
+  const PROJECT_COLORS = [
+    '#4f8cff',
+    '#2ecc71',
+    '#f5a623',
+    '#e5484d',
+    '#9b59b6',
+    '#1abc9c',
+    '#e67e22',
+    '#3498db',
+  ];
 
   function genLocalId(prefix) {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
@@ -178,7 +187,11 @@
         renderList();
         // 任務狀態即時持久化，不用等按「儲存專案」（前提是專案已經存在）
         if (currentProjectId) {
-          allProjects = await window.workspaceAPI.setTaskStatus(currentProjectId, task.id, task.status);
+          allProjects = await window.workspaceAPI.setTaskStatus(
+            currentProjectId,
+            task.id,
+            task.status
+          );
         }
       });
 
@@ -378,11 +391,19 @@
   }
 
   document.getElementById('btn-cal-prev').addEventListener('click', () => {
-    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() - 1, 1);
+    calendarMonth = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth() - 1,
+      1
+    );
     renderCalendar();
   });
   document.getElementById('btn-cal-next').addEventListener('click', () => {
-    calendarMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 1);
+    calendarMonth = new Date(
+      calendarMonth.getFullYear(),
+      calendarMonth.getMonth() + 1,
+      1
+    );
     renderCalendar();
   });
   document.getElementById('btn-cal-today').addEventListener('click', () => {
@@ -401,7 +422,12 @@
       const start = parseLocalDate(t.startDate || t.dueDate);
       const end = parseLocalDate(t.dueDate || t.startDate);
       const [s, e] = start <= end ? [start, end] : [end, start];
-      bars.push({ title: t.title || window.i18n.t('project.unnamed'), start: s, end: e, status: t.status });
+      bars.push({
+        title: t.title || window.i18n.t('project.unnamed'),
+        start: s,
+        end: e,
+        status: t.status,
+      });
     });
 
     ganttContainerEl.innerHTML = '';
@@ -423,7 +449,9 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayInRange = today >= minDate && today <= maxDate;
-    const todayPct = todayInRange ? ((today - minDate) / 86400000 / totalDays) * 100 : null;
+    const todayPct = todayInRange
+      ? ((today - minDate) / 86400000 / totalDays) * 100
+      : null;
 
     // 表頭：畫出每個月份的分界標籤
     const header = document.createElement('div');
@@ -439,7 +467,9 @@
         const marker = document.createElement('div');
         marker.className = 'gantt-month-marker';
         marker.style.left = `${(offsetDays / totalDays) * 100}%`;
-        marker.textContent = window.i18n.t('project.ganttMonthLabel', { month: cursor.getMonth() + 1 });
+        marker.textContent = window.i18n.t('project.ganttMonthLabel', {
+          month: cursor.getMonth() + 1,
+        });
         headerTrack.appendChild(marker);
       }
       cursor = addDays(cursor, 1);
@@ -662,7 +692,9 @@
   }
 
   function setListToolbarActive(mode) {
-    document.getElementById('btn-overview').classList.toggle('active', mode === 'overview');
+    document
+      .getElementById('btn-overview')
+      .classList.toggle('active', mode === 'overview');
   }
 
   function renderOverviewLegend() {
@@ -701,7 +733,9 @@
     if (tab === 'issues') renderOverviewIssues();
   }
   OVERVIEW_TAB_IDS.forEach((id) => {
-    document.getElementById(`tab-ov-${id}`).addEventListener('click', () => switchOverviewTab(id));
+    document
+      .getElementById(`tab-ov-${id}`)
+      .addEventListener('click', () => switchOverviewTab(id));
   });
 
   function jumpToProject(projectId, tab) {
@@ -713,12 +747,20 @@
     allProjects.forEach((p) => {
       (p.tasks || []).forEach((t) => {
         if (t.dueDate) {
-          (map[t.dueDate] = map[t.dueDate] || []).push({ kind: 'task', ref: t, project: p });
+          (map[t.dueDate] = map[t.dueDate] || []).push({
+            kind: 'task',
+            ref: t,
+            project: p,
+          });
         }
       });
       (p.issues || []).forEach((i) => {
         if (i.dueDate) {
-          (map[i.dueDate] = map[i.dueDate] || []).push({ kind: 'issue', ref: i, project: p });
+          (map[i.dueDate] = map[i.dueDate] || []).push({
+            kind: 'issue',
+            ref: i,
+            project: p,
+          });
         }
       });
     });
@@ -800,7 +842,10 @@
     }
 
     if (overviewSelectedDate) {
-      renderOverviewDayDetail(overviewSelectedDate, itemsByDate[overviewSelectedDate] || []);
+      renderOverviewDayDetail(
+        overviewSelectedDate,
+        itemsByDate[overviewSelectedDate] || []
+      );
     } else {
       document.getElementById('ov-cal-day-detail').innerHTML = '';
     }
@@ -842,11 +887,19 @@
   }
 
   document.getElementById('btn-ov-cal-prev').addEventListener('click', () => {
-    overviewCalMonth = new Date(overviewCalMonth.getFullYear(), overviewCalMonth.getMonth() - 1, 1);
+    overviewCalMonth = new Date(
+      overviewCalMonth.getFullYear(),
+      overviewCalMonth.getMonth() - 1,
+      1
+    );
     renderOverviewCalendar();
   });
   document.getElementById('btn-ov-cal-next').addEventListener('click', () => {
-    overviewCalMonth = new Date(overviewCalMonth.getFullYear(), overviewCalMonth.getMonth() + 1, 1);
+    overviewCalMonth = new Date(
+      overviewCalMonth.getFullYear(),
+      overviewCalMonth.getMonth() + 1,
+      1
+    );
     renderOverviewCalendar();
   });
   document.getElementById('btn-ov-cal-today').addEventListener('click', () => {
@@ -895,7 +948,9 @@
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayInRange = today >= minDate && today <= maxDate;
-    const todayPct = todayInRange ? ((today - minDate) / 86400000 / totalDays) * 100 : null;
+    const todayPct = todayInRange
+      ? ((today - minDate) / 86400000 / totalDays) * 100
+      : null;
 
     const header = document.createElement('div');
     header.className = 'gantt-header';
@@ -910,7 +965,9 @@
         const marker = document.createElement('div');
         marker.className = 'gantt-month-marker';
         marker.style.left = `${(offsetDays / totalDays) * 100}%`;
-        marker.textContent = window.i18n.t('project.ganttMonthLabel', { month: cursor.getMonth() + 1 });
+        marker.textContent = window.i18n.t('project.ganttMonthLabel', {
+          month: cursor.getMonth() + 1,
+        });
         headerTrack.appendChild(marker);
       }
       cursor = addDays(cursor, 1);
@@ -985,10 +1042,14 @@
       typeBadge.textContent = window.i18n.t(`project.issueType${capitalize(issue.type)}`);
       const priorityBadge = document.createElement('span');
       priorityBadge.className = `issue-priority-badge issue-priority-${issue.priority}`;
-      priorityBadge.textContent = window.i18n.t(`project.issuePriority${capitalize(issue.priority)}`);
+      priorityBadge.textContent = window.i18n.t(
+        `project.issuePriority${capitalize(issue.priority)}`
+      );
       const statusBadge = document.createElement('span');
       statusBadge.className = 'status-badge';
-      statusBadge.textContent = window.i18n.t(`project.issueStatus${capitalize(issue.status)}`);
+      statusBadge.textContent = window.i18n.t(
+        `project.issueStatus${capitalize(issue.status)}`
+      );
       const due = document.createElement('span');
       due.className = 'ov-issue-due';
       due.textContent = issue.dueDate || '';
@@ -1011,7 +1072,9 @@
       listEl2.appendChild(empty);
     }
   }
-  document.getElementById('ov-issue-filter-status').addEventListener('change', renderOverviewIssues);
+  document
+    .getElementById('ov-issue-filter-status')
+    .addEventListener('change', renderOverviewIssues);
 
   function showOverview() {
     currentProjectId = null;
@@ -1042,7 +1105,10 @@
       endInput.value = project.endDate || '';
       descInput.value = project.description || '';
       editingTasks = (project.tasks || []).map((t) => ({ ...t }));
-      editingIssues = (project.issues || []).map((i) => ({ ...i, tags: [...(i.tags || [])] }));
+      editingIssues = (project.issues || []).map((i) => ({
+        ...i,
+        tags: [...(i.tags || [])],
+      }));
     } else {
       nameInput.value = '';
       statusSelect.value = 'planning';

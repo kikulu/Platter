@@ -7,6 +7,7 @@
 > （#4f8cff）點綴，扁平化設計風格，無文字，適合縮小到 16x16 仍可辨識。
 
 需要輸出：
+
 - `icon.ico`（Windows，內含多尺寸：16/32/48/256）
 - `icon.icns`（macOS）
 - `icon.png`（Linux，建議 512x512）

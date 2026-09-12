@@ -108,7 +108,9 @@
       roleColumnsEl.appendChild(renderColumn(role.name, role.color, members, roles));
     });
 
-    const unassigned = accounts.filter((a) => !a.roleId || !roles.some((r) => r.id === a.roleId));
+    const unassigned = accounts.filter(
+      (a) => !a.roleId || !roles.some((r) => r.id === a.roleId)
+    );
     roleColumnsEl.appendChild(
       renderColumn(window.i18n.t('team.unassigned'), null, unassigned, roles)
     );
