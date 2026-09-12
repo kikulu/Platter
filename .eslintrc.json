@@ -1,0 +1,46 @@
+{
+  "root": true,
+  "env": {
+    "es2021": true,
+    "node": true
+  },
+  "extends": "eslint:recommended",
+  "parserOptions": {
+    "ecmaVersion": 2021,
+    "sourceType": "script"
+  },
+  "rules": {
+    "no-unused-vars": ["warn", { "args": "none" }],
+    "no-empty": ["warn", { "allowEmptyCatch": true }]
+  },
+  "overrides": [
+    {
+      "files": ["renderer/**/*.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "globals": {
+        "window": "readonly",
+        "document": "readonly"
+      }
+    },
+    {
+      "files": ["extractors/domCapture.js", "extractors/selectorPicker.js"],
+      "env": {
+        "browser": true,
+        "node": false
+      },
+      "rules": {
+        "no-undef": "off"
+      }
+    },
+    {
+      "files": ["test/**/*.js"],
+      "env": {
+        "node": true
+      }
+    }
+  ],
+  "ignorePatterns": ["node_modules/", "dist/"]
+}

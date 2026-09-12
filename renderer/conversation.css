@@ -1,0 +1,135 @@
+body { display: flex; height: 100vh; overflow: hidden; }
+
+#conv-list-pane {
+  width: 320px;
+  min-width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+#conv-list-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#conv-list-toolbar .row button { flex: 1; }
+
+#conv-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.conv-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.conv-item:hover { background: var(--bg-hover); }
+.conv-item.active { background: var(--bg-active); }
+.conv-item .conv-item-title {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.conv-item .conv-item-sub {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.conv-item .conv-item-linked {
+  flex-shrink: 0;
+}
+
+#conv-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+#conv-editor .field { margin-bottom: 14px; }
+
+#conv-content {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+#conv-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+#conv-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: auto;
+  justify-content: flex-end;
+}
+
+#conv-source-info {
+  margin-bottom: 8px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* --- 關聯文件（對話 ↔ 文件庫檔案 多對多） --- */
+#conv-linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.linked-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+.linked-doc-icon { flex-shrink: 0; font-size: 14px; }
+.linked-doc-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.linked-doc-name.missing { color: var(--danger); }
+.linked-doc-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.linked-doc-actions button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+}
+.linked-doc-actions button:hover { color: var(--text-primary); }
+.linked-doc-actions button.danger-text:hover { color: var(--danger); }
+.linked-doc-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+#conv-link-select { flex: 1; }
