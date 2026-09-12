@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.17.0]
+
+### 重構：main.js 模組化
+- `main.js` 原本是單一檔案、逼近 2200 行，拆成 `lib/**` 底下 17 個依
+  職責分組的模組：`constants`（靜態設定值）、`state`（共用可變狀態單例）、
+  `dataDir`（DATA_DIR 讀寫）、`broadcast`（跨視窗同步）、`console`（主控台
+  攔截）、`logs`（錯誤/稽核日誌）、`stores`（各資料檔 loadX/saveX）、
+  `windows`（視窗與帳號 View 管理）、`conversationCapture`（對話擷取/匯出）、
+  以及 `lib/ipc/` 底下依業務領域拆開的 8 個 IPC handler 註冊檔。
+  `main.js` 現在只剩 App 生命週期本身（單一實例鎖、`whenReady`、視窗全關/
+  啟用），約 70 行。
+- **這是純內部重構，沒有新增或改變任何使用者可見的行為**：所有 79 個
+  IPC 頻道名稱、參數、回傳值都原樣保留，只是搬到不同檔案；跨模組共用的
+  可變狀態集中放進 `lib/state.js` 這個單例物件，避免拆檔案後各模組各自
+  持有一份過期的參照。
+- 驗證方式：對每個新檔案跑 `node --check` 語法檢查；在 mock 過
+  `electron` 模組的 Node 環境下實際 `require` 整條模組鏈與 `main.js`，
+  確認沒有循環依賴、匯出缺漏、`__dirname` 相對路徑算錯的問題；並用
+  腳本比對重構前後 `ipcMain.handle`/`ipcMain.on` 註冊的頻道名稱清單，
+  確認 79 筆完全一致。受限於這是純文字環境、沒有實際視窗可以操作，
+  仍建議實機跑一輪 `npm start`，把主視窗、8 個子視窗、帳號新增/切換/
+  匯出對話都操作一次再放心發布。
+- 詳見 `PROJECT_SPEC.md` 第 15 節「檔案結構」新增的 `lib/**` 模組共用慣例
+  說明（狀態集中在 `state.js`、`broadcast.js` 刻意不依賴其他模組以避免
+  循環依賴、IPC handler 只做註冊不塞商業邏輯）。
+
 ## [1.16.0]
 
 ### 新增：帳號清單拖曳排序
