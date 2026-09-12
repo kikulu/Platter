@@ -1,5 +1,24 @@
 # Changelog
 
+## [1.20.0]
+
+### 新增：GitHub Actions CI
+- 新增 `.github/workflows/ci.yml`：`push`／`pull_request` 到 `main`
+  分支時，在 Node `18.x`／`20.x` 兩個版本上各自跑一次
+  `npm install`（設定 `ELECTRON_SKIP_BINARY_DOWNLOAD=1` 跳過 Electron
+  平台安裝檔下載，因為 CI 只需要跑 lint/測試，不需要真的啟動 Electron
+  App）→ `npm run lint` → `npm test`。
+- **不含**實際啟動 Electron App 互動的測試：GitHub Actions 的 runner
+  沒有顯示器，視窗操作永遠要靠 `npm start` 手動驗證（見
+  `ROADMAP.md`「Stage 9～14 的手動驗證債務」）。
+- 驗證方式：在本機實際跑過 `npm install`（同樣加
+  `ELECTRON_SKIP_BINARY_DOWNLOAD=1`）→ `npm run lint`（0 錯誤，
+  `extractors/domCapture.js` 原本就有 1 筆跟這次改動無關的既有警告）→
+  `npm test`（17 個測試全過），確認 workflow 裡的指令組合真的會成功，
+  不是只有 YAML 語法正確而已。另外用 Python `yaml.safe_load()` 驗證過
+  `ci.yml` 本身的 YAML 語法。
+- 詳見 `ROADMAP.md`。
+
 ## [1.19.0]
 
 ### 新功能：知識庫全文搜尋
