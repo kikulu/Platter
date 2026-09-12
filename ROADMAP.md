@@ -27,9 +27,12 @@
   `1.7.0` 做成真的可以跑的腳本（見 `lib/utils.js`、`test/utils.test.js`、
   `.eslintrc.json`），`1.13.0` 又補了 `test/sqlite.test.js`，還缺的只是
   接上 CI workflow 檔案。
-- 把 `main.js`（目前已破千行）繼續模組化，`lib/utils.js`、
+- ~~把 `main.js`（目前已破千行）繼續模組化，`lib/utils.js`、
   `lib/sqlite.js` 只是第一步，之後可以考慮把資料層（`loadX`/`saveX`
-  系列）、IPC handler 註冊也拆成獨立模組。
+  系列）、IPC handler 註冊也拆成獨立模組。~~ → 已在 `1.17.0` 完成，
+  `main.js` 拆成 `lib/**` 底下 17 個模組（含 `lib/ipc/` 依業務領域分組
+  的 8 個 IPC handler 註冊檔），`main.js` 本身只剩約 70 行的 App 生命
+  週期，見 `PROJECT_SPEC.md` 第 15 節「檔案結構」。
 - `npm run format` 目前只有腳本本身可以正確執行，`main.js`/`preload.js`/
   `renderer/**` 都還沒有整批套用過 Prettier 排版（會是一次性的大量非
   功能性 diff，刻意獨立處理，不跟其他修改混在一起）。
