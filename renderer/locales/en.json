@@ -38,6 +38,8 @@
   "knowledge.tabItems": "Prompts",
   "knowledge.tabGroups": "Bundles",
   "knowledge.filterAll": "All tags",
+  "knowledge.searchPlaceholder": "Search title / content / tags…",
+  "knowledge.searchNoResult": "No items match your search",
   "knowledge.newItem": "New Item",
   "knowledge.name": "Title",
   "knowledge.tags": "Tags (comma separated)",
