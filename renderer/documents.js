@@ -7,11 +7,23 @@
   };
 
   const ICONS = {
-    md: '📝', markdown: '📝',
+    md: '📝',
+    markdown: '📝',
     json: '🗂',
     pdf: '📕',
-    png: '🖼', jpg: '🖼', jpeg: '🖼', gif: '🖼', webp: '🖼', svg: '🖼',
-    js: '💻', ts: '💻', py: '💻', html: '💻', css: '💻', jsx: '💻', tsx: '💻',
+    png: '🖼',
+    jpg: '🖼',
+    jpeg: '🖼',
+    gif: '🖼',
+    webp: '🖼',
+    svg: '🖼',
+    js: '💻',
+    ts: '💻',
+    py: '💻',
+    html: '💻',
+    css: '💻',
+    jsx: '💻',
+    tsx: '💻',
     txt: '📄',
   };
 
@@ -55,11 +67,16 @@
     if (!doc.sourceAccountId) return window.i18n.t('documents.manualImport');
     const acc = allAccounts.find((a) => a.id === doc.sourceAccountId);
     const platformName = PLATFORM_LABELS[doc.sourcePlatform] || doc.sourcePlatform || '';
-    return acc ? `${platformName} · ${acc.name}` : platformName || window.i18n.t('documents.manualImport');
+    return acc
+      ? `${platformName} · ${acc.name}`
+      : platformName || window.i18n.t('documents.manualImport');
   }
 
   function parseTags(str) {
-    return str.split(',').map((s) => s.trim()).filter(Boolean);
+    return str
+      .split(',')
+      .map((s) => s.trim())
+      .filter(Boolean);
   }
 
   function rebuildTagOptions() {
@@ -67,19 +84,23 @@
     allDocs.forEach((d) => (d.tags || []).forEach((t) => tagSet.add(t)));
     const currentValue = tagFilterEl.value;
     tagFilterEl.innerHTML = `<option value="">${window.i18n.t('knowledge.filterAll')}</option>`;
-    Array.from(tagSet).sort().forEach((tag) => {
-      const opt = document.createElement('option');
-      opt.value = tag;
-      opt.textContent = tag;
-      tagFilterEl.appendChild(opt);
-    });
+    Array.from(tagSet)
+      .sort()
+      .forEach((tag) => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.textContent = tag;
+        tagFilterEl.appendChild(opt);
+      });
     tagFilterEl.value = currentValue;
   }
   tagFilterEl.addEventListener('change', renderList);
 
   function renderList() {
     const filterTag = tagFilterEl.value;
-    const filtered = filterTag ? allDocs.filter((d) => (d.tags || []).includes(filterTag)) : allDocs;
+    const filtered = filterTag
+      ? allDocs.filter((d) => (d.tags || []).includes(filterTag))
+      : allDocs;
 
     listEl.innerHTML = '';
     filtered
@@ -100,7 +121,9 @@
         name.textContent = doc.name;
         const sub = document.createElement('div');
         sub.className = 'doc-item-sub';
-        sub.textContent = [sourceLabel(doc), formatSize(doc.size)].filter(Boolean).join(' · ');
+        sub.textContent = [sourceLabel(doc), formatSize(doc.size)]
+          .filter(Boolean)
+          .join(' · ');
         meta.appendChild(name);
         meta.appendChild(sub);
         if (doc.missing) {
@@ -135,7 +158,9 @@
     infoOriginal.textContent = doc.originalName || doc.name || '';
     infoSource.textContent = sourceLabel(doc);
     infoSize.textContent = formatSize(doc.size);
-    infoCreated.textContent = doc.createdAt ? new Date(doc.createdAt).toLocaleString() : '';
+    infoCreated.textContent = doc.createdAt
+      ? new Date(doc.createdAt).toLocaleString()
+      : '';
     infoPath.textContent = doc.filePath || '';
     infoPath.title = doc.filePath || '';
 
@@ -165,7 +190,9 @@
   document.getElementById('btn-delete-doc').addEventListener('click', async () => {
     if (!currentDocId) return;
     const doc = allDocs.find((d) => d.id === currentDocId);
-    const ok = window.confirm(window.i18n.t('documents.deleteConfirm', { name: doc ? doc.name : '' }));
+    const ok = window.confirm(
+      window.i18n.t('documents.deleteConfirm', { name: doc ? doc.name : '' })
+    );
     if (!ok) return;
 
     let alsoDeleteFile = false;

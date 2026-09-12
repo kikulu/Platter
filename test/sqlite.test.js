@@ -53,9 +53,10 @@ test('openDatabaseFile：檔案不存在時給一個可以直接建表寫入的�
   try {
     const dbPath = path.join(dir, 'logs.sqlite');
     const db = await createSchema(dbPath);
-    db.run('INSERT INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)', [
-      'e1', '2025-01-01T00:00:00.000Z', 'test', 'hello', null,
-    ]);
+    db.run(
+      'INSERT INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)',
+      ['e1', '2025-01-01T00:00:00.000Z', 'test', 'hello', null]
+    );
     const rows = queryAll(db, 'SELECT * FROM errors');
     assert.equal(rows.length, 1);
     assert.equal(rows[0].message, 'hello');
@@ -69,9 +70,10 @@ test('saveDatabaseFile + openDatabaseFile：存檔後重新開檔，資料還在
   try {
     const dbPath = path.join(dir, 'logs.sqlite');
     const db = await createSchema(dbPath);
-    db.run('INSERT INTO audits (id, timestamp, category, action, detail) VALUES (?, ?, ?, ?, ?)', [
-      'a1', '2025-01-01T00:00:00.000Z', 'account', 'add', '新增帳號測試',
-    ]);
+    db.run(
+      'INSERT INTO audits (id, timestamp, category, action, detail) VALUES (?, ?, ?, ?, ?)',
+      ['a1', '2025-01-01T00:00:00.000Z', 'account', 'add', '新增帳號測試']
+    );
     saveDatabaseFile(db, dbPath);
 
     const reopened = await openDatabaseFile(dbPath);
@@ -91,13 +93,16 @@ test('裁剪邏輯：超過上限筆數時，只留下時間最新的那幾筆',
     const MAX = 3;
 
     for (let i = 0; i < 10; i++) {
-      db.run('INSERT INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)', [
-        genId('log'),
-        new Date(2025, 0, 1, 0, 0, i).toISOString(),
-        'test',
-        `err-${i}`,
-        null,
-      ]);
+      db.run(
+        'INSERT INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)',
+        [
+          genId('log'),
+          new Date(2025, 0, 1, 0, 0, i).toISOString(),
+          'test',
+          `err-${i}`,
+          null,
+        ]
+      );
       db.run(
         `DELETE FROM errors WHERE id NOT IN (SELECT id FROM errors ORDER BY timestamp DESC LIMIT ${MAX})`
       );
@@ -105,7 +110,10 @@ test('裁剪邏輯：超過上限筆數時，只留下時間最新的那幾筆',
 
     const rows = queryAll(db, 'SELECT message FROM errors ORDER BY timestamp ASC');
     assert.equal(rows.length, MAX);
-    assert.deepEqual(rows.map((r) => r.message), ['err-7', 'err-8', 'err-9']);
+    assert.deepEqual(
+      rows.map((r) => r.message),
+      ['err-7', 'err-8', 'err-9']
+    );
   } finally {
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -116,7 +124,9 @@ test('清除邏輯：只清 errors 不會動到 audits', async () => {
   try {
     const dbPath = path.join(dir, 'logs.sqlite');
     const db = await createSchema(dbPath);
-    db.run("INSERT INTO errors (id, timestamp, scope, message) VALUES ('e1', '2025-01-01T00:00:00.000Z', 's', 'm')");
+    db.run(
+      "INSERT INTO errors (id, timestamp, scope, message) VALUES ('e1', '2025-01-01T00:00:00.000Z', 's', 'm')"
+    );
     db.run(
       "INSERT INTO audits (id, timestamp, category, action, detail) VALUES ('a1', '2025-01-01T00:00:00.000Z', 'c', 'x', 'd')"
     );
@@ -138,8 +148,24 @@ test('從舊版 logs.json 搬遷：資料庫是空的且舊檔存在時，把內
     fs.writeFileSync(
       legacyPath,
       JSON.stringify({
-        errors: [{ id: 'e_old', timestamp: '2024-01-01T00:00:00.000Z', scope: 'old', message: '舊錯誤', stack: null }],
-        audits: [{ id: 'a_old', timestamp: '2024-01-01T00:00:00.000Z', category: 'account', action: 'add', detail: '舊稽核' }],
+        errors: [
+          {
+            id: 'e_old',
+            timestamp: '2024-01-01T00:00:00.000Z',
+            scope: 'old',
+            message: '舊錯誤',
+            stack: null,
+          },
+        ],
+        audits: [
+          {
+            id: 'a_old',
+            timestamp: '2024-01-01T00:00:00.000Z',
+            category: 'account',
+            action: 'add',
+            detail: '舊稽核',
+          },
+        ],
       })
     );
 
@@ -154,14 +180,16 @@ test('從舊版 logs.json 搬遷：資料庫是空的且舊檔存在時，把內
 
     const legacy = JSON.parse(fs.readFileSync(legacyPath, 'utf-8'));
     legacy.errors.forEach((e) => {
-      db.run('INSERT OR IGNORE INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)', [
-        e.id, e.timestamp, e.scope, e.message, e.stack,
-      ]);
+      db.run(
+        'INSERT OR IGNORE INTO errors (id, timestamp, scope, message, stack) VALUES (?, ?, ?, ?, ?)',
+        [e.id, e.timestamp, e.scope, e.message, e.stack]
+      );
     });
     legacy.audits.forEach((a) => {
-      db.run('INSERT OR IGNORE INTO audits (id, timestamp, category, action, detail) VALUES (?, ?, ?, ?, ?)', [
-        a.id, a.timestamp, a.category, a.action, a.detail,
-      ]);
+      db.run(
+        'INSERT OR IGNORE INTO audits (id, timestamp, category, action, detail) VALUES (?, ?, ?, ?, ?)',
+        [a.id, a.timestamp, a.category, a.action, a.detail]
+      );
     });
     fs.renameSync(legacyPath, `${legacyPath}.migrated`);
 

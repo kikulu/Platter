@@ -78,7 +78,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   accountId**（因此同一個 partition 名稱）重建 `WebContentsView`，就能自動
   接回原本已登入的 session，不需要重新登入。
 - 新增帳號：建立獨立 partition 的 `WebContentsView`，`mainWindow.contentView
-  .addChildView(view)` 掛進主視窗，`loadURL()` 載入對應平台網址
+.addChildView(view)` 掛進主視窗，`loadURL()` 載入對應平台網址
   （`https://claude.ai`、`https://chatgpt.com`、`https://gemini.google.com`、
   `https://grok.com`）。
 - 切換帳號：不銷毀任何 view，只是 `setVisible(true/false)` 切換顯示狀態，
@@ -100,7 +100,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
      `splice` 重組一份新的 id 順序陣列，整份傳給 `accounts:reorder`
      IPC；main process 依這份新順序重組 `appState.accounts`（用 id 對照
      查表，找不到對應帳號的 id 會被忽略；反過來說，如果 `appState.
-     accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論上不該
+accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論上不該
      發生——會被原樣接在最後面，不會憑空遺失帳號)，存檔並廣播
      `accounts:changed`。
   4. 側邊欄的「新增帳號」下拉選單、知識庫「依角色列出提示詞」這些功能
@@ -123,7 +123,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   `{ id, name, description, color, createdAt, updatedAt }`。
   `description` 可當成角色提示詞／system prompt 使用；`color` 是預先定義的
   8 色色票之一（`#4f8cff #e5484d #f5a623 #2ecc71 #9b59b6 #1abc9c #e91e8c
-  #95a5a6`）。
+#95a5a6`）。
 - 存在 `app-state.json` 的 `roles: []`。
 - 帳號物件新增 `roleId`（可為 `null`）。
 - **管理位置**：設定視窗「帳號角色管理」區塊——新增/編輯/刪除角色、色票
@@ -269,6 +269,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   儲存的編輯內容；月曆、甘特圖都是純前端即時運算，不另外存衍生資料。
 
 ### 7.1 任務清單
+
 - 可新增（輸入框 + Enter）、行內編輯標題、指派給「虛擬團隊」裡的任何
   帳號（下拉選單）、狀態（待辦/進行中/已完成）、**開始日期**與**到期日**
   兩個日期欄位、移除。
@@ -277,6 +278,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   「儲存專案」。
 
 ### 7.2 月曆檢視
+
 - 月曆格子上用小圓點標示當天「到期」的任務（顏色對應任務狀態）與 Issue
   （顏色對應優先度），超過 4 個項目用 `+N` 縮寫；今天用強調色外框標示。
 - 上方「‹ › 回到今天」切換月份；點任一天格子，下方會列出當天所有到期
@@ -286,6 +288,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   位移），不需要開始日期。
 
 ### 7.3 甘特圖
+
 - 只取「有開始日期或到期日」的任務畫成橫向色塊：只有到期日視為當天
   一天的任務、只有開始日期視為當天一天、兩者都有則畫成一段區間；色塊
   顏色對應任務狀態（待辦/進行中/已完成）。
@@ -297,6 +300,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   調整日期（要改日期還是回任務清單分頁改）。
 
 ### 7.4 Issue 管理
+
 - 每個專案有自己獨立的 issue 清單（不是全域共用），欄位：標題、描述
   （選填）、類型（🐞錯誤／✨功能／📋任務／🔧改善）、優先度（低/中/高/
   緊急）、狀態（待處理/處理中/已解決/已關閉）、指派對象（虛擬團隊帳號）、
@@ -442,13 +446,33 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
 重複一份 `new BrowserWindow(...)` 的邏輯：
 
 ```js
-function openChildWindow({ getWindow, setWindow, htmlFile, width, height, minWidth, minHeight }) {
+function openChildWindow({
+  getWindow,
+  setWindow,
+  htmlFile,
+  width,
+  height,
+  minWidth,
+  minHeight,
+}) {
   const existing = getWindow();
-  if (existing && !existing.isDestroyed()) { existing.focus(); return; }
+  if (existing && !existing.isDestroyed()) {
+    existing.focus();
+    return;
+  }
   const win = new BrowserWindow({
-    width, height, minWidth: minWidth || 360, minHeight: minHeight || 400,
-    parent: mainWindow, modal: false, backgroundColor: '#1e1e1e',
-    webPreferences: { preload: path.join(__dirname, 'preload.js'), contextIsolation: true, nodeIntegration: false },
+    width,
+    height,
+    minWidth: minWidth || 360,
+    minHeight: minHeight || 400,
+    parent: mainWindow,
+    modal: false,
+    backgroundColor: '#1e1e1e',
+    webPreferences: {
+      preload: path.join(__dirname, 'preload.js'),
+      contextIsolation: true,
+      nodeIntegration: false,
+    },
   });
   win.setMenuBarVisibility(false);
   win.loadFile(path.join(__dirname, 'renderer', htmlFile));
@@ -523,8 +547,8 @@ function openChildWindow({ getWindow, setWindow, htmlFile, width, height, minWid
   同時指向同一個 `userData` 資料夾時，會共用同一份 Chromium 磁碟快取／
   service worker／quota 資料庫，其中一個對這些檔案的讀寫動作會被另一個
   鎖住，這是啟動時終端機印出 `Unable to create cache`、`Unable to move
-  the cache`（Windows 上常見錯誤碼 `0x5` = 存取被拒）、`Could not open
-  the quota database, resetting` 這類錯誤最常見的成因。拿不到鎖的那個
+the cache`（Windows 上常見錯誤碼 `0x5` = 存取被拒）、`Could not open
+the quota database, resetting` 這類錯誤最常見的成因。拿不到鎖的那個
   進程會直接 `app.quit()`；使用者「又點了一次啟動」時透過
   `second-instance` 事件把已經開著的主視窗 focus 過去，而不是真的再開
   一個進程出來跟自己搶同一份快取。
@@ -532,7 +556,7 @@ function openChildWindow({ getWindow, setWindow, htmlFile, width, height, minWid
   立刻強制終止進程，跳過視窗關閉、session 清理這些正常收尾步驟，
   Chromium 的磁碟快取/資料庫可能來不及正常關閉就被砍斷，就會在下次啟動
   時被偵測成髒資料（quota database 需要 `resetting`）。`settings:
-  chooseDataDir`／`settings:resetDataDir` 兩個「切換設定檔存放位置後
+chooseDataDir`／`settings:resetDataDir` 兩個「切換設定檔存放位置後
   立即重啟」的 IPC handler 都是 `app.relaunch(); app.quit();`，讓
   Electron 走正常的關閉流程（觸發 `window-all-closed` 等事件、讓
   Chromium 有機會把快取/資料庫正常關閉）再重啟。
@@ -557,6 +581,7 @@ Electron 裡常見的 SQLite 方案是 `better-sqlite3`，但它是**原生模�
 「盡量不要有建置步驟、依賴越少越好」的風格來說，代價偏高。
 
 改用 **`sql.js`**（純 WebAssembly 版 SQLite）：
+
 - 沒有原生模組，`npm install` 完就能直接在 Electron 的 main process
   （本質上就是一個 Node.js 環境）裡 `require('sql.js')` 用，不用
   rebuild，也不用改 `asarUnpack`（`.wasm` 檔是用一般的 `fs.readFileSync`
@@ -603,6 +628,7 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
 「儲存」也能點「測試擷取」直接看結果——用表單裡目前的值（不是
 `selectors.json` 裡已儲存的版本）呼叫跟真正匯出同一套
 `extractors/domCapture.js`，對「目前選擇的這個平台」跑一次擷取：
+
 - 優先用目前作用中的帳號（如果剛好是這個平台）；不是的話找第一個開著
   的同平台帳號；一個都沒開就提示「請先新增或切換一個該平台的帳號」。
 - 成功：直接在設定視窗裡列出擷取到的訊息數量跟前 5 則預覽（🧑/🤖 +
@@ -646,7 +672,7 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   🤖 AI）+ 內容；JSON 輸出就是原始擷取結果。
 - 每次匯出成功都會自動登記進文件庫（見第 8 節）。
 - 回傳結果一律帶 `debug: { selectorUsed, matchedNodeCount,
-  nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
+nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
   結構跟預設 selector 對不上」這種必然會隨網站改版而發生的問題：
   - `matchedNodeCount = 0` → selector 本身就沒選到任何節點，通常代表
     網站的 DOM 結構變了，`selectors.json` 裡那個平台的 `turn` selector
@@ -672,15 +698,15 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
 
 ## 13. IPC 事件總覽（跨視窗即時同步機制）
 
-| 事件 | 觸發時機 | 訂閱方 |
-|---|---|---|
-| `accounts:changed` | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入 | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
-| `knowledge:changed` | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理 | 側邊欄「預設提示詞」區塊 |
-| `documents:changed` | 文件匯入/儲存/刪除、對話匯出自動登記 | 文件管理視窗、對話庫視窗 |
-| `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入 | 對話庫視窗 |
-| `logs:changed` | 任何一筆錯誤/稽核日誌被寫入或清除 | 日誌主控台視窗 |
-| `console:entry` | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆 | 日誌主控台視窗（主控台分頁） |
-| `language:changed` | 語言切換 | 所有視窗（重新載入翻譯） |
+| 事件                    | 觸發時機                                                                                             | 訂閱方                                         |
+| ----------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| `accounts:changed`      | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入                                                     | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
+| `knowledge:changed`     | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理                                                | 側邊欄「預設提示詞」區塊                       |
+| `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                 | 文件管理視窗、對話庫視窗                       |
+| `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                   | 對話庫視窗                                     |
+| `logs:changed`          | 任何一筆錯誤/稽核日誌被寫入或清除                                                                    | 日誌主控台視窗                                 |
+| `console:entry`         | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆 | 日誌主控台視窗（主控台分頁）                   |
+| `language:changed`      | 語言切換                                                                                             | 所有視窗（重新載入翻譯）                       |
 
 ---
 
@@ -788,6 +814,7 @@ renderer/locales/zh-TW.json, en.json
 
 `lib/**` 模組之間的共用慣例（新增功能或修 bug 時務必遵守，避免破壞這個
 拆分方式）：
+
 - 所有跨模組共用的可變狀態（視窗參照、帳號 View、appState、console 緩衝區、
   logsDb 連線……）都放在 `lib/state.js` 這個單例物件裡，其他模組一律用
   `state.appState.xxx`、`state.mainWindow` 這種「每次都重新讀取屬性」的
@@ -851,7 +878,7 @@ CREATE TABLE audits (id TEXT PRIMARY KEY, timestamp TEXT NOT NULL, category TEXT
   就消失，回頭完全查不到發生過什麼事。
 - 兩種日誌都各自最多保留最新 500 筆：每次寫入後跑
   `DELETE FROM <table> WHERE id NOT IN (SELECT id FROM <table> ORDER BY
-  timestamp DESC LIMIT 500)`，用 SQL 直接裁剪，避免 `logs.sqlite`
+timestamp DESC LIMIT 500)`，用 SQL 直接裁剪，避免 `logs.sqlite`
   無限長大。
 - **升級搬遷**：1.11 以前的版本把日誌存在 `logs.json`。第一次用新版
   啟動時，`initLogsDatabase()` 建完表之後會檢查：如果偵測到舊的
