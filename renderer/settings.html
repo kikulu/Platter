@@ -115,9 +115,19 @@
   </div>
 
   <!-- 7. 疑難排解 -->
-  <div class="section" style="border-bottom:none;">
+  <div class="section">
     <div class="settings-section-title" data-i18n="settings.troubleshoot.title">疑難排解</div>
     <button id="btn-open-devtools" data-i18n="settings.troubleshoot.openDevTools">開啟目前帳號 DevTools</button>
+    <button id="btn-clear-cache" data-i18n="settings.troubleshoot.clearCache" style="margin-top:8px;">清除快取</button>
+    <div class="settings-hint" data-i18n="settings.troubleshoot.clearCacheHint">
+      如果啟動時看到終端機印出 disk_cache / quota_database 相關錯誤，或帳號畫面出現不明的載入異常，可以試著清除快取（不會登出帳號、不會刪除任何資料）。
+    </div>
+  </div>
+
+  <!-- 8. 關於 -->
+  <div class="section" style="border-bottom:none;">
+    <div class="settings-section-title" data-i18n="settings.about.title">關於</div>
+    <div class="settings-hint" id="about-version" style="margin:0;"></div>
   </div>
 
   <script src="i18n.js"></script>

@@ -14,6 +14,7 @@
   let collapsed = false;
   let rolesById = new Map();
   let lastAccounts = [];
+  let draggedAccountId = null; // 帳號清單拖曳排序：目前正在被拖曳的帳號 id
 
   function applyCollapsedState() {
     sidebar.classList.toggle('collapsed', collapsed);
@@ -67,6 +68,14 @@
     window.workspaceAPI.openDocumentsWindow();
   });
 
+  document.getElementById('btn-conversations').addEventListener('click', () => {
+    window.workspaceAPI.openConversationsWindow();
+  });
+
+  document.getElementById('btn-logs').addEventListener('click', () => {
+    window.workspaceAPI.openLogWindow();
+  });
+
   document.getElementById('btn-settings').addEventListener('click', () => {
     window.workspaceAPI.openSettingsWindow();
   });
@@ -83,7 +92,15 @@
     } else if (result.error === 'CANCELLED') {
       // 使用者自行取消，不用提示
     } else if (result.error === 'EMPTY_RESULT' || result.error === 'NO_SELECTOR') {
-      alert(window.i18n.t('export.selectorHint'));
+      const debug = result.debug;
+      const detail =
+        debug && typeof debug.matchedNodeCount === 'number'
+          ? window.i18n.t('export.selectorHintDetail', {
+              matched: debug.matchedNodeCount,
+              nonEmpty: debug.nonEmptyMessageCount,
+            })
+          : '';
+      alert(`${window.i18n.t('export.selectorHint')}${detail ? '\n\n' + detail : ''}`);
     } else {
       alert(`${window.i18n.t('export.fail')}: ${result.error || ''}`);
     }
@@ -99,6 +116,55 @@
       const item = document.createElement('div');
       item.className = 'account-item' + (acc.active ? ' active' : '');
       item.title = acc.name;
+
+      // 帳號清單拖曳排序（原生 HTML5 drag & drop，不用額外套件）
+      item.draggable = true;
+      item.dataset.accountId = acc.id;
+
+      item.addEventListener('dragstart', (e) => {
+        draggedAccountId = acc.id;
+        item.classList.add('dragging');
+        e.dataTransfer.effectAllowed = 'move';
+        // Firefox 系瀏覽器要求一定要呼叫 setData 才會真的觸發拖曳，
+        // Electron/Chromium 其實用不到這行讀出來的值（用上面的閉包變數
+        // draggedAccountId 判斷），但保留呼叫確保行為一致。
+        e.dataTransfer.setData('text/plain', acc.id);
+      });
+
+      item.addEventListener('dragend', () => {
+        draggedAccountId = null;
+        item.classList.remove('dragging');
+        accountList
+          .querySelectorAll('.account-item.drag-over')
+          .forEach((el) => el.classList.remove('drag-over'));
+      });
+
+      item.addEventListener('dragover', (e) => {
+        if (!draggedAccountId || draggedAccountId === acc.id) return;
+        e.preventDefault(); // 一定要呼叫，不然瀏覽器不允許 drop
+        e.dataTransfer.dropEffect = 'move';
+        item.classList.add('drag-over');
+      });
+
+      item.addEventListener('dragleave', () => {
+        item.classList.remove('drag-over');
+      });
+
+      item.addEventListener('drop', async (e) => {
+        e.preventDefault();
+        item.classList.remove('drag-over');
+        if (!draggedAccountId || draggedAccountId === acc.id) return;
+
+        const order = lastAccounts.map((a) => a.id);
+        const fromIndex = order.indexOf(draggedAccountId);
+        const toIndex = order.indexOf(acc.id);
+        if (fromIndex === -1 || toIndex === -1) return;
+
+        order.splice(fromIndex, 1);
+        order.splice(toIndex, 0, draggedAccountId);
+        await window.workspaceAPI.reorderAccounts(order);
+        await refreshAccounts();
+      });
 
       const avatar = document.createElement('div');
       avatar.className = 'avatar';
@@ -119,6 +185,7 @@
       // 帳號角色機制：可直接在側邊欄快速切換這個帳號套用的角色
       const roleSelect = document.createElement('select');
       roleSelect.className = 'role-select';
+      roleSelect.draggable = false; // 避免在下拉選單上點擊被誤判成拖曳排序的起手勢
       if (role) roleSelect.style.color = role.color;
       const noRoleOpt = document.createElement('option');
       noRoleOpt.value = '';
@@ -142,6 +209,7 @@
 
       const deleteBtn = document.createElement('button');
       deleteBtn.className = 'delete-btn';
+      deleteBtn.draggable = false;
       deleteBtn.textContent = '🗑';
       deleteBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -254,6 +322,9 @@
     initGroups(ui.sidebarGroups);
     await window.i18n.init();
     await refreshAccounts();
+
+    const version = await window.workspaceAPI.getAppVersion();
+    document.getElementById('app-version-label').textContent = `v${version}`;
   })();
 })();
 

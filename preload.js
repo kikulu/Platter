@@ -10,6 +10,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('accounts:setSidebarCollapsed', collapsed),
   setGroupExpanded: (key, expanded) => ipcRenderer.invoke('ui:setGroupExpanded', { key, expanded }),
   setAccountRole: (accountId, roleId) => ipcRenderer.invoke('accounts:setRole', { accountId, roleId }),
+  reorderAccounts: (orderedIds) => ipcRenderer.invoke('accounts:reorder', orderedIds),
   onAccountsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('accounts:changed', handler);
@@ -39,6 +40,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   deleteKnowledge: (id) => ipcRenderer.invoke('knowledge:delete', id),
   exportAllKnowledge: (format) => ipcRenderer.invoke('knowledge:exportAll', format),
   importKnowledge: () => ipcRenderer.invoke('knowledge:import'),
+  importKnowledgeMarkdown: () => ipcRenderer.invoke('knowledge:importMarkdown'),
   toggleChecklistEntry: (itemId, entryId, checked) =>
     ipcRenderer.invoke('knowledge:toggleChecklistEntry', { itemId, entryId, checked }),
   onKnowledgeChanged: (cb) => {
@@ -85,6 +87,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
 
   // 設定：疑難排解
   openCurrentDevTools: () => ipcRenderer.invoke('settings:openCurrentDevTools'),
+  clearAppCache: () => ipcRenderer.invoke('settings:clearCache'),
 
   // 子視窗
   openAccountWindow: () => ipcRenderer.invoke('window:openAccountWindow'),
@@ -93,6 +96,9 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   openTeamWindow: () => ipcRenderer.invoke('window:openTeamWindow'),
   openProjectWindow: () => ipcRenderer.invoke('window:openProjectWindow'),
   openDocumentsWindow: () => ipcRenderer.invoke('window:openDocumentsWindow'),
+  openConversationsWindow: () => ipcRenderer.invoke('window:openConversationsWindow'),
+  openLogWindow: () => ipcRenderer.invoke('window:openLogWindow'),
+  getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
   closeSelf: () => ipcRenderer.invoke('window:closeSelf'),
 
   // 專案計畫管理
@@ -101,6 +107,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   deleteProject: (id) => ipcRenderer.invoke('projects:delete', id),
   setTaskStatus: (projectId, taskId, status) =>
     ipcRenderer.invoke('projects:task:setStatus', { projectId, taskId, status }),
+  setIssueStatus: (projectId, issueId, status) =>
+    ipcRenderer.invoke('projects:issue:setStatus', { projectId, issueId, status }),
 
   // 文件管理
   listDocuments: () => ipcRenderer.invoke('documents:list'),
@@ -113,5 +121,41 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     const handler = () => cb();
     ipcRenderer.on('documents:changed', handler);
     return () => ipcRenderer.removeListener('documents:changed', handler);
+  },
+
+  // 對話庫（新增對話 Markdown、匯出檔案、跟文件庫的檔案互相關聯）
+  listConversations: () => ipcRenderer.invoke('conversations:list'),
+  saveConversation: (conv) => ipcRenderer.invoke('conversations:save', conv),
+  deleteConversation: (id) => ipcRenderer.invoke('conversations:delete', id),
+  importConversationMarkdown: () => ipcRenderer.invoke('conversations:importMarkdown'),
+  captureCurrentConversationDraft: () => ipcRenderer.invoke('conversations:captureCurrent'),
+  exportConversation: (id, format) => ipcRenderer.invoke('conversations:export', { id, format }),
+  linkConversationDocument: (conversationId, documentId) =>
+    ipcRenderer.invoke('conversations:linkDocument', { conversationId, documentId }),
+  unlinkConversationDocument: (conversationId, documentId) =>
+    ipcRenderer.invoke('conversations:unlinkDocument', { conversationId, documentId }),
+  onConversationsChanged: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.on('conversations:changed', handler);
+    return () => ipcRenderer.removeListener('conversations:changed', handler);
+  },
+
+  // 日誌主控台（錯誤日誌、稽核日誌）
+  listLogs: () => ipcRenderer.invoke('logs:list'),
+  clearLogs: (kind) => ipcRenderer.invoke('logs:clear', kind),
+  exportLogs: () => ipcRenderer.invoke('logs:export'),
+  onLogsChanged: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.on('logs:changed', handler);
+    return () => ipcRenderer.removeListener('logs:changed', handler);
+  },
+
+  // 主控台（Console）：即時 console 逐行輸出
+  listConsole: () => ipcRenderer.invoke('console:list'),
+  clearConsole: () => ipcRenderer.invoke('console:clear'),
+  onConsoleEntry: (cb) => {
+    const handler = (e, entry) => cb(entry);
+    ipcRenderer.on('console:entry', handler);
+    return () => ipcRenderer.removeListener('console:entry', handler);
   },
 });

@@ -160,20 +160,26 @@ selector，不用手動開 DevTools 找——點「選取範例：使用者訊�
 ## 開發
 
 ```bash
-npm test          # 單元測試（lib/utils.js，node:test，不需要額外套件）
-npm run lint       # ESLint
-npm run format     # Prettier 自動排版
+npm test              # 單元測試（lib/utils.js + lib/sqlite.js，node --test 內建測試框架，不需要額外套件）
+npm run lint          # ESLint（main.js/preload.js/lib/test 用 Node 規則，renderer/** 用瀏覽器規則）
+npm run format        # Prettier 自動排版（會直接覆寫檔案，跑之前建議先 commit）
+npm run format:check  # 只檢查格式，不覆寫檔案
 ```
-<!-- 
-`lib/utils.js` 放不依賴 Electron API 的純函式（字串處理、檔案系統輔助
-函式），跟 `main.js` 分開才能直接用 `node --test` 測。這是把
-`main.js`（目前已經破千行）拆成模組的第一步，完整模組化見
-[ROADMAP.md](./ROADMAP.md)。
 
-Push / PR 時 [GitHub Actions](./.github/workflows/ci.yml) 會自動跑語法
-檢查、lint、單元測試——不含實際啟動 Electron App 互動的測試（CI 環境沒有
-顯示器），那部分要自己 `npm start` 手動驗證。
--->
+`lib/utils.js` 放不依賴 Electron API 的純函式（字串處理、檔案系統輔助
+函式），跟 `main.js` 分開才能直接用 `node --test` 測，不需要啟動
+Electron。這是把 `main.js`（目前已經破千行）拆成模組的第一步，完整
+模組化方向見 [ROADMAP.md](./ROADMAP.md)。
+
+`lib/sqlite.js` 包了 `sql.js`（純 WebAssembly 版 SQLite，沒有原生模組、
+不需要 `electron-rebuild`）的最小存取介面，目前給「日誌主控台」的
+`logs.sqlite` 用；選型取捨見 `PROJECT_SPEC.md` 第 9.7 節。`npm install`
+時會一併裝進 `sql.js` 這個 dependency，不需要額外設定。
+
+> 目前 `main.js`/`preload.js`/`renderer/**` 還沒有整批套用過
+> `npm run format`，先跑 `npm run format:check` 看目前有多少檔案不符合
+> 排版規則；要一次套用到整個專案，直接跑 `npm run format` 即可，但這會
+> 產生大量非功能性的排版 diff，建議跟其他改動分開提交。
 
 ## 打包發布
 
@@ -238,19 +244,26 @@ extensions.json         # 已安裝的擴充功能清單
 | [CHANGELOG.md](./CHANGELOG.md) | 版本歷程，每次加了什麼功能 |
 | [ROADMAP.md](./ROADMAP.md) | 還沒做、之後可能會做的方向 |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md) | 完整規格提示詞，適合給有檔案系統工具的 agent（Claude Code / Cursor）重現整個專案 |
-| [BUILD_PLAN.md](./BUILD_PLAN.md) | 分成 8 階段的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
-| [CHECKLIST.md](./CHECKLIST.md) | 搭配 `BUILD_PLAN.md`，橫跨全部階段的總檢核表 |
+| [BUILD_PLAN.md](./BUILD_PLAN.md) | 分階段（目前 16 階段）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
+| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md) | 既有階段都做完之後，要加新功能時用的提示詞模板 |
+| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板 |
+| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md) | 開新對話只附文件、不附原始碼時用的提示詞模板 |
 
 ## 貢獻
 
-歡迎 fork 之後開 PR。送 PR 前請確認：
+歡迎 fork 之後開 PR。目前還沒有接 CI，以下檢查都要自己在本機跑過一次，
+送 PR 前請確認：
 
-1. `npm test` 全部通過
-2. `npm run lint` 沒有新增的錯誤
-3. 有牽動到功能行為的改動，實際 `npm start` 跑過一輪再送出（CI 不含
-   Electron 互動測試）
+1. `npm test` 全部通過（`lib/utils.js` 的單元測試，`node --test`）
+2. `npm run lint` 沒有新增的 error（既有的 1 個 warning 是預期中的，見
+   `extractors/domCapture.js` 的說明，不用處理）
+3. 有牽動到功能行為的改動，實際 `npm start` 跑過一輪再送出——上面兩項
+   只涵蓋 `lib/utils.js` 這類純函式，Electron 視窗互動、IPC、UI 這些都
+   要手動驗證
 4. 新功能如果違反上面「設計原則」三條（呼叫未公開 API、繞過網站保護
    機制、把登入憑證放進備份檔案），不會被接受
+5. 如果順手跑了 `npm run format`，記得跟功能改動分開成不同的 commit/PR，
+   方便 review（格式化 diff 會很大，混在一起不好看變更內容）
 
 ## License
 

@@ -54,9 +54,13 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   2. 群組「帳號」👤：新增帳號、帳號清單（可捲動）
   3. 群組「預設提示詞」💡：依「目前選中帳號」的角色，列出知識庫裡配置給
      該角色的所有提示詞，每則旁邊有複製按鈕
-  4. 群組「內容工具」🧰：匯出當前對話、知識庫、文件管理
+  4. 群組「內容工具」🧰：匯出當前對話、知識庫、文件管理、對話庫、
+     日誌主控台
   5. 群組「團隊與專案」🧩：虛擬團隊、專案計畫
-  6. 「設定」⚙️ 固定在最底部，不屬於任何可收合群組
+  6. 「設定」⚙️ 固定在最底部，不屬於任何可收合群組；下方再加一行極小的
+     版本號文字（`v{package.json 的 version}`，透過 `app:getVersion`
+     IPC 讀 `app.getVersion()`），側邊欄摺疊成純 icon 版時這行版本號
+     跟著隱藏
 - 每個群組標題可點擊展開/收合（chevron 圖示 ▸/▾ 跟著轉向），展開狀態存進
   `app-state.json`（`ui.sidebarGroups`），重開程式記住上次狀態。
 - 整個側邊欄摺疊成 56px 純 icon 版時，**忽略**各群組展開/收合狀態，一律
@@ -84,12 +88,32 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   `session.clearStorageData()` 清乾淨；同時清掉任何套餐（知識庫）裡引用到
   這個帳號的地方（目前套餐不直接引用帳號，僅專案任務的 `assigneeId` 會
   留下懸空引用——刪除帳號時不強制清理任務指派，UI 顯示為「未指派」即可）。
+- **帳號清單排序**：每個帳號項目 `draggable="true"`，用原生 HTML5
+  drag & drop（`dragstart`/`dragover`/`drop`/`dragend`），不引入額外
+  拖曳排序套件。拖曳邏輯：
+  1. `dragstart` 記住正在拖的帳號 id（存在模組層的閉包變數，不依賴
+     `dataTransfer.getData()`，避免部分瀏覽器在 `dragover` 階段讀不到
+     資料的相容性問題）。
+  2. `dragover` 時如果目前懸停的項目不是自己，用 `.drag-over` 樣式
+     （內縮的頂部藍色邊框）標示「放開後會插入到這個位置」。
+  3. `drop` 時算出拖曳來源在目前清單裡的 index 跟放開目標的 index，用
+     `splice` 重組一份新的 id 順序陣列，整份傳給 `accounts:reorder`
+     IPC；main process 依這份新順序重組 `appState.accounts`（用 id 對照
+     查表，找不到對應帳號的 id 會被忽略；反過來說，如果 `appState.
+     accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論上不該
+     發生——會被原樣接在最後面，不會憑空遺失帳號)，存檔並廣播
+     `accounts:changed`。
+  4. 側邊欄的「新增帳號」下拉選單、知識庫「依角色列出提示詞」這些功能
+     都不依賴帳號在陣列裡的順序（用 id 查找），重新排序不影響其他功能。
+  5. 角色下拉選單（`role-select`）跟刪除按鈕都設定 `draggable="false"`，
+     避免使用者點擊這些控制項時被誤判成拖曳排序的起手勢。
 
 ### 3.3 帳號清單持久化
 
 - 帳號清單的中繼資料（`id`、`platform`、`name`、`roleId`——**不含** cookie
   等實際登入資料）寫進設定檔（`app-state.json`）。開機時讀回來，用相同的
-  id 依序重建每個帳號的 `WebContentsView`。
+  id 依序重建每個帳號的 `WebContentsView`——**陣列順序就是使用者排序過的
+  顯示順序**，拖曳排序本質上就是在改這個陣列的順序。
 
 ---
 
@@ -139,6 +163,13 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
 - 「複製內容」用瀏覽器原生 `navigator.clipboard.writeText()`。
 - 標籤篩選：從目前所有項目的標籤動態組出下拉選單選項，選了就在記憶體裡
   篩選清單（不用重打 IPC）。
+- 「匯入」按鈕匯入的是完整的知識庫 JSON 備份格式（`{items, groups}`，
+  沿用 Stage 5 原始設計）；「匯入 Markdown」是另一個按鈕，只在「提示詞」
+  分頁顯示，可一次多選任意 `.md`/`.markdown`/`.txt` 檔案，逐一讀成新的
+  提示詞項目（檔名去掉副檔名當標題，檔案全文塞進 `content`，`tags`/
+  `checklist`/`roleIds` 都是空的），匯入完自動把最後一個匯入的項目打開
+  在編輯器裡，方便馬上檢視/編輯內容，不用另外手動點開。這兩個「匯入」
+  按鈕處理的是完全不同的檔案格式，不要搞混。
 
 ### 5.2 檢核表機制（單一項目自帶）
 
@@ -212,19 +243,90 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   "id", "name", "description",
   "status": "planning|active|onhold|done",
   "startDate", "endDate",
-  "tasks": [ { "id", "title", "description", "assigneeId", "status": "todo|doing|done", "dueDate" } ],
+  "tasks": [ { "id", "title", "description", "assigneeId",
+               "status": "todo|doing|done", "startDate", "dueDate" } ],
+  "issues": [ { "id", "title", "description",
+                "type": "bug|feature|task|improvement",
+                "priority": "low|medium|high|urgent",
+                "status": "open|inprogress|resolved|closed",
+                "assigneeId", "dueDate", "tags": ["..."] } ],
   "createdAt", "updatedAt"
 } ] }
 ```
 
-- 左側專案清單（狀態徽章 + 任務完成度 `done/total`）、右側編輯表單：
-  名稱、狀態（規劃中/進行中/暫停/已完成）、起訖日期、說明。
-- 任務清單：可新增（輸入框 + Enter）、行內編輯標題、指派給「虛擬團隊」裡
-  的任何帳號（下拉選單）、設定到期日、移除。
-- 任務狀態（待辦/進行中/已完成）切換即時透過 `projects:task:setStatus`
-  持久化，不用等按「儲存專案」；結構性變更（新增/移除/編輯任務內容）
-  才需要按「儲存專案」。
-- 備份與還原同步支援專案資料，匯入時已存在的專案 id 略過。
+- 左側專案清單（狀態徽章 + 任務完成度 `done/total` + 未結案 issue 數量
+  🐞）、右側編輯表單：名稱、狀態（規劃中/進行中/暫停/已完成）、起訖日期、
+  說明。
+- 編輯表單下方是「任務清單 / 月曆 / 甘特圖 / Issue 管理」四個分頁，共用
+  同一份 `editingTasks`/`editingIssues` 記憶體狀態，切分頁不會遺失還沒
+  儲存的編輯內容；月曆、甘特圖都是純前端即時運算，不另外存衍生資料。
+
+### 7.1 任務清單
+- 可新增（輸入框 + Enter）、行內編輯標題、指派給「虛擬團隊」裡的任何
+  帳號（下拉選單）、狀態（待辦/進行中/已完成）、**開始日期**與**到期日**
+  兩個日期欄位、移除。
+- 任務狀態切換即時透過 `projects:task:setStatus` 持久化，不用等按
+  「儲存專案」；結構性變更（新增/移除/編輯任務內容、日期）才需要按
+  「儲存專案」。
+
+### 7.2 月曆檢視
+- 月曆格子上用小圓點標示當天「到期」的任務（顏色對應任務狀態）與 Issue
+  （顏色對應優先度），超過 4 個項目用 `+N` 縮寫；今天用強調色外框標示。
+- 上方「‹ › 回到今天」切換月份；點任一天格子，下方會列出當天所有到期
+  項目的明細（圖示 + 標題）。
+- 資料來源單純是 `editingTasks`/`editingIssues` 裡 `dueDate` 對到當天
+  日期字串（`YYYY-MM-DD`，一律用本地日期，不用 `toISOString()` 避免時區
+  位移），不需要開始日期。
+
+### 7.3 甘特圖
+- 只取「有開始日期或到期日」的任務畫成橫向色塊：只有到期日視為當天
+  一天的任務、只有開始日期視為當天一天、兩者都有則畫成一段區間；色塊
+  顏色對應任務狀態（待辦/進行中/已完成）。
+- 時間軸範圍 = 所有色塊裡最早的開始日往前一天 ~ 最晚的到期日往後一天，
+  用百分比定位（`left`/`width`）畫在一條 `.gantt-track` 上；表頭標出每個
+  月份的分界；有一條紅色「今天」豎線（若今天落在時間軸範圍內）。
+- 沒有任何任務帶日期時顯示提示文字，引導使用者去任務清單加上日期。
+- 這是純 CSS/DOM 畫的簡易甘特圖，沒有引入額外圖表函式庫，也不支援拖曳
+  調整日期（要改日期還是回任務清單分頁改）。
+
+### 7.4 Issue 管理
+- 每個專案有自己獨立的 issue 清單（不是全域共用），欄位：標題、描述
+  （選填）、類型（🐞錯誤／✨功能／📋任務／🔧改善）、優先度（低/中/高/
+  緊急）、狀態（待處理/處理中/已解決/已關閉）、指派對象（虛擬團隊帳號）、
+  到期日、標籤（逗號分隔）。
+- 「＋新增 Issue」在清單最下面加一張空白卡片並把游標移過去；每張卡片
+  都是行內可編輯（跟任務清單一樣的模式，不用另開視窗/對話框）。
+- 上方下拉選單可依狀態篩選（全部/待處理/處理中/已解決/已關閉）。
+- Issue 狀態切換即時透過 `projects:issue:setStatus` 持久化，其餘欄位
+  變更（標題/描述/類型/優先度/指派/到期日/標籤）跟任務一樣要按「儲存
+  專案」才會寫檔。
+- 左側專案清單會顯示這個專案「待處理 + 處理中」的 issue 數量（🐞
+  數字），方便一眼看出哪個專案還有沒處理完的問題。
+
+### 7.5 跨專案總覽
+
+側邊列表工具列多一個「跨專案總覽」按鈕（跟「新增專案」並排），點下去會
+把右側從單一專案編輯畫面切成一個**唯讀、把所有專案疊在一起看**的儀表板，
+本身也有月曆／甘特圖／Issue 三個分頁（跟第 7.2～7.4 節的單一專案版本邏輯
+共用，只是資料來源改成 `allProjects`（所有已存檔的專案）而不是正在編輯
+中那一個專案的 `editingTasks`/`editingIssues`）：
+
+- 每個專案依在清單中的順序固定分配一個顏色（8 色循環），畫面最上方有一排
+  圖例（色點 + 專案名稱），點圖例上的專案名稱可以直接跳回那個專案的編輯
+  畫面。
+- 月曆格子的色點、甘特圖色塊的左側色條、Issue 總覽每一行前面的色點都用
+  這個顏色標示「這是哪個專案的項目」；滑鼠移上去的 tooltip 會顯示
+  「專案名稱：項目標題」。
+- 月曆/甘特圖/Issue 清單裡的每一項都可以點擊，會直接跳回該項目所屬的
+  專案（自動切到對應分頁：任務相關跳「任務清單」，Issue 跳「Issue
+  管理」，甘特圖的列標籤跳「甘特圖」），方便看完全貌後直接鑽進去編輯。
+- 這是**純讀取**的彙總畫面，不能在這裡編輯任務/Issue 內容；要編輯還是要
+  跳回單一專案畫面。
+- 因為資料來源是「已存檔」的 `allProjects`，正在某個專案編輯中但還沒按
+  「儲存專案」的變更不會出現在總覽裡。
+
+備份與還原同步支援專案資料（含 `tasks` 與 `issues`），匯入時已存在的
+專案 id 略過。
 
 ---
 
@@ -251,14 +353,70 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   顯示」（`shell.showItemInFolder`）。
 - 找不到原始檔案時（被移動/刪除）清單與詳細頁都顯示「檔案遺失」警示。
 - 移除文件時，若是「已管理」的複本，會另外詢問是否連同實體檔案一起刪除，
-  或只移除紀錄保留檔案。
+  或只移除紀錄保留檔案；移除時也會清掉第 8.5 節「對話庫」裡任何引用到
+  這份文件的關聯，避免懸空引用。
 - 備份與還原同步支援文件庫中繼資料（已存在的 id 略過）；還原到不同機器/
   資料夾時，「已管理」複本的檔案本體不會被還原（不打包實體檔案，只還原
   紀錄），會顯示為「檔案遺失」，需要重新匯入。
 
+### 8.5 對話庫（`conversation.html`）
+
+資料檔 `conversations.json`：
+
+```json
+{ "conversations": [ {
+  "id", "title", "tags": ["..."],
+  "content": "Markdown 全文",
+  "sourceAccountId", "sourcePlatform",
+  "linkedDocumentIds": ["doc_xxx", "doc_yyy"],
+  "createdAt", "updatedAt"
+} ] }
+```
+
+- 跟「文件管理」是兩個獨立資料檔：文件庫存的是「檔案」本身（路徑引用或
+  管理複本），對話庫存的是「對話內容」本身（Markdown 全文直接存在
+  JSON 裡），兩者用 `linkedDocumentIds`（多對多）互相關聯，方便「這則
+  對話後來衍生出了哪些文件」這種追蹤。
+- **新增對話 Markdown**：
+  1. 「新增對話」：空白編輯器，手動輸入標題、標籤、貼上或編寫 Markdown
+     內容。
+  2. 「擷取目前對話」：重用第 12 節的 DOM 擷取機制
+     （`captureCurrentConversation` + `toMarkdown`），把目前作用中帳號
+     畫面上的對話轉成 Markdown 直接帶入編輯器（不會立刻寫檔，只是預填
+     內容，方便擷取後再編輯、加標籤），同時記住來源帳號/平台。
+  3. 「匯入 Markdown 檔案」：跟第 5 節知識庫的「匯入 Markdown」是同一種
+     模式——開檔案選取對話框（可多選 `.md`/`.markdown`/`.txt`），每個
+     檔案直接變成一則新的對話（檔名去掉副檔名當標題，檔案全文塞進
+     `content`，`tags`/`linkedDocumentIds` 都是空的），**不用先預覽、
+     直接寫進 `conversations.json`**（這點跟「擷取目前對話」不一樣，
+     擷取是先預填編輯器等使用者確認再儲存；匯入檔案因為內容就是使用者
+     自己選的既有檔案，直接存檔，匯入完自動把最後一個匯入的項目打開在
+     編輯器裡，方便馬上檢視/編輯內容）。
+  4. 手動新增/擷取的方式都要按「儲存」才會寫進 `conversations.json`
+     （`id` 為空時新增、有值時更新，沿用其他模組的慣例）。
+- **匯出檔案**：「匯出檔案」跳存檔對話框（或依設定裡的「使用預設路徑時
+  不再詢問」略過對話框），可選 Markdown（直接輸出 `content` 全文）或
+  JSON（`{ title, tags, content }`）。匯出成功後：
+  1. 自動把匯出的檔案登記進文件庫（沿用第 8 節「自動登記」邏輯，
+     `managed: false`，只記錄路徑引用）。
+  2. 自動把新登記的文件 id 加進這則對話的 `linkedDocumentIds`——也就是
+     「將檔案與文件庫的文件檔案對應關聯」的其中一種來源：由匯出動作
+     自動建立關聯。
+- **手動關聯文件庫檔案**：編輯器「關聯文件」區塊列出這則對話目前關聯到
+  的文件庫檔案（顯示名稱、遺失警示、可「開啟檔案」/「取消關聯」），
+  下方下拉選單列出文件庫裡「尚未關聯」的檔案，選好按「關聯」即可手動
+  建立多對多關聯，不需要透過匯出這條路徑，例如：對話是使用者自己貼上
+  的內容，但想要把它跟之前手動匯入文件庫的某份參考資料連結在一起。
+- 對話被刪除時不影響原本已建立的文件庫紀錄，只是那份文件不再顯示跟這
+  則對話的關聯；文件被刪除時，見第 8 節「連動清理」，對話庫裡引用到
+  它的關聯會一併移除。
+- 備份與還原同步支援對話庫資料（已存在的 id 略過，不覆蓋使用者後續的
+  編輯）；`linkedDocumentIds` 若引用到還原環境裡不存在的文件 id，不強制
+  清理，畫面上自然當成「關聯的文件已被移除」顯示，不影響其他資料。
+
 ---
 
-## 9. 三個（現為五個）獨立子視窗架構
+## 9. 獨立子視窗架構
 
 一開始「新增帳號」「知識庫」「設定」是疊在主視窗裡的 HTML 彈窗，後來發現
 **`WebContentsView` 是原生疊層，不受 CSS z-index 控制**，彈窗開著時如果
@@ -268,9 +426,10 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
 ——modal 視窗會在 OS 層級鎖住主視窗，跟「滑鼠選取 selector」這種需要切回
 主視窗互動的功能會衝突），共用同一份 `preload.js`。
 
-目前共有五個獨立子視窗：`account.html`（新增帳號）、`knowledge.html`
+目前共有八個獨立子視窗：`account.html`（新增帳號）、`knowledge.html`
 （知識庫）、`settings.html`（設定）、`team.html`（虛擬團隊主控台）、
-`project.html`（專案計畫管理）、`documents.html`（文件管理）——共 6 個。
+`project.html`（專案計畫管理）、`documents.html`（文件管理）、
+`conversation.html`（對話庫）、`log.html`（日誌主控台）。
 
 用一個共用的 `openChildWindow(options)` helper 開窗，避免每個視窗各自
 重複一份 `new BrowserWindow(...)` 的邏輯：
@@ -310,7 +469,8 @@ function openChildWindow({ getWindow, setWindow, htmlFile, width, height, minWid
    `window.i18n.setLanguage(lang)`。
 2. **設定檔存放位置**：顯示目前設定檔資料夾路徑（唯讀），「選擇外部資料夾」
    按鈕（跳 `dialog.showOpenDialog`），選好後主程序跳確認對話框問要不要
-   立刻 `app.relaunch(); app.exit();` 重開 App；「還原為預設位置」按鈕
+   立刻 `app.relaunch(); app.quit();` 重開 App（見第 9.6 節，用
+   `app.quit()` 而不是 `app.exit()` 是刻意的）；「還原為預設位置」按鈕
    （只在非預設狀態時顯示）。
 3. **擴充功能**：只支援「已解壓縮」格式（資料夾裡要有 `manifest.json`），
    **不做**「連去 Chrome 線上應用程式商店一鍵安裝」這種事。清單每項一個
@@ -327,12 +487,86 @@ function openChildWindow({ getWindow, setWindow, htmlFile, width, height, minWid
    設定打包成一個 JSON 檔；「匯入備份」讀回這份檔案，各類資料都是「已
    存在的 id 略過，不覆蓋使用者後續的編輯」。
 7. **選擇器設定**：見第 10 節。
-8. **疑難排解**：「開啟目前帳號 DevTools」按鈕，呼叫
-   `account.view.webContents.openDevTools({ mode: 'detach' })`。
+8. **疑難排解**：
+   - 「開啟目前帳號 DevTools」按鈕，呼叫
+     `account.view.webContents.openDevTools({ mode: 'detach' })`。
+   - 「清除快取」按鈕：對 `session.defaultSession` 跟每個目前開著的帳號
+     各自的 `webContents.session` 呼叫 `clearCache()`（只清 HTTP 快取，
+     刻意不用 `clearStorageData()`，才不會連 cookies/localStorage 一起
+     清掉、把使用者的帳號登入狀態洗掉）。用來處理啟動時終端機印出
+     `disk_cache` / `quota_database` 相關錯誤，或帳號畫面出現不明載入
+     異常這類 Chromium 磁碟快取髒掉的疑難雜症（常見成因見第 9.6 節）。
+9. **關於**：顯示目前版本號（`Platter v{version}`，`version` 是即時透過
+   `app:getVersion` IPC 讀 `app.getVersion()`，不是寫死在畫面上的字串，
+   打包時 `package.json` 的 `version` 改了這裡會自動跟著變）。主視窗側邊
+   欄最下面也有同一個版本號（更小、更不顯眼的位置），這裡是比較正式、
+   使用者會特地來找版本號時的地方。
 
-### 9.4 虛擬團隊主控台、專案計畫管理、文件管理
+### 9.4 虛擬團隊主控台、專案計畫管理、文件管理、對話庫
 
 見第 6、7、8 節。
+
+### 9.5 日誌主控台
+
+見第 16 節。
+
+### 9.6 App 穩定性：單一實例鎖、app.quit() vs app.exit()
+
+- **單一實例鎖**（`app.requestSingleInstanceLock()`）：兩個 Platter 進程
+  同時指向同一個 `userData` 資料夾時，會共用同一份 Chromium 磁碟快取／
+  service worker／quota 資料庫，其中一個對這些檔案的讀寫動作會被另一個
+  鎖住，這是啟動時終端機印出 `Unable to create cache`、`Unable to move
+  the cache`（Windows 上常見錯誤碼 `0x5` = 存取被拒）、`Could not open
+  the quota database, resetting` 這類錯誤最常見的成因。拿不到鎖的那個
+  進程會直接 `app.quit()`；使用者「又點了一次啟動」時透過
+  `second-instance` 事件把已經開著的主視窗 focus 過去，而不是真的再開
+  一個進程出來跟自己搶同一份快取。
+- **relaunch 一律用 `app.quit()`，不要用 `app.exit()`**：`app.exit()` 會
+  立刻強制終止進程，跳過視窗關閉、session 清理這些正常收尾步驟，
+  Chromium 的磁碟快取/資料庫可能來不及正常關閉就被砍斷，就會在下次啟動
+  時被偵測成髒資料（quota database 需要 `resetting`）。`settings:
+  chooseDataDir`／`settings:resetDataDir` 兩個「切換設定檔存放位置後
+  立即重啟」的 IPC handler 都是 `app.relaunch(); app.quit();`，讓
+  Electron 走正常的關閉流程（觸發 `window-all-closed` 等事件、讓
+  Chromium 有機會把快取/資料庫正常關閉）再重啟。
+- 如果使用者還是在終端機看到這類錯誤（例如防毒軟體介入、`userData`
+  資料夾在會被雲端同步鎖檔的路徑下、或帳號權限問題），這些通常不是
+  App 本身邏輯造成的資料損毀，App 多半還是能繼續運作；設定裡「疑難
+  排解 → 清除快取」（見第 9.3 節）可以讓使用者自己嘗試修復，不用整個
+  移除資料夾/重灌。
+
+### 9.7 SQLite 選型：為什麼用 sql.js，不用 better-sqlite3
+
+日誌主控台（第 16 節）的資料庫是唯一一個真的落地成 SQLite 檔案
+（`logs.sqlite`）的地方；其他模組（帳號、知識庫、專案、文件庫、對話庫）
+目前仍然是 JSON 檔案，沒有一起搬過去——這是刻意先從風險最低、最適合
+展示 SQL 查詢能力的模組開始，不是漏掉。
+
+Electron 裡常見的 SQLite 方案是 `better-sqlite3`，但它是**原生模組**
+（C++ 編譯出來的 `.node` 檔），要對應 Electron 內建的 Node.js ABI 重新
+編譯（`@electron/rebuild` / `electron-builder install-app-deps`），
+`.node` 檔案還不能被塞進 `.asar` 封存檔裡（要另外設定
+`asarUnpack`），升級 Electron 版本還要重新跑一次 rebuild——對這個專案
+「盡量不要有建置步驟、依賴越少越好」的風格來說，代價偏高。
+
+改用 **`sql.js`**（純 WebAssembly 版 SQLite）：
+- 沒有原生模組，`npm install` 完就能直接在 Electron 的 main process
+  （本質上就是一個 Node.js 環境）裡 `require('sql.js')` 用，不用
+  rebuild，也不用改 `asarUnpack`（`.wasm` 檔是用一般的 `fs.readFileSync`
+  讀取，不是 `dlopen`，Electron 的 asar 檔案系統整合本來就支援直接讀取
+  asar 內部的檔案）。
+- 代價：**整個資料庫活在記憶體裡**，不是「開檔案直接對硬碟讀寫」，每次
+  要落地存檔都要 `db.export()` 把整份資料庫匯出成 bytes 再整份寫回檔案
+  （見 `lib/sqlite.js` 開頭的說明）。`logError`/`logAudit` 選擇「每次
+  寫入就立刻存檔」，用效能換資料安全性，對日誌這種寫入頻率不高、資料量
+  頂多幾千筆的情境完全夠用；但這個取捨代表 sql.js **不適合**拿來裝
+  「大量資料、高頻寫入」的場景——如果之後真的要把帳號/專案/文件這些
+  資料也搬進 SQLite，且資料量/寫入頻率明顯變高，屆時應該重新評估
+  `better-sqlite3`（用同步 API + WAL 模式，效能明顯更好），而不是預設
+  沿用 sql.js。
+- `lib/sqlite.js` 把 `openDatabaseFile()`/`saveDatabaseFile()`/
+  `queryAll()` 包成通用的小工具，之後如果要幫其他模組加 SQLite 表，
+  直接重用這幾個函式即可，不用重寫一次 WASM 載入邏輯。
 
 ---
 
@@ -389,6 +623,28 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   調整。成功的話，Markdown 輸出格式是每則訊息一個 `###` 標題（🧑 使用者 /
   🤖 AI）+ 內容；JSON 輸出就是原始擷取結果。
 - 每次匯出成功都會自動登記進文件庫（見第 8 節）。
+- 回傳結果一律帶 `debug: { selectorUsed, matchedNodeCount,
+  nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
+  結構跟預設 selector 對不上」這種必然會隨網站改版而發生的問題：
+  - `matchedNodeCount = 0` → selector 本身就沒選到任何節點，通常代表
+    網站的 DOM 結構變了，`selectors.json` 裡那個平台的 `turn` selector
+    已經過時，需要用「設定 → 選擇器設定」的滑鼠選取工具重新框選、
+    重新產生 selector（`deriveSelectorFromSamples`，見第 10 節），而不是
+    去改 `extractors/default-selectors.json` 這個寫死的預設值。
+  - `matchedNodeCount > 0` 但 `nonEmptyMessageCount = 0` → selector 有
+    選到節點，但抓出來的 `innerText` 是空的，通常是選到了外層容器
+    （例如整個側邊欄或版面骨架）而不是實際訊息氣泡，一樣建議重新用滑鼠
+    選取工具挑更精準的節點。
+  - main.js 的 `captureCurrentConversation()` 每次呼叫都會把這組 debug
+    數字連同 `platform`/`ok`/`error` 印一行到主控台（見第 16 節），失敗
+    時額外記一筆錯誤日誌；前端「匯出當前對話」跟「對話庫 → 擷取目前
+    對話」失敗時的提示視窗也會直接顯示這組數字，不用另外開日誌視窗才
+    看得到。
+- 也掛了頁面層級的診斷：`createAccountView()` 幫每個帳號的
+  `WebContentsView` 接了 `did-fail-load`（頁面本身載入失敗，例如網路
+  斷線、被導向登入頁）跟 `console-message`（頁面自己的 JS 噴錯）事件，
+  轉送進第 16 節的主控台即時輸出，用來排除「根本不是 selector 的問題，
+  而是頁面沒載入成功」這種情況。
 
 ---
 
@@ -398,7 +654,10 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
 |---|---|---|
 | `accounts:changed` | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入 | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
 | `knowledge:changed` | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理 | 側邊欄「預設提示詞」區塊 |
-| `documents:changed` | 文件匯入/儲存/刪除、對話匯出自動登記 | 文件管理視窗 |
+| `documents:changed` | 文件匯入/儲存/刪除、對話匯出自動登記 | 文件管理視窗、對話庫視窗 |
+| `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入 | 對話庫視窗 |
+| `logs:changed` | 任何一筆錯誤/稽核日誌被寫入或清除 | 日誌主控台視窗 |
+| `console:entry` | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆 | 日誌主控台視窗（主控台分頁） |
 | `language:changed` | 語言切換 | 所有視窗（重新載入翻譯） |
 
 ---
@@ -406,12 +665,57 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
 ## 14. 打包（electron-builder）
 
 `package.json` 的 `build` 欄位設定 `appId`、`productName`、
-`directories.output: "dist"`、`files`（main.js/preload.js/renderer/**/
-extractors/**）、`asarUnpack: ["extractors/**/*"]`、各平台 `target`
+`directories.output: "dist"`、`files`（main.js/preload.js/**`lib/**/*`**/
+renderer/**/extractors/**，另外排除 `node_modules/sql.js/dist/` 裡用不到
+的 asm.js/worker/browser 變體跟壓縮包，減少打包體積）、
+`asarUnpack: ["extractors/**/*"]`、各平台 `target`
 （win: nsis, mac: dmg, linux: AppImage）與對應 icon 路徑
 （`assets/icons/icon.ico`/`.icns`/`.png`）。npm scripts：`start`、
 `build`、`build:win`、`build:mac`、`build:linux`、`build:dir`（免安裝
 資料夾，快速測試用）。
+
+**`files` 陣列務必包含 `lib/**/*`**：electron-builder 只要你自己指定了
+`files`，就只打包陣列裡列到的東西，不會自動囊括專案根目錄下所有檔案。
+`main.js` 用 `require('./lib/utils')`、`require('./lib/sqlite')` 依賴
+`lib/` 資料夾，如果漏掉沒列進 `files`，打包出來的成品會在啟動時直接
+噴 `Cannot find module './lib/...'` 崩潰——這是本專案曾經真的存在過的
+設定疏漏（`lib/utils.js` 一直都有在用，但 `files` 陣列一直沒列到它，
+只是因為開發時都用 `npm start` 直接跑原始碼所以沒發現），加入
+`lib/sqlite.js` 的時候一併修正。
+
+**`sql.js` 不需要 `asarUnpack`**：它是純 WebAssembly，main.js 用一般的
+`fs.readFileSync` 讀取 `.wasm` 檔（不是 `dlopen` 原生模組），Electron 的
+asar 檔案系統整合本來就支援直接讀取封存檔內部的檔案，跟 `better-
+sqlite3` 那種一定要解壓縮出來才能載入的原生模組不一樣。
+
+**Windows 安裝程式（`build.nsis`）預設安裝到使用者的應用程式資料夾，
+不是 `Program Files`**：
+
+```json
+"nsis": {
+  "oneClick": false,
+  "perMachine": false,
+  "allowToChangeInstallationDirectory": true,
+  "createDesktopShortcut": true,
+  "createStartMenuShortcut": true,
+  "shortcutName": "Platter"
+}
+```
+
+- `perMachine: false` → 預設安裝路徑是 `%LOCALAPPDATA%\Programs\Platter`
+  （使用者自己的 AppData 底下），不是需要系統管理員權限的
+  `C:\Program Files\Platter`。單機單人用的桌面工具沒有必要要求 UAC
+  提權，per-user 安裝也順便降低「使用者裝在權限受限資料夾、之後啟動時
+  一堆檔案存取被拒」這類問題的機率（跟第 9.6 節提到的 Chromium 磁碟
+  快取錯誤是相關但不同的兩件事：快取本身的存放位置一定是
+  `app.getPath('userData')`、不受安裝路徑影響，但安裝路徑如果需要
+  admin 權限，使用者日常操作、防毒軟體行為都會更容易出狀況）。
+- `oneClick: false` → 顯示正常的安裝精靈視窗（不是靜默一鍵安裝），
+  `allowToChangeInstallationDirectory: true` → 精靈裡有「選擇安裝路徑」
+  這一步，預設值就是上面那個 AppData 路徑，使用者仍然可以自己改到別的
+  地方（例如想裝到 D 槽）。
+- mac（`dmg`）、linux（`AppImage`）本來就沒有「安裝到系統資料夾」這個
+  概念（拖進 Applications / 直接執行檔案），不需要對應設定。
 
 ---
 
@@ -419,6 +723,8 @@ extractors/**）、`asarUnpack: ["extractors/**/*"]`、各平台 `target`
 
 ```
 main.js / preload.js / package.json
+lib/utils.js            # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
+lib/sqlite.js           # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
 assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
@@ -432,6 +738,8 @@ renderer/settings.html, settings.js, settings.css    # 設定視窗
 renderer/team.html, team.js, team.css                # 虛擬團隊主控台
 renderer/project.html, project.js, project.css       # 專案計畫管理
 renderer/documents.html, documents.js, documents.css # 文件管理
+renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
+renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
 renderer/i18n.js
 renderer/locales/zh-TW.json, en.json
 ```
@@ -441,16 +749,79 @@ renderer/locales/zh-TW.json, en.json
 ```
 app-state.json      # 帳號清單、UI 狀態（含側邊欄群組展開狀態）、擴充功能、角色
 knowledge-base.json # 提示詞項目 + 套餐
-projects.json        # 專案 + 任務
+projects.json        # 專案 + 任務 + 每個專案自己的 issue 清單
 documents.json        # 文件中繼資料
 documents/             # 文件庫「已管理」檔案複本存放資料夾
+conversations.json     # 對話庫（對話標題/標籤/Markdown 內容/跟文件庫的關聯）
 selectors.json          # 各平台的 DOM selector 設定
+logs.sqlite             # 日誌主控台（錯誤日誌 + 稽核日誌，sql.js/SQLite，各自最多保留最新 500 筆）
+logs.json.migrated     # 舊版（1.11 以前）JSON 格式日誌，升級時搬進 logs.sqlite 後留底，可以刪除
 data-dir-pointer.json  # 指向自訂 DATA_DIR 的指標檔（永遠留在預設 userData）
 ```
 
 ---
 
-## 16. 深色主題視覺規範
+## 16. 日誌主控台（`log.html`）
+
+資料庫 `logs.sqlite`（**sql.js**：純 WebAssembly 版 SQLite，沒有原生
+模組，不需要 `electron-rebuild`；細節與取捨見 `lib/sqlite.js` 開頭的
+註解跟第 9.7 節）：
+
+```sql
+CREATE TABLE errors (id TEXT PRIMARY KEY, timestamp TEXT NOT NULL, scope TEXT, message TEXT, stack TEXT);
+CREATE TABLE audits (id TEXT PRIMARY KEY, timestamp TEXT NOT NULL, category TEXT, action TEXT, detail TEXT);
+```
+
+- **錯誤日誌**：`main.js` 裡原本很多 `catch (err) { console.error(...) }`
+  的地方（擴充功能載入失敗、對話擷取失敗、選取器工具失敗、文件匯入/
+  刪除失敗……）都額外呼叫 `logError(scope, message, err)` 寫進來；另外在
+  App 層級掛了 `process.on('uncaughtException'/'unhandledRejection')`，
+  main process 任何沒被接住的例外也會自動記進來，不會只留在終端機、
+  使用者完全看不到。`readJSONSafe`/`writeJSONSafe` 內部的 catch **刻意
+  不**接進 `logError`，避免「寫日誌這件事本身失敗」造成無窮遞迴。
+- **稽核日誌**：關鍵動作各自呼叫 `logAudit(category, action, detail)`
+  記錄，`detail` 本身就是組好的可讀中文說明（例如「新增帳號「X」
+  (chatgpt)」），不需要另外拼字串。目前有記錄的動作：帳號新增/移除、
+  專案建立/刪除、文件匯入/刪除、對話新增/刪除/匯出/匯出失敗、備份匯出/
+  匯入、設定檔存放位置搬遷、擴充功能安裝/移除。**對話匯出失敗**（不論是
+  「匯出當前對話」還是「對話庫 → 匯出檔案」）現在都會記一筆
+  `conversation` / `exportFailed` 稽核紀錄，並在 `logError` 那邊留一筆對應
+  的錯誤日誌，之前這類失敗完全沒有落地記錄、只會在畫面上跳一次 alert
+  就消失，回頭完全查不到發生過什麼事。
+- 兩種日誌都各自最多保留最新 500 筆：每次寫入後跑
+  `DELETE FROM <table> WHERE id NOT IN (SELECT id FROM <table> ORDER BY
+  timestamp DESC LIMIT 500)`，用 SQL 直接裁剪，避免 `logs.sqlite`
+  無限長大。
+- **升級搬遷**：1.11 以前的版本把日誌存在 `logs.json`。第一次用新版
+  啟動時，`initLogsDatabase()` 建完表之後會檢查：如果偵測到舊的
+  `logs.json` 檔案、而且新資料庫的 `errors`/`audits` 都還是空的，就把
+  舊檔內容一筆筆 `INSERT OR IGNORE` 進新資料庫，再把舊檔改名成
+  `logs.json.migrated` 留底（不直接刪除）。如果新資料庫已經有資料
+  （代表已經搬過或是全新安裝），就不會再動舊檔，避免覆蓋。
+- 視窗畫面用「錯誤日誌／稽核日誌／主控台」三個分頁：
+  - 錯誤日誌可依來源（`scope`，例如 `documents:import`）篩選、關鍵字
+    搜尋訊息；每筆若帶 `stack` 可以點開展開完整堆疊。
+  - 稽核日誌可依類別（帳號/專案/文件/對話/備份/設定/擴充功能）篩選、
+    關鍵字搜尋內容。
+  - **主控台**：即時攔截 `console.log/info/warn/error`（含每個帳號
+    `WebContentsView` 自己的 `console-message`、頁面 `did-fail-load`
+    轉送過來的訊息，見第 12 節），逐行显示成終端機風格的即時輸出，只存
+    在記憶體（`consoleBuffer`，上限 300 筆），App 關掉就沒了、不落地存檔
+    也不算進備份。有「自動捲動」開關跟「清除主控台」按鈕。這個分頁存在
+    的目的是讓使用者不用另外開終端機/DevTools，就能直接在 App 裡看到
+    「這次擷取對話 matched 幾個節點、有內容的訊息幾則」這類除錯用的原始
+    輸出，對排查「某個 AI 平台匯出失敗」這種必然跟網站當下 DOM 結構有關、
+    沒辦法只靠改程式碼一勞永逸解決的問題特別有幫助。
+  - 三個分頁都可以「清除」（各自獨立清除，會問確認）；錯誤/稽核日誌有
+    「匯出日誌」把目前完整的 `errors`+`audits` 存成一份 JSON 檔，方便回報
+    問題給其他人看（主控台的即時輸出不在這份匯出範圍內，因為它本來就
+    只是暫時性的除錯輸出）。
+- 不備份進 `settings:exportBackup`（日誌是診斷用的執行紀錄，不是使用者
+  資料，換一台機器/重灌不需要帶著走）。
+
+---
+
+## 17. 深色主題視覺規範
 
 CSS 變數：`--bg-main:#1e1e1e`、`--bg-sidebar:#171717`、
 `--bg-hover:#2a2a2a`、`--bg-active:#2f3b52`、`--text-primary:#e6e6e6`、
@@ -460,7 +831,7 @@ CSS 變數：`--bg-main:#1e1e1e`、`--bg-sidebar:#171717`、
 
 ---
 
-## 17. 明確排除的功能（不要做）
+## 18. 明確排除的功能（不要做）
 
 - 不做「連去 Chrome 線上應用程式商店一鍵安裝擴充功能」。
 - 不做任何呼叫平台未公開 API 的自動化抓取（例如輪詢新訊息、背景自動
@@ -471,7 +842,7 @@ CSS 變數：`--bg-main:#1e1e1e`、`--bg-sidebar:#171717`、
 
 ---
 
-## 18. 與 BUILD_PLAN.md 的關係
+## 19. 與 BUILD_PLAN.md 的關係
 
 本文件是「最終狀態」的完整規格。`BUILD_PLAN.md` 把第 3～13 節的內容拆成
 8 個可獨立驗收的建置階段，每個階段都有明確的交付項目與檢核表，方便另一個

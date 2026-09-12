@@ -19,13 +19,14 @@ function capturePlatformConversation(platform, selectorConfig) {
         title: document.title || platform,
         messages: [],
         capturedAt: new Date().toISOString(),
+        debug: { selectorUsed: null, matchedNodeCount: 0, nonEmptyMessageCount: 0, pageUrl: location.href },
       };
     }
 
     const nodes = Array.from(document.querySelectorAll(selectorConfig.turn));
     const userHint = (selectorConfig.userHint || '').trim();
 
-    function isUserMessage(el) {
+    const isUserMessage = function (el) {
       if (!userHint) return false;
 
       // 1) 優先比對 data-message-author-role 屬性值
@@ -52,7 +53,7 @@ function capturePlatformConversation(platform, selectorConfig) {
       }
 
       return false;
-    }
+    };
 
     const messages = nodes
       .map((el) => {
@@ -71,6 +72,12 @@ function capturePlatformConversation(platform, selectorConfig) {
       title: document.title || platform,
       messages,
       capturedAt: new Date().toISOString(),
+      debug: {
+        selectorUsed: selectorConfig.turn,
+        matchedNodeCount: nodes.length,
+        nonEmptyMessageCount: messages.length,
+        pageUrl: location.href,
+      },
     };
   } catch (err) {
     return {

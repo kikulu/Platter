@@ -190,6 +190,13 @@
     await window.workspaceAPI.openCurrentDevTools();
   });
 
+  document.getElementById('btn-clear-cache').addEventListener('click', async () => {
+    const ok = window.confirm(window.i18n.t('settings.troubleshoot.clearCacheConfirm'));
+    if (!ok) return;
+    await window.workspaceAPI.clearAppCache();
+    alert(window.i18n.t('settings.troubleshoot.clearCacheDone'));
+  });
+
   // --- 帳號角色機制 ---
   const ROLE_COLOR_PALETTE = [
     '#4f8cff', '#e5484d', '#f5a623', '#2ecc71',
@@ -320,6 +327,13 @@
     resetRoleForm();
   });
 
+  // 語言切換後，「關於」區塊的版本文字要重新套用翻譯格式（不是靠
+  // data-i18n 靜態字串替換，因為裡面要內插版本號）
+  document.addEventListener('i18n:updated', async () => {
+    const version = await window.workspaceAPI.getAppVersion();
+    document.getElementById('about-version').textContent = window.i18n.t('settings.about.version', { version });
+  });
+
   // --- 初始化 ---
   (async () => {
     await window.i18n.init();
@@ -330,5 +344,8 @@
     await refreshSelectors();
     resetRoleForm();
     await refreshRoles();
+
+    const version = await window.workspaceAPI.getAppVersion();
+    document.getElementById('about-version').textContent = window.i18n.t('settings.about.version', { version });
   })();
 })();
