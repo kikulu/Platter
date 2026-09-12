@@ -22,12 +22,12 @@
   預覽或失敗診斷數字，見 `PROJECT_SPEC.md` 第 10 節。
 - 更多平台支援（在 `PLATFORM_URLS` 與 `default-selectors.json` 增加項目
   即可，UI 下拉選單同步增加選項）。
-- GitHub Actions CI：push / PR 時自動跑 `npm run lint` + `npm test`
+- ~~GitHub Actions CI：push / PR 時自動跑 `npm run lint` + `npm test`
   （不含實際啟動 Electron App 互動的測試，CI 環境沒有顯示器，那部分
-  永遠要靠 `npm start` 手動驗證）。`npm test`/`npm run lint` 本身已經在
-  `1.7.0` 做成真的可以跑的腳本（見 `lib/utils.js`、`test/utils.test.js`、
-  `.eslintrc.json`），`1.13.0` 又補了 `test/sqlite.test.js`，還缺的只是
-  接上 CI workflow 檔案。
+  永遠要靠 `npm start` 手動驗證）。~~ → 已在 `1.20.0` 完成，見
+  `.github/workflows/ci.yml`：`push`/`pull_request` 到 `main` 分支時，
+  在 Node 18.x / 20.x 兩個版本上各跑一次 `npm install`（跳過 Electron
+  binary 下載）→ `npm run lint` → `npm test`。
 - ~~把 `main.js`（目前已破千行）繼續模組化，`lib/utils.js`、
   `lib/sqlite.js` 只是第一步，之後可以考慮把資料層（`loadX`/`saveX`
   系列）、IPC handler 註冊也拆成獨立模組。~~ → 已在 `1.17.0` 完成，
