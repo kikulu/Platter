@@ -38,6 +38,8 @@
   "knowledge.tabItems": "提示詞",
   "knowledge.tabGroups": "套餐",
   "knowledge.filterAll": "全部標籤",
+  "knowledge.searchPlaceholder": "搜尋標題／內容／標籤…",
+  "knowledge.searchNoResult": "沒有符合搜尋條件的項目",
   "knowledge.newItem": "新增項目",
   "knowledge.name": "名稱",
   "knowledge.tags": "標籤（逗號分隔）",

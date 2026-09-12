@@ -6,6 +6,7 @@
   const btnNewGroup = document.getElementById('btn-new-group');
   const btnImportMd = document.getElementById('btn-import-md');
   const listEl = document.getElementById('kb-list');
+  const searchInput = document.getElementById('kb-search');
   const tagFilterEl = document.getElementById('kb-tag-filter');
   const emptyEl = document.getElementById('kb-empty');
 
@@ -96,6 +97,11 @@
   tagFilterEl.addEventListener('change', renderList);
 
   // ---------------------------------------------------------------------
+  // 全文搜尋（即時篩選，不用按 Enter；跟標籤篩選是 AND 關係）
+  // ---------------------------------------------------------------------
+  searchInput.addEventListener('input', renderList);
+
+  // ---------------------------------------------------------------------
   // List rendering
   // ---------------------------------------------------------------------
   function renderList() {
@@ -106,7 +112,17 @@
 
   function renderItemList() {
     const filterTag = tagFilterEl.value;
-    const filtered = filterTag ? allItems.filter((it) => (it.tags || []).includes(filterTag)) : allItems;
+    const query = searchInput.value.trim().toLowerCase();
+    const filtered = allItems.filter((it) => {
+      if (filterTag && !(it.tags || []).includes(filterTag)) return false;
+      if (query && !itemMatchesQuery(it, query)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      renderListEmptyHint(allItems.length === 0 ? 'knowledge.selectPrompt' : 'knowledge.searchNoResult');
+      return;
+    }
 
     filtered.forEach((it) => {
       const div = document.createElement('div');
@@ -132,9 +148,29 @@
     });
   }
 
+  // 全文搜尋比對範圍：標題、內容、標籤——標籤篩選下拉選單已經可以精準篩
+  // 單一標籤，這裡額外也比對標籤是為了「只記得標籤片段、不確定完整拼法」
+  // 這種情況也能搜到。
+  function itemMatchesQuery(it, query) {
+    if ((it.title || '').toLowerCase().includes(query)) return true;
+    if ((it.content || '').toLowerCase().includes(query)) return true;
+    if ((it.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
+    return false;
+  }
+
   function renderGroupList() {
     const filterTag = tagFilterEl.value;
-    const filtered = filterTag ? allGroups.filter((g) => (g.tags || []).includes(filterTag)) : allGroups;
+    const query = searchInput.value.trim().toLowerCase();
+    const filtered = allGroups.filter((g) => {
+      if (filterTag && !(g.tags || []).includes(filterTag)) return false;
+      if (query && !groupMatchesQuery(g, query)) return false;
+      return true;
+    });
+
+    if (filtered.length === 0) {
+      renderListEmptyHint(allGroups.length === 0 ? 'knowledge.selectGroupPrompt' : 'knowledge.searchNoResult');
+      return;
+    }
 
     filtered.forEach((g) => {
       const div = document.createElement('div');
@@ -156,6 +192,28 @@
       div.addEventListener('click', () => selectGroup(g.id));
       listEl.appendChild(div);
     });
+  }
+
+  // 全文搜尋比對範圍：套餐標題、說明、標籤，外加「套餐裡任一步驟引用的
+  // 提示詞標題」——這樣可以直接搜「這個提示詞被用在哪些套餐裡」，不用
+  // 自己一個個套餐點開看步驟。itemTitleById() 定義在後面（函式宣告會
+  // hoist，執行順序沒問題）。
+  function groupMatchesQuery(g, query) {
+    if ((g.title || '').toLowerCase().includes(query)) return true;
+    if ((g.description || '').toLowerCase().includes(query)) return true;
+    if ((g.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
+    if ((g.steps || []).some((s) => itemTitleById(s.itemId).toLowerCase().includes(query))) return true;
+    return false;
+  }
+
+  // 標籤/搜尋篩選後完全沒有符合的項目時顯示的提示；如果清單本身就是空的
+  // （還沒建立過任何項目/套餐），顯示原本的「選擇或新增」提示，不要誤導
+  // 使用者以為是搜尋沒搜到。
+  function renderListEmptyHint(i18nKey) {
+    const hint = document.createElement('div');
+    hint.className = 'kb-list-empty';
+    hint.textContent = window.i18n.t(i18nKey);
+    listEl.appendChild(hint);
   }
 
   // ---------------------------------------------------------------------

@@ -40,6 +40,13 @@ body { display: flex; height: 100vh; overflow: hidden; }
   margin-top: 2px;
 }
 
+.kb-list-empty {
+  padding: 20px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
 #kb-list-footer {
   padding: 10px;
   border-top: 1px solid var(--border);
