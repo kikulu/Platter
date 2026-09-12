@@ -11,6 +11,7 @@
   <div id="proj-list-pane">
     <div id="proj-list-toolbar">
       <button id="btn-new-project" class="primary" data-i18n="project.newProject">新增專案</button>
+      <button id="btn-overview" data-i18n="project.overview">跨專案總覽</button>
     </div>
     <div id="proj-list"></div>
   </div>
@@ -48,7 +49,15 @@
       <textarea id="proj-description" style="min-height:56px;"></textarea>
     </div>
 
-    <div class="field" style="flex:1; display:flex; flex-direction:column;">
+    <div id="proj-tabs" class="tabbar">
+      <button id="tab-tasks" class="tab-btn active" data-i18n="project.tabTasks">任務清單</button>
+      <button id="tab-calendar" class="tab-btn" data-i18n="project.tabCalendar">月曆</button>
+      <button id="tab-gantt" class="tab-btn" data-i18n="project.tabGantt">甘特圖</button>
+      <button id="tab-issues" class="tab-btn" data-i18n="project.tabIssues">Issue 管理</button>
+    </div>
+
+    <!-- 任務清單 -->
+    <div id="panel-tasks" class="tab-panel active">
       <div class="row" style="justify-content:space-between; margin-bottom:4px;">
         <label class="label" style="margin:0;" data-i18n="project.tasks">任務清單</label>
         <span id="proj-task-progress" class="settings-hint" style="margin:0;"></span>
@@ -60,9 +69,89 @@
       </div>
     </div>
 
+    <!-- 月曆檢視 -->
+    <div id="panel-calendar" class="tab-panel">
+      <div id="cal-toolbar" class="cal-toolbar">
+        <button id="btn-cal-prev">‹</button>
+        <span id="cal-month-label"></span>
+        <button id="btn-cal-next">›</button>
+        <button id="btn-cal-today" data-i18n="project.calendarToday">回到今天</button>
+      </div>
+      <div id="cal-weekdays"></div>
+      <div id="cal-grid"></div>
+      <div id="cal-day-detail"></div>
+    </div>
+
+    <!-- 甘特圖 -->
+    <div id="panel-gantt" class="tab-panel">
+      <div id="gantt-empty" data-i18n="project.ganttEmpty">尚未有任何含日期的任務，幫任務加上開始/到期日就能看到甘特圖</div>
+      <div id="gantt-container"></div>
+    </div>
+
+    <!-- Issue 管理 -->
+    <div id="panel-issues" class="tab-panel">
+      <div class="row" style="justify-content:space-between; margin-bottom:4px; align-items:center;">
+        <label class="label" style="margin:0;" data-i18n="project.issues">Issue 清單</label>
+        <select id="issue-filter-status">
+          <option value="" data-i18n="project.filterAllStatus">全部狀態</option>
+          <option value="open" data-i18n="project.issueStatusOpen">待處理</option>
+          <option value="inprogress" data-i18n="project.issueStatusInprogress">處理中</option>
+          <option value="resolved" data-i18n="project.issueStatusResolved">已解決</option>
+          <option value="closed" data-i18n="project.issueStatusClosed">已關閉</option>
+        </select>
+      </div>
+      <div id="proj-issue-list"></div>
+      <div class="row" style="margin-top:8px;">
+        <button id="btn-add-issue" data-i18n="project.addIssue">＋ 新增 Issue</button>
+      </div>
+    </div>
+
     <div id="proj-editor-actions">
       <button id="btn-delete-project" class="danger" data-i18n="project.delete">刪除專案</button>
       <button id="btn-save-project" class="primary" data-i18n="project.save">儲存專案</button>
+    </div>
+  </div>
+
+  <!-- 跨專案總覽：把所有專案的月曆/甘特圖/Issue 疊在一起看 -->
+  <div id="proj-overview" style="display:none;">
+    <h2 class="overview-title" data-i18n="project.overviewTitle">跨專案總覽</h2>
+    <div id="ov-legend"></div>
+
+    <div id="ov-tabs" class="tabbar">
+      <button id="tab-ov-calendar" class="tab-btn active" data-i18n="project.tabCalendar">月曆</button>
+      <button id="tab-ov-gantt" class="tab-btn" data-i18n="project.tabGantt">甘特圖</button>
+      <button id="tab-ov-issues" class="tab-btn" data-i18n="project.tabIssues">Issue 管理</button>
+    </div>
+
+    <div id="ov-panel-calendar" class="tab-panel active">
+      <div id="ov-cal-toolbar" class="cal-toolbar">
+        <button id="btn-ov-cal-prev">‹</button>
+        <span id="ov-cal-month-label"></span>
+        <button id="btn-ov-cal-next">›</button>
+        <button id="btn-ov-cal-today" data-i18n="project.calendarToday">回到今天</button>
+      </div>
+      <div id="ov-cal-weekdays"></div>
+      <div id="ov-cal-grid"></div>
+      <div id="ov-cal-day-detail"></div>
+    </div>
+
+    <div id="ov-panel-gantt" class="tab-panel">
+      <div id="ov-gantt-empty" data-i18n="project.ganttEmpty">尚未有任何含日期的任務，幫任務加上開始/到期日就能看到甘特圖</div>
+      <div id="ov-gantt-container"></div>
+    </div>
+
+    <div id="ov-panel-issues" class="tab-panel">
+      <div class="row" style="justify-content:space-between; margin-bottom:4px; align-items:center;">
+        <label class="label" style="margin:0;" data-i18n="project.issues">Issue 清單</label>
+        <select id="ov-issue-filter-status">
+          <option value="" data-i18n="project.filterAllStatus">全部狀態</option>
+          <option value="open" data-i18n="project.issueStatusOpen">待處理</option>
+          <option value="inprogress" data-i18n="project.issueStatusInprogress">處理中</option>
+          <option value="resolved" data-i18n="project.issueStatusResolved">已解決</option>
+          <option value="closed" data-i18n="project.issueStatusClosed">已關閉</option>
+        </select>
+      </div>
+      <div id="ov-issue-list"></div>
     </div>
   </div>
 

@@ -132,6 +132,8 @@
     #sidebar.collapsed .account-item { padding-left: 14px; }
     .account-item:hover { background: var(--bg-hover); }
     .account-item.active { background: var(--bg-active); }
+    .account-item.dragging { opacity: 0.4; }
+    .account-item.drag-over { box-shadow: inset 0 2px 0 var(--accent); }
     .account-item .avatar {
       width: 26px; height: 26px; border-radius: 50%;
       background: var(--accent); color: #fff;
@@ -216,6 +218,15 @@
       border-top: 1px solid var(--border);
       padding: 6px 0;
     }
+    #app-version-label {
+      text-align: center;
+      font-size: 10px;
+      color: var(--text-secondary);
+      padding: 2px 0 4px;
+      user-select: text;
+      cursor: default;
+    }
+    #sidebar.collapsed #app-version-label { display: none; }
 
     #main-content {
       flex: 1;
@@ -288,6 +299,14 @@
             <span class="icon">🗃️</span>
             <span class="label-text" data-i18n="sidebar.documents">文件管理</span>
           </button>
+          <button class="sidebar-action indent" id="btn-conversations">
+            <span class="icon">🗨️</span>
+            <span class="label-text" data-i18n="sidebar.conversationLibrary">對話庫</span>
+          </button>
+          <button class="sidebar-action indent" id="btn-logs">
+            <span class="icon">🧾</span>
+            <span class="label-text" data-i18n="sidebar.logConsole">日誌主控台</span>
+          </button>
         </div>
       </div>
 
@@ -316,6 +335,7 @@
         <span class="icon">⚙️</span>
         <span class="label-text" data-i18n="sidebar.settings">設定</span>
       </button>
+      <div id="app-version-label"></div>
     </div>
   </div>
 

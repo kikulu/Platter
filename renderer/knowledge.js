@@ -4,6 +4,7 @@
   const tabGroupsBtn = document.getElementById('tab-groups');
   const btnNewItem = document.getElementById('btn-new-item');
   const btnNewGroup = document.getElementById('btn-new-group');
+  const btnImportMd = document.getElementById('btn-import-md');
   const listEl = document.getElementById('kb-list');
   const tagFilterEl = document.getElementById('kb-tag-filter');
   const emptyEl = document.getElementById('kb-empty');
@@ -55,6 +56,7 @@
     tabGroupsBtn.classList.toggle('active', mode === 'groups');
     btnNewItem.style.display = mode === 'items' ? 'inline-block' : 'none';
     btnNewGroup.style.display = mode === 'groups' ? 'inline-block' : 'none';
+    btnImportMd.style.display = mode === 'items' ? 'inline-block' : 'none';
 
     itemEditorEl.style.display = 'none';
     groupEditorEl.style.display = 'none';
@@ -534,6 +536,20 @@
     allGroups = kb.groups;
     rebuildTagOptions();
     renderList();
+  });
+
+  // 匯入現成的 .md 檔案（例如之前匯出的對話紀錄），直接變成新的提示詞
+  // 項目，匯入完直接把最後一個開起來，方便馬上檢視/編輯內容
+  btnImportMd.addEventListener('click', async () => {
+    const result = await window.workspaceAPI.importKnowledgeMarkdown();
+    allItems = result.kb.items;
+    allGroups = result.kb.groups;
+    rebuildTagOptions();
+    if (result.importedIds && result.importedIds.length > 0) {
+      selectItem(result.importedIds[result.importedIds.length - 1]);
+    } else {
+      renderList();
+    }
   });
 
   // 語言切換後，重新套用動態產生內容裡的翻譯字串（空狀態提示、進度文字等）

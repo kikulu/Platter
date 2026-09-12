@@ -1,10 +1,14 @@
 {
   "name": "Platter",
-  "version": "1.0.0",
+  "version": "1.16.0",
   "description": "在同一個視窗內管理多個 AI 平台Web帳號的桌面應用程式",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
+    "test": "node --test",
+    "lint": "eslint . --ext .js",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
     "build": "electron-builder",
     "build:win": "electron-builder --win",
     "build:mac": "electron-builder --mac",
@@ -13,9 +17,14 @@
   },
   "author": "Kikulu",
   "license": "MIT",
+  "dependencies": {
+    "sql.js": "^1.14.2"
+  },
   "devDependencies": {
     "electron": "^30.0.0",
-    "electron-builder": "^24.13.3"
+    "electron-builder": "^24.13.3",
+    "eslint": "^8.57.1",
+    "prettier": "^3.3.3"
   },
   "build": {
     "appId": "com.kikulu.platter",
@@ -26,8 +35,13 @@
     "files": [
       "main.js",
       "preload.js",
+      "lib/**/*",
       "renderer/**/*",
-      "extractors/**/*"
+      "extractors/**/*",
+      "!node_modules/sql.js/dist/*.zip",
+      "!node_modules/sql.js/dist/sql-asm*",
+      "!node_modules/sql.js/dist/worker.*",
+      "!node_modules/sql.js/dist/*-browser*"
     ],
     "asarUnpack": [
       "extractors/**/*"
@@ -35,6 +49,14 @@
     "win": {
       "target": "nsis",
       "icon": "assets/icons/icon.ico"
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Platter"
     },
     "mac": {
       "target": "dmg",

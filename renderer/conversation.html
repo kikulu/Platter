@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>對話庫</title>
+  <link rel="stylesheet" href="renderer.css" />
+  <link rel="stylesheet" href="conversation.css" />
+</head>
+<body>
+  <div id="conv-list-pane">
+    <div id="conv-list-toolbar">
+      <select id="conv-tag-filter">
+        <option value="" data-i18n="knowledge.filterAll">全部標籤</option>
+      </select>
+      <div class="row">
+        <button id="btn-new-conv" class="primary" data-i18n="conversations.new">新增對話</button>
+        <button id="btn-capture-conv" data-i18n="conversations.capture">擷取目前對話</button>
+      </div>
+      <div class="row">
+        <button id="btn-import-conv-md" data-i18n="conversations.importMarkdown">匯入 Markdown 檔案</button>
+      </div>
+    </div>
+    <div id="conv-list"></div>
+  </div>
+
+  <div id="conv-empty" data-i18n="conversations.selectPrompt">從左側選擇一則對話，或點「新增對話」建立新的</div>
+
+  <div id="conv-editor" style="display:none;">
+    <div class="field">
+      <label class="label" data-i18n="conversations.name">標題</label>
+      <input type="text" id="conv-title" data-i18n-placeholder="conversations.namePlaceholder" />
+    </div>
+    <div class="field">
+      <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
+      <input type="text" id="conv-tags" data-i18n-placeholder="knowledge.tagsPlaceholder" />
+    </div>
+    <div class="field" style="flex:1; display:flex; flex-direction:column; min-height:160px;">
+      <label class="label" data-i18n="conversations.content">對話內容（Markdown）</label>
+      <textarea id="conv-content" data-i18n-placeholder="conversations.contentPlaceholder"></textarea>
+    </div>
+
+    <div class="field">
+      <label class="label" data-i18n="conversations.linkedDocuments">關聯文件（文件庫）</label>
+      <div id="conv-linked-list"></div>
+      <div class="row" style="margin-top:6px;">
+        <select id="conv-link-select"></select>
+        <button id="btn-link-doc" data-i18n="conversations.link">關聯</button>
+      </div>
+    </div>
+
+    <div id="conv-source-info" class="settings-hint"></div>
+
+    <div id="conv-editor-actions">
+      <button id="btn-export-conv" data-i18n="conversations.export">匯出檔案</button>
+      <button id="btn-delete-conv" class="danger" data-i18n="knowledge.delete">刪除</button>
+      <button id="btn-save-conv" class="primary" data-i18n="knowledge.save">儲存</button>
+    </div>
+  </div>
+
+  <script src="i18n.js"></script>
+  <script src="conversation.js"></script>
+</body>
+</html>
