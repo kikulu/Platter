@@ -1,5 +1,31 @@
 # Changelog
 
+## [1.21.1]
+
+### 修正：對話庫的文件關聯每次儲存都會被清空
+
+- **根因**：`renderer/conversation.js` 的 `currentDraft()`（「儲存」按鈕
+  組出來要送給後端的資料）從來不包含 `linkedDocumentIds`——這個欄位是
+  「新增關聯」/「取消關聯」按鈕各自透過獨立的
+  `conversations:linkDocument`/`unlinkDocument` 頻道維護的，編輯表單本來
+  就不該碰它。但後端 `conversations:save` 遇到沒帶這個欄位的情況會直接
+  預設成空陣列 `[]`，而且是用 `{...原本資料, ...明確覆蓋的欄位}` 的寫法、
+  `linkedDocumentIds` 又剛好列在「明確覆蓋」那一組裡，蓋掉了展開運算子
+  帶出來的原始值。結果就是：只要在對話庫按「儲存」（不管是改標題、標籤
+  還是內容，跟文件關聯完全無關的操作），已經建立好的文件關聯就會被
+  整個清空。
+- **修正**：`conversations:save` 遇到既有對話、且 payload 沒有明確帶
+  `linkedDocumentIds` 時，一律沿用資料庫裡已經存的版本，不再預設成空
+  陣列去覆蓋。只有新建對話（原本就沒有舊資料可以沿用）才會用空陣列
+  當初始值。
+- 驗證方式：寫了一支重現腳本，透過 mock 過的 `electron` 模組直接呼叫
+  `lib/ipc/conversations.js` 的真正 production handler（不是另外模擬
+  邏輯）——新增對話 → 關聯一份文件 → 只改標題後存檔 → 確認關聯還在。
+  修正前的版本重新跑一次同一支腳本，先實際重現「存檔後關聯變成空陣列」
+  來確認腳本真的抓得到這個問題，再換回修正後的版本確認通過。另外重新
+  跑過 `npm run lint`（0 錯誤）、`npm test`（17 個測試全過）、
+  `npm run format:check`。
+
 ## [1.21.0]
 
 ### 整批套用 Prettier 排版
