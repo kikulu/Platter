@@ -188,6 +188,106 @@ body {
   color: var(--danger);
 }
 
+.task-time-btn {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 4px 8px;
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-secondary);
+  border-radius: 4px;
+}
+.task-time-btn:hover {
+  color: var(--text-primary);
+  border-color: var(--accent);
+}
+.task-time-btn.has-entries {
+  color: var(--accent);
+  border-color: var(--accent);
+}
+
+.task-time-panel {
+  margin: -2px 0 4px 0;
+  padding: 8px;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 6px 6px;
+  background: var(--bg-main);
+  font-size: 12px;
+}
+.task-time-entry {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border);
+}
+.task-time-entry:last-of-type {
+  border-bottom: none;
+}
+.task-time-entry .task-time-entry-date {
+  color: var(--text-secondary);
+  flex-shrink: 0;
+  width: 84px;
+}
+.task-time-entry .task-time-entry-hours {
+  flex-shrink: 0;
+  width: 48px;
+  color: var(--accent);
+  font-weight: 600;
+}
+.task-time-entry .task-time-entry-note {
+  flex: 1;
+  color: var(--text-secondary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.task-time-entry .task-time-entry-remove {
+  flex-shrink: 0;
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 0 4px;
+}
+.task-time-entry .task-time-entry-remove:hover {
+  color: var(--danger);
+}
+
+.task-time-add {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--border);
+}
+.task-time-add input[type='date'] {
+  width: 118px;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-time-add input[type='number'] {
+  width: 56px;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-time-add input[type='text'] {
+  flex: 1;
+  font-size: 11px;
+  padding: 4px 6px;
+}
+.task-time-add button {
+  flex-shrink: 0;
+  font-size: 11px;
+  padding: 4px 10px;
+}
+
+.task-time-empty {
+  color: var(--text-secondary);
+  padding: 4px 0;
+}
+
 #proj-new-task-input {
   flex: 1;
 }
