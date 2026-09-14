@@ -12,6 +12,7 @@
   const taskListEl = document.getElementById('proj-task-list');
   const newTaskInput = document.getElementById('proj-new-task-input');
   const taskProgressEl = document.getElementById('proj-task-progress');
+  const taskTotalHoursEl = document.getElementById('proj-task-total-hours');
 
   // 月曆
   const calToolbarLabel = document.getElementById('cal-month-label');
@@ -31,6 +32,7 @@
   let allAccounts = [];
   let currentProjectId = null;
   let editingTasks = [];
+  let expandedTimeTaskId = null; // 目前展開「工時紀錄」面板的任務 id，切換任務清單時重置
   let editingIssues = [];
   let calendarMonth = startOfMonth(new Date());
   let selectedCalendarDate = null;
@@ -140,10 +142,29 @@
   // ---------------------------------------------------------------------
   // 任務清單
   // ---------------------------------------------------------------------
+  function taskHours(task) {
+    return (task.timeEntries || []).reduce(
+      (sum, entry) => sum + (Number(entry.hours) || 0),
+      0
+    );
+  }
+
+  function formatHours(hours) {
+    // 去掉沒意義的小數點（3 顯示 3，3.5 顯示 3.5），避免每個都是 3.00 小時
+    const rounded = Math.round(hours * 100) / 100;
+    return String(rounded);
+  }
+
   function renderTaskProgress() {
     const total = editingTasks.length;
     const done = editingTasks.filter((t) => t.status === 'done').length;
     taskProgressEl.textContent = window.i18n.t('project.taskProgress', { done, total });
+
+    const totalHours = editingTasks.reduce((sum, t) => sum + taskHours(t), 0);
+    taskTotalHoursEl.textContent =
+      totalHours > 0
+        ? window.i18n.t('project.totalHours', { hours: formatHours(totalHours) })
+        : '';
   }
 
   function renderTasks() {
@@ -211,11 +232,24 @@
         task.dueDate = dueDateInput.value || null;
       });
 
+      const timeBtn = document.createElement('button');
+      timeBtn.type = 'button';
+      timeBtn.className = 'task-time-btn' + (taskHours(task) > 0 ? ' has-entries' : '');
+      timeBtn.textContent =
+        taskHours(task) > 0
+          ? `⏱ ${formatHours(taskHours(task))}${window.i18n.t('project.hoursUnit')}`
+          : `⏱ ${window.i18n.t('project.logTime')}`;
+      timeBtn.addEventListener('click', () => {
+        expandedTimeTaskId = expandedTimeTaskId === task.id ? null : task.id;
+        renderTasks();
+      });
+
       const removeBtn = document.createElement('button');
       removeBtn.className = 'task-remove';
       removeBtn.textContent = '✕';
       removeBtn.addEventListener('click', () => {
         editingTasks = editingTasks.filter((t) => t.id !== task.id);
+        if (expandedTimeTaskId === task.id) expandedTimeTaskId = null;
         renderTasks();
         renderTaskProgress();
       });
@@ -225,8 +259,13 @@
       row.appendChild(statusSelectEl);
       row.appendChild(startDateInput);
       row.appendChild(dueDateInput);
+      row.appendChild(timeBtn);
       row.appendChild(removeBtn);
       taskListEl.appendChild(row);
+
+      if (expandedTimeTaskId === task.id) {
+        taskListEl.appendChild(buildTimePanel(task));
+      }
     });
 
     if (editingTasks.length === 0) {
@@ -237,6 +276,125 @@
     }
 
     renderTaskProgress();
+  }
+
+  // 工時紀錄面板：列出這個任務目前的紀錄（可個別移除），下面是新增一筆
+  // 紀錄的小表單（日期預設今天、小時數、備註選填）。跟任務狀態切換一樣
+  // 即時持久化，不用等按「儲存專案」——避免記完工時忘記存檔白做工。
+  function buildTimePanel(task) {
+    const panel = document.createElement('div');
+    panel.className = 'task-time-panel';
+
+    const entries = (task.timeEntries || [])
+      .slice()
+      .sort((a, b) => b.date.localeCompare(a.date));
+    if (entries.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'task-time-empty';
+      empty.textContent = window.i18n.t('project.noTimeEntries');
+      panel.appendChild(empty);
+    } else {
+      entries.forEach((entry) => {
+        const row = document.createElement('div');
+        row.className = 'task-time-entry';
+
+        const dateSpan = document.createElement('span');
+        dateSpan.className = 'task-time-entry-date';
+        dateSpan.textContent = entry.date;
+
+        const hoursSpan = document.createElement('span');
+        hoursSpan.className = 'task-time-entry-hours';
+        hoursSpan.textContent = `${formatHours(entry.hours)}${window.i18n.t('project.hoursUnit')}`;
+
+        const noteSpan = document.createElement('span');
+        noteSpan.className = 'task-time-entry-note';
+        noteSpan.textContent = entry.note || '';
+
+        const removeEntryBtn = document.createElement('button');
+        removeEntryBtn.className = 'task-time-entry-remove';
+        removeEntryBtn.textContent = '✕';
+        removeEntryBtn.addEventListener('click', async () => {
+          if (!currentProjectId) return;
+          allProjects = await window.workspaceAPI.removeTaskTimeEntry(
+            currentProjectId,
+            task.id,
+            entry.id
+          );
+          syncTaskFromAllProjects(task.id);
+          renderTasks();
+        });
+
+        row.appendChild(dateSpan);
+        row.appendChild(hoursSpan);
+        row.appendChild(noteSpan);
+        row.appendChild(removeEntryBtn);
+        panel.appendChild(row);
+      });
+    }
+
+    if (currentProjectId) {
+      const addRow = document.createElement('div');
+      addRow.className = 'task-time-add';
+
+      const dateInput = document.createElement('input');
+      dateInput.type = 'date';
+      dateInput.value = new Date().toISOString().slice(0, 10);
+
+      const hoursInput = document.createElement('input');
+      hoursInput.type = 'number';
+      hoursInput.min = '0';
+      hoursInput.step = '0.5';
+      hoursInput.placeholder = window.i18n.t('project.timeHoursPlaceholder');
+
+      const noteInput = document.createElement('input');
+      noteInput.type = 'text';
+      noteInput.placeholder = window.i18n.t('project.timeNotePlaceholder');
+
+      const addBtn = document.createElement('button');
+      addBtn.textContent = window.i18n.t('project.addTimeEntry');
+      addBtn.addEventListener('click', async () => {
+        const hours = parseFloat(hoursInput.value);
+        if (!hours || hours <= 0) return;
+        allProjects = await window.workspaceAPI.addTaskTimeEntry(
+          currentProjectId,
+          task.id,
+          {
+            date: dateInput.value || new Date().toISOString().slice(0, 10),
+            hours,
+            note: noteInput.value.trim(),
+          }
+        );
+        syncTaskFromAllProjects(task.id);
+        renderTasks();
+      });
+
+      addRow.appendChild(dateInput);
+      addRow.appendChild(hoursInput);
+      addRow.appendChild(noteInput);
+      addRow.appendChild(addBtn);
+      panel.appendChild(addRow);
+    } else {
+      const hint = document.createElement('div');
+      hint.className = 'task-time-empty';
+      hint.textContent = window.i18n.t('project.saveProjectFirstForTime');
+      panel.appendChild(hint);
+    }
+
+    return panel;
+  }
+
+  // 工時紀錄的 add/remove 走獨立 IPC 即時持久化（見 lib/ipc/projects.js），
+  // 回傳的是完整 allProjects；editingTasks 裡的 task 物件是各自獨立的
+  // spread 副本，不會自動跟著更新，這裡手動把最新的 timeEntries 同步回去。
+  function syncTaskFromAllProjects(taskId) {
+    if (!currentProjectId) return;
+    const project = allProjects.find((p) => p.id === currentProjectId);
+    if (!project) return;
+    const updatedTask = project.tasks.find((t) => t.id === taskId);
+    const task = editingTasks.find((t) => t.id === taskId);
+    if (updatedTask && task) {
+      task.timeEntries = updatedTask.timeEntries;
+    }
   }
 
   document.getElementById('btn-add-task').addEventListener('click', () => {
@@ -250,6 +408,7 @@
       status: 'todo',
       startDate: null,
       dueDate: null,
+      timeEntries: [],
     });
     newTaskInput.value = '';
     renderTasks();
@@ -1095,6 +1254,7 @@
     document.getElementById('proj-overview').style.display = 'none';
     setListToolbarActive('project');
     currentProjectId = id;
+    expandedTimeTaskId = null;
     const project = allProjects.find((p) => p.id === id);
     editorEl.style.display = 'flex';
     emptyEl.style.display = 'none';

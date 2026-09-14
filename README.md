@@ -66,7 +66,7 @@ AI做越多，人需要喝的咖啡就越少。
 | 📐 側邊欄摺疊           | 可摺成只顯示 icon 的窄版                                                                               |
 | 📚 知識庫（獨立視窗）   | 儲存常用的提示詞 / skill 範本，支援標籤篩選，可匯出成 Markdown 或 JSON                                 |
 | 🧩 虛擬團隊主控台       | 把帳號依角色組織成團隊組織圖，並在「專案計畫管理」裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度。 |
-| 🗃️ 文件管理             | 統一保存對話匯出的檔案與手動匯入的任意檔案。                                                           |
+| 🗃️ 文件庫               | 統一保存對話匯出的檔案與手動匯入的任意檔案，.md 檔可直接預覽。                                         |
 | ➕ 新增帳號（獨立視窗） | 選平台、取自訂名稱，新增完直接切過去                                                                   |
 | ⬇️ 對話匯出             | 把畫面上目前看得到的對話存成 Markdown 或 JSON，可設定自動存檔不跳對話框                                |
 | ⚙️ 設定（獨立視窗）     | 語言切換、設定檔存放位置、擴充功能、預設匯出路徑、備份還原、選擇器設定、滑鼠選取工具、疑難排解         |
@@ -229,7 +229,7 @@ Platter/
 │   ├── settings.html / settings.js / settings.css     # 設定（獨立視窗）
 │   ├── team.html, team.js, team.css              # 虛擬團隊主控台
 │   ├── project.html, project.js, project.css     # 專案計畫管理
-│   ├── documents.html, documents.js, documents.css # 文件管理
+│   ├── documents.html, documents.js, documents.css # 文件庫（含 Markdown 預覽）
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json
 └── assets/                    # App 圖示與生成提示詞
