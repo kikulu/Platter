@@ -6,7 +6,7 @@
       http-equiv="Content-Security-Policy"
       content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
     />
-    <title>文件管理</title>
+    <title>文件庫</title>
     <link rel="stylesheet" href="renderer.css" />
     <link rel="stylesheet" href="documents.css" />
   </head>
@@ -74,8 +74,19 @@
         </div>
       </div>
 
+      <div id="doc-preview-box" style="display: none">
+        <div id="doc-preview-content" class="doc-preview-content"></div>
+      </div>
+
       <div id="doc-editor-actions">
         <button id="btn-open-file" data-i18n="documents.openFile">開啟檔案</button>
+        <button
+          id="btn-preview-md"
+          data-i18n="documents.previewMarkdown"
+          style="display: none"
+        >
+          預覽 Markdown
+        </button>
         <button id="btn-show-in-folder" data-i18n="documents.showInFolder">
           在資料夾中顯示
         </button>
