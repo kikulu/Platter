@@ -23,6 +23,7 @@ const {
   toMarkdown,
   escapeCssIdentifier,
   deriveSelectorFromSamples,
+  markdownToHtml,
 } = require('../lib/utils');
 
 test('genId() 產生非空字串，且連續呼叫兩次不會撞號', () => {
@@ -120,4 +121,60 @@ test('deriveSelectorFromSamples：完全沒有可用資訊時，userHint 回傳�
   const aiSample = { className: 'shared' };
   const { userHint } = deriveSelectorFromSamples(userSample, aiSample);
   assert.equal(userHint, '');
+});
+
+test('markdownToHtml：標題、粗體、斜體、行內程式碼', () => {
+  const html = markdownToHtml('# 標題\n\n**粗體** *斜體* `code`');
+  assert.equal(
+    html,
+    '<h1>標題</h1>\n<p><strong>粗體</strong> <em>斜體</em> <code>code</code></p>'
+  );
+});
+
+test('markdownToHtml：fenced code block 保留原始內容、不解析裡面的語法', () => {
+  const html = markdownToHtml('```js\nconst a = 1;\n**not bold**\n```');
+  assert.equal(html, '<pre><code>const a = 1;\n**not bold**</code></pre>');
+});
+
+test('markdownToHtml：無序清單跟有序清單各自包在 ul/ol 裡', () => {
+  const html = markdownToHtml('- a\n- b\n\n1. one\n2. two');
+  assert.equal(
+    html,
+    '<ul>\n<li>a</li>\n<li>b</li>\n</ul>\n<ol>\n<li>one</li>\n<li>two</li>\n</ol>'
+  );
+});
+
+test('markdownToHtml：引言、分隔線、連結', () => {
+  const html = markdownToHtml('> 引言文字\n\n---\n\n[連結](https://example.com)');
+  assert.equal(
+    html,
+    '<blockquote><p>引言文字</p></blockquote>\n<hr>\n<p><a href="https://example.com">連結</a></p>'
+  );
+});
+
+test('markdownToHtml：安全性——來源文字裡的 <script> 會被跳脫成純文字，不會變成真的標籤', () => {
+  const html = markdownToHtml('<script>alert(1)</script>');
+  assert.ok(!html.includes('<script>'));
+  assert.ok(html.includes('&lt;script&gt;'));
+});
+
+test('markdownToHtml：安全性——javascript: 連結會被擋掉換成 #', () => {
+  const html = markdownToHtml('[click me](javascript:alert(1))');
+  assert.ok(html.includes('href="#"'));
+  assert.ok(!html.includes('javascript:'));
+});
+
+test('markdownToHtml：安全性——data: 連結也會被擋掉', () => {
+  const html = markdownToHtml('![x](data:text/html;base64,PHNjcmlwdD4=)');
+  assert.ok(html.includes('src="#"'));
+});
+
+test('markdownToHtml：相對路徑連結（沒有 scheme）原樣保留', () => {
+  const html = markdownToHtml('[説明](./readme.md)');
+  assert.ok(html.includes('href="./readme.md"'));
+});
+
+test('markdownToHtml：空字串輸入不會丟錯，回傳空字串', () => {
+  assert.equal(markdownToHtml(''), '');
+  assert.equal(markdownToHtml(undefined), '');
 });

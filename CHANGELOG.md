@@ -1,5 +1,55 @@
 # Changelog
 
+## [1.22.0]
+
+### 新功能：專案加入工時紀錄
+
+- 專案計畫管理的每個任務新增「工時紀錄」：任務列上的「⏱」按鈕展開/
+  收合面板，列出已記錄的工時（日期＋小時數＋備註，可個別移除），下方
+  是新增一筆的小表單（日期預設今天）。任務清單上方顯示這個專案所有
+  任務加總的總工時。
+- 跟任務狀態切換一樣，新增/移除工時紀錄透過獨立的
+  `projects:task:addTimeEntry`／`removeTimeEntry` 即時持久化，不用等按
+  「儲存專案」——工時紀錄本質上是「事件」，即時存檔可以避免記完工時
+  忘記按儲存就白做工。新建立、還沒儲存過的任務暫時不能記工時（面板會
+  提示「請先儲存專案」），因為後端還沒有對應的任務 id 可以掛。
+- **特別留意的地方**：`projects:save` 原本用「白名單重建」的寫法組出
+  儲存後的 task 物件（只列出明確要保留的欄位），這次加欄位時如果沒把
+  `timeEntries` 加進這個白名單，就會重現跟對話庫 `linkedDocumentIds`
+  一模一樣的 bug（見 1.21.1）——使用者改個任務標題存檔，工時紀錄就會
+  被清空。這次已經加進白名單並用重現腳本實際驗證過存檔後工時紀錄還在。
+- 詳見 `PROJECT_SPEC.md` 第 7.1 節。
+
+### 新功能：文件管理改名為「文件庫」，支援 Markdown 預覽
+
+- UI 上「文件管理」統一改名為「文件庫」（側邊欄按鈕、視窗標題、
+  `PROJECT_SPEC.md`／`README.md` 對應段落）——英文版 `documents.title`
+  本來就已經是 "Document Library"，這次讓中文版跟既有的英文命名一致，
+  順便把 `sidebar.documents` 的英文也統一成 "Document Library"（原本是
+  "Documents"）。
+- 副檔名是 `.md`/`.markdown` 的文件，編輯區多一個「預覽 Markdown」
+  按鈕，點下去就地顯示轉換後的 HTML，不用另外開外部程式。
+- 新增 `lib/utils.js` 的 `markdownToHtml()`：刻意手刻的極簡 Markdown→
+  HTML 轉換器（不是引入 npm 套件——CSP 本來就不允許載入外部 CDN 函式庫，
+  自己刻也讓安全邊界完全可控），涵蓋標題／粗體斜體／行內程式碼／
+  fenced code block／有序無序清單／引言／連結圖片／分隔線／段落，
+  不支援表格、巢狀清單、原始 HTML 穿透。
+- **安全性**：來源文字一律先做 HTML escape，只有轉換器自己產生的標籤
+  是未跳脫的——來源文字裡任何看起來像標籤的內容（例如 `<script>`）都
+  會被當成純文字顯示；連結／圖片網址限制只接受 `http(s)://`、
+  `mailto:` 或相對路徑，`javascript:`/`data:` 一律擋掉換成 `#`。這是
+  這個 renderer 目前唯一會用 `innerHTML` 插入動態內容的地方，安全邊界
+  完全建立在主程序這邊的轉換器上。
+- 新增 IPC 頻道 `documents:getMarkdownPreview`：只接受 `.md`/`.markdown`
+  副檔名，找不到文件或檔案遺失會回傳對應錯誤。
+- 驗證方式：`test/utils.test.js` 新增 10 筆 `markdownToHtml` 測試，
+  涵蓋語法覆蓋跟三個安全性案例（`<script>` 逸出、`javascript:`／
+  `data:` 連結被擋）；另外用 mock 過 `electron` 的環境直接呼叫真正的
+  production handler，驗證成功／找不到文件／非 Markdown 副檔名三種
+  情況。`npm run lint`（0 錯誤）、`npm test`（26 個測試全過）、
+  `npm run format:check` 都重新跑過確認。
+- 詳見 `PROJECT_SPEC.md` 第 8 節。
+
 ## [1.21.1]
 
 ### 修正：對話庫的文件關聯每次儲存都會被清空

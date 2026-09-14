@@ -19,7 +19,7 @@
 4. 維護一個知識庫：一般提示詞項目、群組順序提示詞套餐、檢核表機制。
 5. 用「虛擬團隊主控台」把帳號依角色組織成團隊組織圖，並在「專案計畫管理」
    裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度。
-6. 用「文件管理」統一保存對話匯出的檔案與手動匯入的任意檔案。
+6. 用「文件庫」統一保存對話匯出的檔案與手動匯入的任意檔案。
 
 技術棧：Electron（主框架，`WebContentsView`，Electron 30+）、原生
 JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-builder`
@@ -54,7 +54,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   2. 群組「帳號」👤：新增帳號、帳號清單（可捲動）
   3. 群組「預設提示詞」💡：依「目前選中帳號」的角色，列出知識庫裡配置給
      該角色的所有提示詞，每則旁邊有複製按鈕
-  4. 群組「內容工具」🧰：匯出當前對話、知識庫、文件管理、對話庫、
+  4. 群組「內容工具」🧰：匯出當前對話、知識庫、文件庫、對話庫、
      日誌主控台
   5. 群組「團隊與專案」🧩：虛擬團隊、專案計畫
   6. 「設定」⚙️ 固定在最底部，不屬於任何可收合群組；下方再加一行極小的
@@ -277,6 +277,25 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
   「儲存專案」；結構性變更（新增/移除/編輯任務內容、日期）才需要按
   「儲存專案」。
 
+**工時紀錄**：每個任務可以記錄多筆工時（日期 + 小時數 + 備註選填），
+點任務列上的「⏱」按鈕展開/收合這個任務的工時紀錄面板，列出已有的紀錄
+（可個別移除），下方是新增一筆的小表單（日期預設今天）。任務清單上方
+會顯示這個專案目前所有任務加總的總工時。
+
+跟任務狀態一樣，新增/移除工時紀錄透過 `projects:task:addTimeEntry`／
+`removeTimeEntry` 即時持久化，不用等按「儲存專案」——工時紀錄本質上是
+「事件」而不是使用者會反覆編輯的欄位，即時存檔可以避免記完工時忘記
+按儲存就白做工。新建立、還沒按過「儲存專案」的任務暫時不能記工時
+（面板顯示「請先儲存專案」提示），因為後端沒有對應的任務 id 可以掛。
+
+`task.timeEntries` 這個欄位**不是**「編輯任務標題/指派/日期 → 按儲存
+專案」這條路徑負責維護的——render 層的 `editingTasks` 是從
+`projects:list` 載入的完整 task 物件 spread 出來，會一路帶著
+`timeEntries`，但後端 `projects:save` 重建 task 物件時必須明確保留這個
+欄位，不能預設成空陣列去覆蓋（不然使用者隨便改個任務標題存檔，工時
+紀錄就會消失——這是對話庫 `linkedDocumentIds` 踩過的真實 bug，見
+`CHANGELOG.md` 1.21.1，這次加這個功能時特別留意避免重蹈覆轍）。
+
 ### 7.2 月曆檢視
 
 - 月曆格子上用小圓點標示當天「到期」的任務（顏色對應任務狀態）與 Issue
@@ -341,7 +360,7 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 ---
 
-## 8. 文件管理（`documents.html`）
+## 8. 文件庫（`documents.html`）
 
 資料檔 `documents.json` + 檔案存放資料夾 `documents/`（都在 DATA_DIR
 底下，跟著「設定檔存放位置」一起搬移）：
@@ -363,6 +382,16 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
   大小、建立時間、路徑；「開啟檔案」（`shell.openPath`）、「在資料夾中
   顯示」（`shell.showItemInFolder`）。
 - 找不到原始檔案時（被移動/刪除）清單與詳細頁都顯示「檔案遺失」警示。
+- **Markdown 預覽**：副檔名是 `.md`/`.markdown` 的文件，編輯區多一個
+  「預覽 Markdown」按鈕，點下去呼叫 `documents:getMarkdownPreview` 讀取
+  檔案內容、轉成 HTML 就地顯示，不用另外開外部程式。轉換用
+  `lib/utils.js` 的 `markdownToHtml()`——刻意手刻的極簡轉換器，涵蓋
+  標題/粗體斜體/行內程式碼/fenced code block/清單/引言/連結圖片/分隔線，
+  不支援表格、巢狀清單、原始 HTML 穿透。安全性：來源文字一律先 HTML
+  escape、只有轉換器自己產生的標籤未跳脫，連結／圖片網址限制只接受
+  `http(s)://`、`mailto:` 或相對路徑，`javascript:`/`data:` 一律擋掉
+  換成 `#`——因為渲染層是直接把回傳的 HTML 用 `innerHTML` 插入畫面
+  （見 `renderer/documents.js`），這個安全邊界不能鬆動。
 - 移除文件時，若是「已管理」的複本，會另外詢問是否連同實體檔案一起刪除，
   或只移除紀錄保留檔案；移除時也會清掉第 8.5 節「對話庫」裡任何引用到
   這份文件的關聯，避免懸空引用。
@@ -384,7 +413,7 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 } ] }
 ```
 
-- 跟「文件管理」是兩個獨立資料檔：文件庫存的是「檔案」本身（路徑引用或
+- 跟「文件庫」是兩個獨立資料檔：前者存的是「檔案」本身（路徑引用或
   管理複本），對話庫存的是「對話內容」本身（Markdown 全文直接存在
   JSON 裡），兩者用 `linkedDocumentIds`（多對多）互相關聯，方便「這則
   對話後來衍生出了哪些文件」這種追蹤。
@@ -445,7 +474,7 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 目前共有八個獨立子視窗：`account.html`（新增帳號）、`knowledge.html`
 （知識庫）、`settings.html`（設定）、`team.html`（虛擬團隊主控台）、
-`project.html`（專案計畫管理）、`documents.html`（文件管理）、
+`project.html`（專案計畫管理）、`documents.html`（文件庫）、
 `conversation.html`（對話庫）、`log.html`（日誌主控台）。
 
 用一個共用的 `openChildWindow(options)` helper 開窗，避免每個視窗各自
@@ -539,7 +568,7 @@ function openChildWindow({
    欄最下面也有同一個版本號（更小、更不顯眼的位置），這裡是比較正式、
    使用者會特地來找版本號時的地方。
 
-### 9.4 虛擬團隊主控台、專案計畫管理、文件管理、對話庫
+### 9.4 虛擬團隊主控台、專案計畫管理、文件庫、對話庫
 
 見第 6、7、8 節。
 
@@ -708,7 +737,7 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
 | ----------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
 | `accounts:changed`      | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入                                                     | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
 | `knowledge:changed`     | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理                                                | 側邊欄「預設提示詞」區塊                       |
-| `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                 | 文件管理視窗、對話庫視窗                       |
+| `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                 | 文件庫視窗、對話庫視窗                         |
 | `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                   | 對話庫視窗                                     |
 | `logs:changed`          | 任何一筆錯誤/稽核日誌被寫入或清除                                                                    | 日誌主控台視窗                                 |
 | `console:entry`         | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆 | 日誌主控台視窗（主控台分頁）                   |
@@ -811,7 +840,7 @@ renderer/knowledge.html, knowledge.js, knowledge.css # 知識庫（提示詞/套
 renderer/settings.html, settings.js, settings.css    # 設定視窗
 renderer/team.html, team.js, team.css                # 虛擬團隊主控台
 renderer/project.html, project.js, project.css       # 專案計畫管理
-renderer/documents.html, documents.js, documents.css # 文件管理
+renderer/documents.html, documents.js, documents.css # 文件庫
 renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
 renderer/i18n.js

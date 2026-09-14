@@ -117,8 +117,18 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('projects:task:setStatus', { projectId, taskId, status }),
   setIssueStatus: (projectId, issueId, status) =>
     ipcRenderer.invoke('projects:issue:setStatus', { projectId, issueId, status }),
+  addTaskTimeEntry: (projectId, taskId, entry) =>
+    ipcRenderer.invoke('projects:task:addTimeEntry', {
+      projectId,
+      taskId,
+      date: entry.date,
+      hours: entry.hours,
+      note: entry.note,
+    }),
+  removeTaskTimeEntry: (projectId, taskId, entryId) =>
+    ipcRenderer.invoke('projects:task:removeTimeEntry', { projectId, taskId, entryId }),
 
-  // 文件管理
+  // 文件庫
   listDocuments: () => ipcRenderer.invoke('documents:list'),
   importDocuments: () => ipcRenderer.invoke('documents:import'),
   saveDocument: (id, name, tags, notes) =>
@@ -127,6 +137,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('documents:delete', { id, alsoDeleteFile }),
   openDocumentFile: (id) => ipcRenderer.invoke('documents:openFile', id),
   showDocumentInFolder: (id) => ipcRenderer.invoke('documents:showInFolder', id),
+  getMarkdownPreview: (id) => ipcRenderer.invoke('documents:getMarkdownPreview', id),
   onDocumentsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('documents:changed', handler);
