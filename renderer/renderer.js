@@ -80,13 +80,68 @@
     window.workspaceAPI.openSettingsWindow();
   });
 
-  document.getElementById('btn-export').addEventListener('click', async () => {
-    const format = window.confirm(
-      `${window.i18n.t('export.choosingFormat')}\n\nOK = ${window.i18n.t('export.markdown')}  /  Cancel = ${window.i18n.t('export.json')}`
-    )
-      ? 'md'
-      : 'json';
-    const result = await window.workspaceAPI.exportCurrentConversation(format);
+  // ---------------------------------------------------------------------
+  // 匯出對話選項對話框：格式（Markdown/JSON）、這次要不要另外選擇儲存
+  // 路徑（不影響「預設儲存路徑」設定本身，只是這一次的一次性選擇）、
+  // 是否同時把這次匯出的內容加進知識庫（這個勾選會存成持久化設定，
+  // 下次打開對話框會記得上次的選擇）。
+  // ---------------------------------------------------------------------
+  const exportOverlay = document.getElementById('export-options-overlay');
+  const exportPathHint = document.getElementById('export-path-hint');
+  const exportAddKnowledgeCheckbox = document.getElementById('export-add-knowledge');
+  let exportForceChoosePath = false;
+
+  function updateExportPathHint(savePathConfig) {
+    exportPathHint.textContent = exportForceChoosePath
+      ? window.i18n.t('export.willChoosePath')
+      : savePathConfig.skipSaveDialog
+        ? window.i18n.t('export.willSaveTo', { path: savePathConfig.defaultSavePath })
+        : window.i18n.t('export.willAskPath');
+    exportPathHint.title = exportPathHint.textContent;
+  }
+
+  async function openExportDialog() {
+    exportForceChoosePath = false;
+    document.querySelector('input[name="export-format"][value="md"]').checked = true;
+    const [savePathConfig, ui] = await Promise.all([
+      window.workspaceAPI.getSavePathConfig(),
+      window.workspaceAPI.getUIState(),
+    ]);
+    exportAddKnowledgeCheckbox.checked = !!ui.autoAddToKnowledgeOnExport;
+    updateExportPathHint(savePathConfig);
+    exportOverlay.classList.add('open');
+  }
+
+  function closeExportDialog() {
+    exportOverlay.classList.remove('open');
+  }
+
+  document
+    .getElementById('btn-export-choose-path')
+    .addEventListener('click', async () => {
+      exportForceChoosePath = true;
+      updateExportPathHint(await window.workspaceAPI.getSavePathConfig());
+    });
+
+  document
+    .getElementById('btn-export-cancel')
+    .addEventListener('click', closeExportDialog);
+
+  exportOverlay.addEventListener('click', (e) => {
+    if (e.target === exportOverlay) closeExportDialog();
+  });
+
+  document.getElementById('btn-export-confirm').addEventListener('click', async () => {
+    const format = document.querySelector('input[name="export-format"]:checked').value;
+    const addToKnowledge = exportAddKnowledgeCheckbox.checked;
+    // 「同時加入知識庫」是持久化偏好，這次選的值就是下次對話框打開時的預設值
+    window.workspaceAPI.setAutoAddToKnowledgeOnExport(addToKnowledge);
+    closeExportDialog();
+
+    const result = await window.workspaceAPI.exportCurrentConversation(format, {
+      forceChoosePath: exportForceChoosePath,
+      addToKnowledge,
+    });
     if (result.ok) {
       alert(window.i18n.t('export.success', { path: result.filePath }));
     } else if (result.error === 'CANCELLED') {
@@ -105,6 +160,8 @@
       alert(`${window.i18n.t('export.fail')}: ${result.error || ''}`);
     }
   });
+
+  document.getElementById('btn-export').addEventListener('click', openExportDialog);
 
   function renderAccounts(accounts) {
     accountList.innerHTML = '';

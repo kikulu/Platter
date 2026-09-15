@@ -764,6 +764,26 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   調整。成功的話，Markdown 輸出格式是每則訊息一個 `###` 標題（🧑 使用者 /
   🤖 AI）+ 內容；JSON 輸出就是原始擷取結果。
 - 每次匯出成功都會自動登記進文件庫（見第 8 節）。
+
+**匯出選項對話框**（主視窗側邊欄「匯出當前對話」按鈕）：點下去先跳一個
+選項對話框，不是直接匯出——選 Markdown/JSON 格式、可以按「另存到其他
+路徑」這次額外跳存檔對話框自己選位置（即使「設定 → 儲存路徑」已經開了
+「使用預設路徑時不再詢問」，這次也還是會跳，因為使用者當下就是想自己
+選，不該被全域設定蓋過去）、可以勾選「同時加入知識庫」（這個勾選狀態
+會記住，下次打開對話框預設沿用上次選的值）。
+
+- `exportCurrentConversation(format, { forceChoosePath, addToKnowledge })`
+  （`lib/conversationCapture.js`）：`forceChoosePath` 為 true 時，不管
+  `state.appState.ui.skipSaveDialog` 是不是開著，都照樣跳
+  `dialog.showSaveDialog()`；`addToKnowledge` 為 true 時，匯出檔案成功
+  登記進文件庫的同時，**另外**在知識庫（見第 5 節）新增一筆項目——
+  內容一律存成 `toMarkdown(result)`（人類好讀的 Markdown），跟使用者
+  這次選的檔案格式（md/json）無關，因為知識庫本來就是拿來當提示詞/
+  參考資料用的，原始 JSON 丟進去不好閱讀也不方便直接複製貼上。
+- 「同時加入知識庫」的持久化偏好存在
+  `state.appState.ui.autoAddToKnowledgeOnExport`，透過
+  `settings:setAutoAddToKnowledgeOnExport` 更新，跟「另存到其他路徑」
+  是分開的兩件事——後者是「這一次」的選擇，不持久化。
 - 回傳結果一律帶 `debug: { selectorUsed, matchedNodeCount,
 nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
   結構跟預設 selector 對不上」這種必然會隨網站改版而發生的問題：
