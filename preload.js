@@ -35,7 +35,12 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   },
 
   // 匯出對話
-  exportCurrentConversation: (format) => ipcRenderer.invoke('export:current', format),
+  exportCurrentConversation: (format, options = {}) =>
+    ipcRenderer.invoke('export:current', {
+      format,
+      forceChoosePath: !!options.forceChoosePath,
+      addToKnowledge: !!options.addToKnowledge,
+    }),
 
   // 知識庫：提示詞項目
   listKnowledge: () => ipcRenderer.invoke('knowledge:list'),
@@ -76,6 +81,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   getSavePathConfig: () => ipcRenderer.invoke('settings:getSavePathConfig'),
   chooseDefaultSavePath: () => ipcRenderer.invoke('settings:chooseDefaultSavePath'),
   setSkipSaveDialog: (skip) => ipcRenderer.invoke('settings:setSkipSaveDialog', skip),
+  setAutoAddToKnowledgeOnExport: (enabled) =>
+    ipcRenderer.invoke('settings:setAutoAddToKnowledgeOnExport', enabled),
 
   // 設定：備份與還原
   exportBackup: () => ipcRenderer.invoke('settings:exportBackup'),

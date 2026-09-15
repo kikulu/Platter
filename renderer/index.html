@@ -442,6 +442,62 @@
         border-radius: 999px;
         padding: 2px 8px;
       }
+
+      /* 匯出對話選項對話框 */
+      #export-options-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      #export-options-overlay.open {
+        display: flex;
+      }
+      #export-options-dialog {
+        width: min(420px, 88vw);
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        padding: 18px;
+      }
+      #export-options-dialog .settings-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 14px;
+      }
+      #export-options-dialog .row {
+        margin-bottom: 12px;
+      }
+      #export-options-dialog .export-hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #export-options-dialog label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-primary);
+        cursor: pointer;
+      }
+      #export-options-dialog input[type='radio'],
+      #export-options-dialog input[type='checkbox'] {
+        width: auto;
+      }
+      #export-options-dialog .row.actions {
+        justify-content: flex-end;
+        margin-bottom: 0;
+      }
     </style>
   </head>
   <body>
@@ -580,6 +636,45 @@
           autocomplete="off"
         />
         <div id="command-palette-results"></div>
+      </div>
+    </div>
+
+    <div id="export-options-overlay">
+      <div id="export-options-dialog">
+        <div class="settings-section-title" data-i18n="export.optionsTitle">匯出對話</div>
+
+        <div class="row">
+          <label
+            ><input type="radio" name="export-format" value="md" checked />
+            Markdown</label
+          >
+          <label><input type="radio" name="export-format" value="json" /> JSON</label>
+        </div>
+
+        <div class="row">
+          <span id="export-path-hint" class="export-hint"></span>
+          <button id="btn-export-choose-path" data-i18n="export.choosePath">
+            另存到其他路徑…
+          </button>
+        </div>
+
+        <div class="row">
+          <label>
+            <input type="checkbox" id="export-add-knowledge" />
+            <span data-i18n="export.addToKnowledge">同時加入知識庫</span>
+          </label>
+        </div>
+
+        <div class="row actions">
+          <button id="btn-export-cancel" data-i18n="common.cancel">取消</button>
+          <button
+            id="btn-export-confirm"
+            class="primary"
+            data-i18n="export.confirmExport"
+          >
+            匯出
+          </button>
+        </div>
       </div>
     </div>
 
