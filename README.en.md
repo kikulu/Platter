@@ -63,19 +63,23 @@ bundled into a backup file.
 
 ## Features
 
-| Feature                             | Description                                                                                                                                             |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🗂️ Multi-account aggregation        | Claude / ChatGPT / Gemini / Grok, each account fully isolated, instant switching                                                                        |
-| 🔐 Persistent login                 | No need to log in again after restarting the app                                                                                                        |
-| ⚡ Lazy loading                     | Only the last-active account loads on startup; others load on first click, so more accounts won't slow down startup                                     |
-| 📐 Collapsible sidebar              | Collapses to an icon-only strip                                                                                                                         |
-| 📚 Knowledge base (separate window) | Store your go-to prompts / skill templates, filterable by tags, exportable as Markdown or JSON                                                          |
-| ➕ Add account (separate window)    | Pick a platform, give it a custom name, and switch to it immediately                                                                                    |
-| ⬇️ Conversation export              | Save what's currently visible on screen as Markdown or JSON; can be set to auto-save without a dialog                                                   |
-| ⚙️ Settings (separate window)       | Language switcher, config storage location, extensions, default export path, backup/restore, selector settings, an element picker tool, troubleshooting |
-| 🌐 Internationalization             | Traditional Chinese / English, easy to extend                                                                                                           |
-| 🧩 Extensions                       | Globally applies "unpacked" Chrome extensions to every account                                                                                          |
-| 🛡️ Data safety                      | Atomic writes with automatic backup before overwrite, strict import validation                                                                          |
+| Feature                             | Description                                                                                                                                                                                          |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 🗂️ Multi-account aggregation        | Claude / ChatGPT / Gemini / Grok, each account fully isolated, instant switching                                                                                                                     |
+| 🔐 Persistent login                 | No need to log in again after restarting the app                                                                                                                                                     |
+| ⚡ Lazy loading                     | Only the last-active account loads on startup; others load on first click, so more accounts won't slow down startup                                                                                  |
+| 📐 Collapsible sidebar              | Collapses to an icon-only strip                                                                                                                                                                      |
+| 🔍 Cross-module quick search        | `Ctrl/⌘+K` opens a command palette that searches the knowledge base, document library, conversation library, and projects (tasks/issues) at once, and jumps straight to the matching window and item |
+| 📚 Knowledge base (separate window) | Store your go-to prompts / skill templates, full-text search, filterable by tags, exportable as Markdown or JSON                                                                                     |
+| 🧩 Virtual Team console             | Organize accounts into a team chart by role, then create projects, split them into tasks, assign tasks to team accounts, track progress, and log hours in "Project Plans"                            |
+| ⏰ Due-date reminders               | A sidebar badge shows how many tasks/issues are overdue or due today; a native notification fires when new items become due                                                                          |
+| 🗃️ Document Library                 | Stores files exported from conversations plus any manually imported file; `.md` files can be previewed in place                                                                                      |
+| ➕ Add account (separate window)    | Pick a platform, give it a custom name, and switch to it immediately                                                                                                                                 |
+| ⬇️ Conversation export              | Save what's currently visible on screen as Markdown or JSON; can be set to auto-save without a dialog                                                                                                |
+| ⚙️ Settings (separate window)       | Language switcher, config storage location, extensions, default export path, backup/restore, selector settings (with test-capture preview), an element picker tool, troubleshooting                  |
+| 🌐 Internationalization             | Traditional Chinese / English / Japanese, easy to extend                                                                                                                                             |
+| 🧩 Extensions                       | Globally applies "unpacked" Chrome extensions to every account                                                                                                                                       |
+| 🛡️ Data safety                      | Atomic writes with automatic backup before overwrite, strict import validation                                                                                                                       |
 
 ## Installation
 
@@ -240,9 +244,10 @@ ai-workspace-aggregator/
 │   ├── stores.js                    # Data layer: loadX()/saveX() for each data file
 │   ├── windows.js                    # Window and per-account WebContentsView management
 │   ├── conversationCapture.js         # Conversation capture/export, selector picker tool
+│   ├── reminders.js                    # Task due-date reminders: due summary, hourly schedule, native notification
 │   ├── utils.js                        # Pure functions with no Electron dependency
 │   ├── sqlite.js                        # Thin wrapper around sql.js: open/save/query
-│   └── ipc/                              # IPC handler registration, split by domain (8 files + index.js)
+│   └── ipc/                              # IPC handler registration, split by domain (9 files + index.js, incl. search.js)
 ├── test/utils.test.js        # Unit tests
 ├── package.json              # npm scripts + electron-builder config
 ├── .eslintrc.json / .prettierrc.json

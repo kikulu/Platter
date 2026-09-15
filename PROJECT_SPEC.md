@@ -296,6 +296,24 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 紀錄就會消失——這是對話庫 `linkedDocumentIds` 踩過的真實 bug，見
 `CHANGELOG.md` 1.21.1，這次加這個功能時特別留意避免重蹈覆轍）。
 
+**到期日提醒**：主視窗側邊欄「專案計畫」按鈕上會顯示一個紅色角標，數字
+是所有專案裡「還沒完成、且到期日 ≤ 今天」的任務與 issue 加總（已完成/
+已解決/已關閉的不算）。這個計算跟通知排程都在 `lib/reminders.js`：
+
+- App 開機立刻檢查一次，之後每小時再檢查一次；任何一次
+  `projects:save`／狀態切換／工時紀錄異動之後也會立刻重算一次，不用
+  等到下一次排程（例如把逾期任務標成完成，角標要馬上消失）。
+- 有新的到期項目（逾期或今天到期）時會另外跳一次系統原生通知（三語
+  文案，依 `state.appState.ui.language` 挑選），標題「Platter 專案
+  提醒」/ "Platter Project Reminder" / 「Platter プロジェクト
+  リマインダー」。用「這批到期項目 id + 逾期/今天到期狀態」組出的
+  指紋比對是否跟上次通知過的內容相同，相同就不重複跳通知，避免每小時
+  排程檢查都彈一次一樣的內容——但只要有任何項目變成到期（新加的、或
+  時間走到隔天讓昨天沒過期的東西變逾期），指紋就會變、就會再通知一次。
+- `projects:getDueSummary` 回傳 `{ overdueCount, dueTodayCount, items }`
+  給角標跟通知共用；`reminders:changed` 廣播只帶 `{ overdueCount,
+dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
+
 ### 7.2 月曆檢視
 
 - 月曆格子上用小圓點標示當天「到期」的任務（顏色對應任務狀態）與 Issue
@@ -635,6 +653,41 @@ Electron 裡常見的 SQLite 方案是 `better-sqlite3`，但它是**原生模�
   `queryAll()` 包成通用的小工具，之後如果要幫其他模組加 SQLite 表，
   直接重用這幾個函式即可，不用重寫一次 WASM 載入邏輯。
 
+### 9.8 跨模組快速搜尋（命令面板）
+
+主視窗按 `Ctrl/⌘+K`（或點側邊欄「快速搜尋」按鈕）開啟一個置頂的命令
+面板，輸入時即時（`input` 事件，不用按 Enter）橫跨知識庫（提示詞＋
+套餐）、文件庫、對話庫、專案（含任務、issue）搜尋，方向鍵上下選、
+Enter 跳到選中的項目，Esc 或點背景關閉。比對範圍跟各自視窗內建的搜尋
+一致（標題/內容/說明/標籤），結果最多回傳 30 筆（`lib/ipc/search.js`
+的 `RESULT_LIMIT`）。
+
+**「跳到項目」的實作方式**——這是這個功能最需要小心處理的地方：
+
+- 每個結果帶一個 `open: { windowKey, id, tab? }`（`windowKey` 是
+  `knowledge`/`documents`/`conversations`/`projects` 其中之一），點選
+  後呼叫 `search:jumpTo`。
+- `search:jumpTo` 內部：把 `{ id, tab }` 存進
+  `state.pendingSelections[windowKey]`，然後呼叫對應的
+  `openXxxWindow()`（已開著就 focus 現有視窗、沒開就新建，見
+  `lib/windows.js` 的 `openChildWindow`）。
+- 目標視窗**主動拉取**（pull）這個待選項目，而不是單純被動接收
+  （push）：每個目標視窗的 renderer 初始化流程跑完基本資料載入後，
+  會呼叫一次 `search:consumePendingSelection(windowKey)`，拿到就套用、
+  拿完後端就把這筆記錄清掉。這是為了避開「視窗剛建立、還在載入，這時
+  候如果直接 `webContents.send()` 推訊息過去，訊息會在 renderer 還沒
+  開始監聽之前就送達、直接遺失」這個 race condition——用主動拉取，
+  視窗永遠是自己準備好了才去問「有沒有人要我選什麼」，不會漏接。
+- 如果目標視窗**已經開著、已經載入完成**（不會重新走一次初始化流程，
+  上面那次拉取的時機已經過了），`search:jumpTo` 會額外直接
+  `webContents.send('search:select', { id, tab })` 推一個即時事件，
+  每個目標視窗的 renderer 同時也長期監聽這個事件，兩條路徑合起來才能
+  同時處理「視窗剛開」跟「視窗已經開著」這兩種情況。
+- 專案的結果（task/issue）目前只會跳到對應的專案＋切換到正確的分頁
+  （任務結果跳「任務」分頁、issue 結果跳「議題」分頁），不會標記出
+  清單裡具體哪一列——這是刻意的簡化，多數專案的任務/issue 清單不會長
+  到需要精準定位單一列。
+
 ---
 
 ## 10. 選擇器設定與滑鼠選取工具
@@ -679,8 +732,13 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
 
 ## 11. 多國語系（i18n）
 
-- `renderer/locales/zh-TW.json`、`renderer/locales/en.json`：扁平 key-value
-  結構，例如 `"sidebar.addAccount": "新增帳號"`。字串裡可以用 `{變數}` 佔位。
+- `renderer/locales/zh-TW.json`、`renderer/locales/en.json`、
+  `renderer/locales/ja.json`：扁平 key-value 結構，例如
+  `"sidebar.addAccount": "新增帳號"`。字串裡可以用 `{變數}` 佔位，三份
+  檔案的 key 集合跟每個 key 裡的 `{變數}` 都必須完全一致（新增/修改字串
+  時三份一起改，不要只改一份）——`settings.html` 語言下拉選單新增語言
+  只要加一個 `<option>` 跟一份對應的 locale json，`renderer/i18n.js`
+  完全通用，不用改任何程式碼。
 - `renderer/i18n.js`：所有視窗共用，掛在 `window.i18n`：
   - `t(key, vars)`：查表回傳翻譯字串，找不到 key 就回傳 key 本身。
   - `applyToDOM(root)`：掃描 `[data-i18n]`（`textContent`）、
@@ -733,15 +791,18 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
 
 ## 13. IPC 事件總覽（跨視窗即時同步機制）
 
-| 事件                    | 觸發時機                                                                                             | 訂閱方                                         |
-| ----------------------- | ---------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
-| `accounts:changed`      | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入                                                     | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
-| `knowledge:changed`     | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理                                                | 側邊欄「預設提示詞」區塊                       |
-| `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                 | 文件庫視窗、對話庫視窗                         |
-| `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                   | 對話庫視窗                                     |
-| `logs:changed`          | 任何一筆錯誤/稽核日誌被寫入或清除                                                                    | 日誌主控台視窗                                 |
-| `console:entry`         | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆 | 日誌主控台視窗（主控台分頁）                   |
-| `language:changed`      | 語言切換                                                                                             | 所有視窗（重新載入翻譯）                       |
+| 事件                    | 觸發時機                                                                                               | 訂閱方                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------ | ---------------------------------------------- |
+| `accounts:changed`      | 帳號新增/切換/刪除/角色指派、角色 CRUD、備份匯入                                                       | 主視窗、虛擬團隊主控台、知識庫（刷新角色清單） |
+| `knowledge:changed`     | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理                                                  | 側邊欄「預設提示詞」區塊                       |
+| `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                   | 文件庫視窗、對話庫視窗                         |
+| `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                     | 對話庫視窗                                     |
+| `projects:changed`      | 專案/任務/issue 的新增、儲存、刪除、狀態切換、工時紀錄新增/移除                                        | （目前沒有其他視窗訂閱，保留給未來擴充）       |
+| `reminders:changed`     | 到期摘要重新計算後（每小時排程、或任一次 `projects:changed` 之後都會立刻重算一次）                     | 主視窗（側邊欄「專案計畫」角標）               |
+| `logs:changed`          | 任何一筆錯誤/稽核日誌被寫入或清除                                                                      | 日誌主控台視窗                                 |
+| `console:entry`         | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆   | 日誌主控台視窗（主控台分頁）                   |
+| `language:changed`      | 語言切換                                                                                               | 所有視窗（重新載入翻譯）                       |
+| `search:select`         | 命令面板 `search:jumpTo` 命中「目標視窗已經開著」的情況（見第 9.8 節），只送給那個視窗，不是廣播給全部 | 被跳轉到的那個視窗                             |
 
 ---
 
@@ -817,15 +878,17 @@ lib/logs.js              # 日誌主控台：錯誤日誌 + 稽核日誌（sql.j
 lib/stores.js            # 資料層：app-state/knowledge-base/selectors/projects/documents/conversations 的 loadX()/saveX()
 lib/windows.js           # 視窗與帳號 WebContentsView 管理：主視窗、各子視窗、openChildWindow helper
 lib/conversationCapture.js # 對話擷取/匯出（executeJavaScript 注入 extractors/domCapture.js）、選取器工具
+lib/reminders.js         # 任務到期日提醒：到期摘要計算、每小時排程、原生系統通知
 lib/ipc/index.js         # 匯總註冊所有 IPC handlers
 lib/ipc/accounts.js      # accounts:* / roles:* / ui:* IPC
 lib/ipc/knowledge.js     # knowledge:* IPC
 lib/ipc/settings.js      # settings:* IPC（資料目錄/擴充功能/儲存路徑/備份還原/選取器/疑難排解）
 lib/ipc/windows.js       # window:* / app:getVersion IPC
-lib/ipc/projects.js      # projects:* IPC
-lib/ipc/documents.js     # documents:* IPC
+lib/ipc/projects.js      # projects:* IPC（含工時紀錄、到期摘要）
+lib/ipc/documents.js     # documents:* IPC（含 Markdown 預覽）
 lib/ipc/conversations.js # conversations:* / export:current IPC
 lib/ipc/logs.js          # logs:* / console:* IPC
+lib/ipc/search.js        # 跨模組快速搜尋（命令面板）：search:* IPC
 lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
 lib/sqlite.js            # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md

@@ -1324,6 +1324,12 @@
     renderList();
   });
 
+  // 跨模組快速搜尋（命令面板）跳轉過來時要選中的專案（連同指定分頁：
+  // 任務結果跳「任務」分頁、issue 結果跳「議題」分頁）
+  window.workspaceAPI.onSearchSelect((payload) => {
+    if (payload) selectProject(payload.id, payload.tab);
+  });
+
   // ---------------------------------------------------------------------
   // 初始化
   // ---------------------------------------------------------------------
@@ -1334,5 +1340,8 @@
       window.workspaceAPI.listAccounts(),
     ]);
     renderList();
+
+    const pending = await window.workspaceAPI.consumePendingSelection('projects');
+    if (pending) selectProject(pending.id, pending.tab);
   })();
 })();

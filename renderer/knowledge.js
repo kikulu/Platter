@@ -646,6 +646,21 @@
   });
 
   // ---------------------------------------------------------------------
+  // 跨模組快速搜尋（命令面板）跳轉過來時要選中的項目
+  // ---------------------------------------------------------------------
+  function applySearchSelection(payload) {
+    if (!payload) return;
+    if (payload.tab === 'groups') {
+      switchTab('groups');
+      selectGroup(payload.id);
+    } else {
+      switchTab('items');
+      selectItem(payload.id);
+    }
+  }
+  window.workspaceAPI.onSearchSelect(applySearchSelection);
+
+  // ---------------------------------------------------------------------
   // 初始化
   // ---------------------------------------------------------------------
   (async () => {
@@ -656,6 +671,11 @@
     allRoles = await window.workspaceAPI.listRoles();
     rebuildTagOptions();
     renderList();
+
+    // 如果是命令面板叫我們開起來的（視窗剛建立），主動拉一次待選項目；
+    // 如果視窗本來就開著，上面的 onSearchSelect 監聽器已經處理過了，這裡
+    // 通常會拉到 null。
+    applySearchSelection(await window.workspaceAPI.consumePendingSelection('knowledge'));
   })();
 
   // 角色是在設定視窗管理的，異動時會廣播 accounts:changed；
