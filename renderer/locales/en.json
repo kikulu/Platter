@@ -132,6 +132,8 @@
   "project.timeHoursPlaceholder": "Hours",
   "project.addTimeEntry": "Add",
   "project.saveProjectFirstForTime": "Save the project first to log time for this task",
+  "project.dueBadgeOverdueTitle": "{overdue} overdue, {today} due today",
+  "project.dueBadgeTodayTitle": "{today} due today",
   "project.save": "Save Project",
   "project.delete": "Delete Project",
   "project.deleteConfirm": "Delete project \"{name}\"?",
@@ -294,5 +296,15 @@
   "knowledge.importMarkdown": "Import Markdown",
   "conversations.importMarkdown": "Import Markdown File",
   "settings.about.title": "About",
-  "settings.about.version": "Platter v{version}"
+  "settings.about.version": "Platter v{version}",
+  "search.openPalette": "Quick Search",
+  "search.placeholder": "Search knowledge base / documents / conversations / projects…",
+  "search.noResults": "No matching results",
+  "search.kindKnowledgeItem": "Prompt",
+  "search.kindKnowledgeGroup": "Bundle",
+  "search.kindDocument": "Document",
+  "search.kindConversation": "Conversation",
+  "search.kindProject": "Project",
+  "search.kindTask": "Task",
+  "search.kindIssue": "Issue"
 }

@@ -127,6 +127,23 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     }),
   removeTaskTimeEntry: (projectId, taskId, entryId) =>
     ipcRenderer.invoke('projects:task:removeTimeEntry', { projectId, taskId, entryId }),
+  getDueSummary: () => ipcRenderer.invoke('projects:getDueSummary'),
+  onRemindersChanged: (cb) => {
+    const handler = (e, summary) => cb(summary);
+    ipcRenderer.on('reminders:changed', handler);
+    return () => ipcRenderer.removeListener('reminders:changed', handler);
+  },
+
+  // 跨模組快速搜尋（命令面板）
+  searchGlobal: (query) => ipcRenderer.invoke('search:global', query),
+  jumpToSearchResult: (open) => ipcRenderer.invoke('search:jumpTo', open),
+  consumePendingSelection: (windowKey) =>
+    ipcRenderer.invoke('search:consumePendingSelection', windowKey),
+  onSearchSelect: (cb) => {
+    const handler = (e, payload) => cb(payload);
+    ipcRenderer.on('search:select', handler);
+    return () => ipcRenderer.removeListener('search:select', handler);
+  },
 
   // 文件庫
   listDocuments: () => ipcRenderer.invoke('documents:list'),
