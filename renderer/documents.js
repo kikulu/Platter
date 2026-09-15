@@ -273,6 +273,11 @@
     renderList();
   });
 
+  // 跨模組快速搜尋（命令面板）跳轉過來時要選中的文件
+  window.workspaceAPI.onSearchSelect((payload) => {
+    if (payload) selectDoc(payload.id);
+  });
+
   (async () => {
     await window.i18n.init();
     [allDocs, allAccounts] = await Promise.all([
@@ -281,5 +286,8 @@
     ]);
     rebuildTagOptions();
     renderList();
+
+    const pending = await window.workspaceAPI.consumePendingSelection('documents');
+    if (pending) selectDoc(pending.id);
   })();
 })();

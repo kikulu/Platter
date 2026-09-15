@@ -132,6 +132,8 @@
   "project.timeHoursPlaceholder": "小時數",
   "project.addTimeEntry": "新增",
   "project.saveProjectFirstForTime": "請先儲存專案，才能記錄這個任務的工時",
+  "project.dueBadgeOverdueTitle": "{overdue} 項已逾期、{today} 項今天到期",
+  "project.dueBadgeTodayTitle": "{today} 項今天到期",
   "project.save": "儲存專案",
   "project.delete": "刪除專案",
   "project.deleteConfirm": "確定要刪除專案「{name}」嗎？",
@@ -294,5 +296,15 @@
   "knowledge.importMarkdown": "匯入 Markdown",
   "conversations.importMarkdown": "匯入 Markdown 檔案",
   "settings.about.title": "關於",
-  "settings.about.version": "Platter v{version}"
+  "settings.about.version": "Platter v{version}",
+  "search.openPalette": "快速搜尋",
+  "search.placeholder": "搜尋知識庫／文件庫／對話庫／專案…",
+  "search.noResults": "沒有符合的結果",
+  "search.kindKnowledgeItem": "提示詞",
+  "search.kindKnowledgeGroup": "套餐",
+  "search.kindDocument": "文件",
+  "search.kindConversation": "對話",
+  "search.kindProject": "專案",
+  "search.kindTask": "任務",
+  "search.kindIssue": "議題"
 }

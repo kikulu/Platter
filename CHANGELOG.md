@@ -1,5 +1,65 @@
 # Changelog
 
+## [1.23.0]
+
+### 新功能：跨模組快速搜尋（命令面板）
+
+- 主視窗按 `Ctrl/⌘+K`（或點側邊欄「快速搜尋」按鈕）開啟命令面板，
+  即時橫跨知識庫（提示詞＋套餐）、文件庫、對話庫、專案（含任務、
+  issue）搜尋，方向鍵選、Enter 跳到選中的項目，Esc 或點背景關閉。
+- 新增 IPC 頻道 `search:global`／`search:jumpTo`／
+  `search:consumePendingSelection`，以及只送給單一視窗的
+  `search:select` 事件。「跳到項目」用主動拉取（視窗剛開啟時）+
+  即時推送（視窗已經開著時）雙路徑處理，避開「訊息在 renderer 開始
+  監聽之前就送達、直接遺失」的 race condition，詳見
+  `PROJECT_SPEC.md` 第 9.8 節。
+- 驗證方式：用 mock 過 `electron` 的環境直接呼叫
+  `lib/ipc/search.js` 的真正 production handler，驗證搜尋涵蓋四個
+  模組的比對準確性，以及 `jumpTo`/`consumePendingSelection` 「拉取
+  一次就清空」的行為。
+
+### 新功能：任務到期日提醒
+
+- 側邊欄「專案計畫」按鈕新增紅色角標，顯示所有專案裡「還沒完成、
+  到期日 ≤ 今天」的任務與 issue 加總。有新的到期項目時另外跳一次
+  系統原生通知（三語文案，依語言設定顯示）。
+- App 開機立刻檢查一次，之後每小時再檢查一次；任何一次專案存檔／
+  狀態切換／工時紀錄異動之後也會立刻重算一次，不用等下一次排程。
+- 用「這批到期項目 id ＋逾期/今天到期狀態」組出的指紋比對是否跟上次
+  通知過的內容相同，避免同一批到期項目每小時排程檢查都彈一次重複
+  通知。
+- 新增 `lib/reminders.js`、IPC 頻道 `projects:getDueSummary`、廣播
+  `projects:changed`／`reminders:changed`。
+- 驗證方式：用 mock 過 `electron` 的環境驗證逾期/今天到期/已完成
+  三種任務狀態的判斷邊界、通知去重指紋邏輯（新增到期項目才會再通知）、
+  以及標記任務完成後角標數字立刻反映。
+
+### 新增：日文語系（UI 實際可用，不只是 README）
+
+- 新增 `renderer/locales/ja.json`，完整翻譯全部 key（跟 `en.json`／
+  `zh-TW.json` 的 key 集合與 `{變數}` 佔位都逐一比對過完全一致）。
+  「設定 → 語言」下拉選單新增「日本語」。
+
+### 修正：補上被靜默吞掉的錯誤
+
+- `lib/windows.js` 的 `removeAccount()` 清除 session 資料失敗、
+  `lib/ipc/settings.js` 的 `settings:addExtension`／
+  `settings:toggleExtension` 套用擴充功能失敗，這三處原本都是
+  `.catch(() => {})`，失敗了使用者完全不知道、也查不到任何紀錄。
+  現在都會 `logError()`，可以在日誌主控台的錯誤日誌分頁看到。
+
+### 文件
+
+- `PROJECT_SPEC.md` 補上第 7.1 節到期日提醒說明、第 9.8 節命令面板
+  完整規格、第 11 節日文語系說明、第 13 節新增的廣播事件，第 15 節
+  檔案結構補上 `lib/reminders.js`／`lib/ipc/search.js`。
+- 三個語系的 `README.md`／`README.en.md`／`README.ja.md` 功能總覽表格
+  跟檔案結構樹一併同步更新（順便把英文版原本缺漏的「虛擬團隊主控台」/
+  「文件庫」項目補齊，這兩份 README 之前就已經比中文版落後一截）。
+- 全部驗證：`node --check`、mock `electron` 環境下的 87 個 IPC 頻道
+  確認、`npm run lint`（0 錯誤）、`npm test`（26 個測試全過）、
+  `npm run format:check`。
+
 ## [1.22.0]
 
 ### 新功能：專案加入工時紀錄

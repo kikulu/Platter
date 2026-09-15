@@ -313,6 +313,176 @@
     refreshAccounts();
   });
 
+  // --- 專案到期提醒角標 ---
+  const dueBadgeEl = document.getElementById('projects-due-badge');
+  function renderDueBadge(summary) {
+    const total = (summary.overdueCount || 0) + (summary.dueTodayCount || 0);
+    if (total === 0) {
+      dueBadgeEl.style.display = 'none';
+      dueBadgeEl.textContent = '';
+      return;
+    }
+    dueBadgeEl.style.display = '';
+    dueBadgeEl.textContent = String(total);
+    dueBadgeEl.title =
+      summary.overdueCount > 0
+        ? window.i18n.t('project.dueBadgeOverdueTitle', {
+            overdue: summary.overdueCount,
+            today: summary.dueTodayCount,
+          })
+        : window.i18n.t('project.dueBadgeTodayTitle', { today: summary.dueTodayCount });
+  }
+  window.workspaceAPI.onRemindersChanged((summary) => {
+    renderDueBadge(summary);
+  });
+
+  // ---------------------------------------------------------------------
+  // 跨模組快速搜尋（命令面板）：Ctrl/⌘+K 或點側邊欄「快速搜尋」開啟，
+  // 一次搜尋橫跨知識庫/文件庫/對話庫/專案，Enter 跳到選中的項目（開啟
+  // 對應視窗＋直接選中該項目，見 lib/ipc/search.js）。
+  // ---------------------------------------------------------------------
+  const paletteOverlay = document.getElementById('command-palette-overlay');
+  const paletteInput = document.getElementById('command-palette-input');
+  const paletteResultsEl = document.getElementById('command-palette-results');
+
+  const RESULT_KIND_META = {
+    'knowledge-item': { icon: '📝', labelKey: 'search.kindKnowledgeItem' },
+    'knowledge-group': { icon: '📦', labelKey: 'search.kindKnowledgeGroup' },
+    document: { icon: '📄', labelKey: 'search.kindDocument' },
+    conversation: { icon: '💬', labelKey: 'search.kindConversation' },
+    project: { icon: '🗂️', labelKey: 'search.kindProject' },
+    task: { icon: '☑️', labelKey: 'search.kindTask' },
+    issue: { icon: '🐞', labelKey: 'search.kindIssue' },
+  };
+
+  let paletteResults = [];
+  let paletteActiveIndex = -1;
+
+  function openPalette() {
+    paletteOverlay.classList.add('open');
+    paletteInput.value = '';
+    paletteResults = [];
+    paletteActiveIndex = -1;
+    renderPaletteResults();
+    paletteInput.focus();
+  }
+
+  function closePalette() {
+    paletteOverlay.classList.remove('open');
+  }
+
+  function renderPaletteResults() {
+    paletteResultsEl.innerHTML = '';
+
+    if (paletteInput.value.trim() && paletteResults.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'cmdp-empty';
+      empty.textContent = window.i18n.t('search.noResults');
+      paletteResultsEl.appendChild(empty);
+      return;
+    }
+
+    paletteResults.forEach((result, idx) => {
+      const meta = RESULT_KIND_META[result.kind] || { icon: '❓', labelKey: '' };
+      const row = document.createElement('div');
+      row.className = 'cmdp-result' + (idx === paletteActiveIndex ? ' active' : '');
+
+      const icon = document.createElement('span');
+      icon.className = 'cmdp-result-icon';
+      icon.textContent = meta.icon;
+
+      const main = document.createElement('div');
+      main.className = 'cmdp-result-main';
+      const title = document.createElement('div');
+      title.className = 'cmdp-result-title';
+      title.textContent = result.title || '';
+      main.appendChild(title);
+      if (result.snippet) {
+        const snippet = document.createElement('div');
+        snippet.className = 'cmdp-result-snippet';
+        snippet.textContent = result.snippet;
+        main.appendChild(snippet);
+      }
+
+      const kind = document.createElement('span');
+      kind.className = 'cmdp-result-kind';
+      kind.textContent = window.i18n.t(meta.labelKey);
+
+      row.appendChild(icon);
+      row.appendChild(main);
+      row.appendChild(kind);
+      row.addEventListener('mouseenter', () => {
+        paletteActiveIndex = idx;
+        renderPaletteResults();
+      });
+      row.addEventListener('click', () => jumpToResult(result));
+      paletteResultsEl.appendChild(row);
+    });
+  }
+
+  async function jumpToResult(result) {
+    if (!result) return;
+    await window.workspaceAPI.jumpToSearchResult(result.open);
+    closePalette();
+  }
+
+  let paletteSearchInFlight = 0;
+  paletteInput.addEventListener('input', async () => {
+    const query = paletteInput.value.trim();
+    const requestId = ++paletteSearchInFlight;
+    if (!query) {
+      paletteResults = [];
+      paletteActiveIndex = -1;
+      renderPaletteResults();
+      return;
+    }
+    const results = await window.workspaceAPI.searchGlobal(query);
+    if (requestId !== paletteSearchInFlight) return; // 使用者輸入期間又打了新的搜尋，這次的結果已經過期
+    paletteResults = results;
+    paletteActiveIndex = results.length > 0 ? 0 : -1;
+    renderPaletteResults();
+  });
+
+  paletteInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      closePalette();
+    } else if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      if (paletteResults.length === 0) return;
+      paletteActiveIndex = (paletteActiveIndex + 1) % paletteResults.length;
+      renderPaletteResults();
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      if (paletteResults.length === 0) return;
+      paletteActiveIndex =
+        (paletteActiveIndex - 1 + paletteResults.length) % paletteResults.length;
+      renderPaletteResults();
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      jumpToResult(paletteResults[paletteActiveIndex]);
+    }
+  });
+
+  paletteOverlay.addEventListener('click', (e) => {
+    if (e.target === paletteOverlay) closePalette();
+  });
+
+  document
+    .getElementById('btn-open-command-palette')
+    .addEventListener('click', openPalette);
+
+  document.addEventListener('keydown', (e) => {
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+      e.preventDefault();
+      if (paletteOverlay.classList.contains('open')) {
+        closePalette();
+      } else {
+        openPalette();
+      }
+    }
+  });
+
   window.addEventListener('resize', () => {
     // main process 自己監聽 resize 來重新計算 WebContentsView bounds
   });
@@ -327,5 +497,7 @@
 
     const version = await window.workspaceAPI.getAppVersion();
     document.getElementById('app-version-label').textContent = `v${version}`;
+
+    renderDueBadge(await window.workspaceAPI.getDueSummary());
   })();
 })();
