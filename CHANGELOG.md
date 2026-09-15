@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.24.0]
+
+### 新功能：匯出對話時可以另存路徑、同時加入知識庫
+
+- 主視窗側邊欄「匯出當前對話」按鈕改成先跳一個選項對話框，不是直接
+  匯出：選 Markdown/JSON 格式、可以按「另存到其他路徑」這次額外跳
+  存檔對話框自己選位置（即使「設定 → 儲存路徑」開了「使用預設路徑時
+  不再詢問」，這次按了也還是會跳，不會被全域設定蓋過去）、可以勾選
+  「同時加入知識庫」把這次匯出的對話內容另外存一份成知識庫項目
+  （固定存成 Markdown，跟這次選的檔案格式無關）。
+- 「同時加入知識庫」的勾選狀態會記住，下次打開對話框預設沿用上次
+  選的值（`settings:setAutoAddToKnowledgeOnExport`）；「另存到其他
+  路徑」是單次選擇，不持久化。
+- `export:current` IPC 頻道的參數從單一 `format` 字串改成
+  `{ format, forceChoosePath, addToKnowledge }` 物件。
+- 驗證方式：用 mock 過 `electron` 的環境直接呼叫
+  `lib/conversationCapture.js` 的真正 production 函式，驗證 5 種情境
+  （預設跳對話框且取消、開啟略過對話框後自動存檔、`forceChoosePath`
+  即使在略過對話框時仍會跳出、`addToKnowledge` 確實新增知識庫項目、
+  不勾選則不新增），以及 `setAutoAddToKnowledgeOnExport` 確實寫入
+  磁碟持久化。
+- 詳見 `PROJECT_SPEC.md` 第 12 節。
+
 ## [1.23.0]
 
 ### 新功能：跨模組快速搜尋（命令面板）
