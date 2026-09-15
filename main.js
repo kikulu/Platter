@@ -9,6 +9,7 @@ const { initLogsDatabase, saveLogsDatabase, logError } = require('./lib/logs');
 const { loadAppState } = require('./lib/stores');
 const { createMainWindow } = require('./lib/windows');
 const { registerIpcHandlers } = require('./lib/ipc');
+const { startDueTaskReminders } = require('./lib/reminders');
 
 // ---------------------------------------------------------------------------
 // main.js（App 入口）
@@ -55,6 +56,9 @@ if (!gotSingleInstanceLock) {
     loadAppState();
     registerIpcHandlers(ipcMain);
     createMainWindow();
+    // 開機先立刻檢查一次到期任務/issue，之後每小時再檢查一次（見
+    // lib/reminders.js），不用等使用者去開專案視窗才知道有東西過期了。
+    startDueTaskReminders();
   });
 
   app.on('window-all-closed', () => {

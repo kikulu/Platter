@@ -349,6 +349,11 @@
     if (currentConvId) selectConversation(currentConvId);
   });
 
+  // 跨模組快速搜尋（命令面板）跳轉過來時要選中的對話
+  window.workspaceAPI.onSearchSelect((payload) => {
+    if (payload) selectConversation(payload.id);
+  });
+
   (async () => {
     await window.i18n.init();
     [allConversations, allDocuments] = await Promise.all([
@@ -357,5 +362,8 @@
     ]);
     rebuildTagOptions();
     renderList();
+
+    const pending = await window.workspaceAPI.consumePendingSelection('conversations');
+    if (pending) selectConversation(pending.id);
   })();
 })();
