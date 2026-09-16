@@ -149,6 +149,19 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 { "items": [ ... ], "groups": [ ... ] }
 ```
 
+**內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
+開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
+`extractors/default-knowledge-base.json` 裡內建的 25 組提示詞範本當
+起始內容，涵蓋 5 個領域各 5 組（標籤對應領域名稱）：企業日常作業、
+醫療軟體研發、論文寫作、研究計畫、專案開發。每組範本都用 Markdown
+格式撰寫（標題、角色與目標、輸入資訊、輸出要求），並刻意在輸出要求裡
+加入「資訊不足就明確指出來問使用者，不要自己編造/假設」的指示——這是
+跟 `default-selectors.json` 讓 `loadSelectors()` 有起手式一樣的慣例，
+種子邏輯只在檔案完全不存在時觸發一次：一旦寫過一次
+`knowledge-base.json`（哪怕使用者把範本全部刪光只剩空清單），之後
+永遠讀使用者自己的版本，絕對不會回頭覆蓋使用者已經編輯過的內容。
+使用者可以自由編輯、刪除、或增加更多範本，內建範本不是唯讀的。
+
 ### 5.1 提示詞項目（items）
 
 ```
@@ -937,6 +950,7 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
+extractors/default-knowledge-base.json  # 內建的25組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發，各5組）
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗
 renderer/knowledge.html, knowledge.js, knowledge.css # 知識庫（提示詞/套餐/檢核表/角色配置）
