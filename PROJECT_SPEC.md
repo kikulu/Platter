@@ -496,7 +496,11 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 `conversation.html`（對話庫）、`log.html`（日誌主控台）。
 
 用一個共用的 `openChildWindow(options)` helper 開窗，避免每個視窗各自
-重複一份 `new BrowserWindow(...)` 的邏輯：
+重複一份 `new BrowserWindow(...)` 的邏輯，子視窗的寬度**不超過主視窗
+寬度的 80%**（取「各視窗設計寬度」跟「80% 主視窗寬度」兩者較小值，
+`minWidth` 仍是最終下限）——主視窗開得比較小的時候，沿用設計寬度反而
+會比主視窗還寬，看起來很不協調；主視窗開得很大的時候，單純的小表單
+（例如新增帳號）也不需要硬撐開：
 
 ```js
 function openChildWindow({
@@ -511,28 +515,44 @@ function openChildWindow({
   const existing = getWindow();
   if (existing && !existing.isDestroyed()) {
     existing.focus();
-    return;
+    return existing;
   }
+
+  const effectiveMinWidth = minWidth || 360;
+  const effectiveMinHeight = minHeight || 400;
+
+  let effectiveWidth = width;
+  if (state.mainWindow && !state.mainWindow.isDestroyed()) {
+    const cappedByMainWindow = Math.round(state.mainWindow.getBounds().width * 0.8);
+    effectiveWidth = Math.max(effectiveMinWidth, Math.min(width, cappedByMainWindow));
+  }
+
   const win = new BrowserWindow({
-    width,
+    width: effectiveWidth,
     height,
-    minWidth: minWidth || 360,
-    minHeight: minHeight || 400,
-    parent: mainWindow,
+    minWidth: effectiveMinWidth,
+    minHeight: effectiveMinHeight,
+    parent: state.mainWindow,
     modal: false,
     backgroundColor: '#1e1e1e',
     webPreferences: {
-      preload: path.join(__dirname, 'preload.js'),
+      preload: path.join(__dirname, '..', 'preload.js'),
       contextIsolation: true,
       nodeIntegration: false,
     },
   });
   win.setMenuBarVisibility(false);
-  win.loadFile(path.join(__dirname, 'renderer', htmlFile));
+  win.loadFile(path.join(__dirname, '..', 'renderer', htmlFile));
   win.on('closed', () => setWindow(null));
   setWindow(win);
+  return win;
 }
 ```
+
+只限制寬度，不限制高度——各視窗原本設計的高度已經是依內容調校過的值，
+不需要跟著主視窗變動。`state.mainWindow` 理論上不會是 `null`（子視窗
+一定是在主視窗開著的情況下才會被開啟），但這裡仍然防呆處理，萬一真的
+拿不到就直接用設計寬度，不會噴錯。
 
 ### 9.1 新增帳號視窗（`account.html` / `account.js`）
 
