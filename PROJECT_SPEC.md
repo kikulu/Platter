@@ -77,12 +77,25 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   讓 Electron 把這個 partition 的資料寫到磁碟，重開程式後用**同一個
   accountId**（因此同一個 partition 名稱）重建 `WebContentsView`，就能自動
   接回原本已登入的 session，不需要重新登入。
-- 新增帳號：建立獨立 partition 的 `WebContentsView`，`mainWindow.contentView
-.addChildView(view)` 掛進主視窗，`loadURL()` 載入對應平台網址
-  （`https://claude.ai`、`https://chatgpt.com`、`https://gemini.google.com`、
+- **懶載入**：帳號的 `WebContentsView` 分兩階段——`registerAccountMeta()`
+  只登記帳號的中繼資料（平台/名稱），不建立任何 `WebContentsView`、也不
+  `loadURL()`；真正的頁面載入延後到 `ensureAccountViewLoaded()`，只在
+  這個帳號**第一次**被切換過去時才觸發（`switchAccount()` 內部呼叫）。
+  一個帳號的網頁本身是完整的 React SPA，同時開好幾個都在背景跑會吃掉
+  可觀的 CPU/記憶體/GPU 合成資源，帳號數量一多（例如 6、7 個）很容易
+  拖累目前正在用的那一個的滾動/互動流暢度——懶載入就是為了避免這個問題：
+  不管帳號清單裡有多少個帳號，同一時間真正在跑頁面的，只有使用者實際
+  點開過的那幾個。
+- 新增帳號：先 `registerAccountMeta()` 登記，緊接著呼叫
+  `switchAccount()`（因為新增帳號代表使用者現在就要用它），這一步才會
+  觸發 `ensureAccountViewLoaded()` 真正建立獨立 partition 的
+  `WebContentsView`，`mainWindow.contentView.addChildView(view)` 掛進
+  主視窗，`loadURL()` 載入對應平台網址（`https://claude.ai`、
+  `https://chatgpt.com`、`https://gemini.google.com`、
   `https://grok.com`）。
-- 切換帳號：不銷毀任何 view，只是 `setVisible(true/false)` 切換顯示狀態，
-  達成毫秒級無縫切換。
+- 切換帳號：如果目標帳號還沒載入過，先 `ensureAccountViewLoaded()`
+  觸發第一次載入；已經載入過的帳號不會重新建立或重新整理，單純
+  `setVisible(true/false)` 切換顯示狀態，達成毫秒級無縫切換。
 - 刪除帳號：滑鼠移到帳號清單項目上，最右側浮現垃圾桶 icon（平常隱藏），
   點下去跳確認對話框（訊息帶出帳號名稱），確認後 `removeChildView()` +
   `session.clearStorageData()` 清乾淨；同時清掉任何套餐（知識庫）裡引用到
@@ -111,9 +124,17 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 ### 3.3 帳號清單持久化
 
 - 帳號清單的中繼資料（`id`、`platform`、`name`、`roleId`——**不含** cookie
-  等實際登入資料）寫進設定檔（`app-state.json`）。開機時讀回來，用相同的
-  id 依序重建每個帳號的 `WebContentsView`——**陣列順序就是使用者排序過的
-  顯示順序**，拖曳排序本質上就是在改這個陣列的順序。
+  等實際登入資料）寫進設定檔（`app-state.json`）。開機時讀回來，
+  `rebuildAllAccountViews()` 只對每個帳號呼叫 `registerAccountMeta()`
+  登記中繼資料——**不會**在開機時就把所有帳號的頁面都載入起來（見 3.2
+  節的懶載入說明）。真正會在開機時載入頁面的只有一個：
+  `state.appState.ui.lastActiveAccountId`（上一次切換到的帳號 id，
+  `switchAccount()` 每次呼叫都會更新並存檔）指到的那個帳號；如果這個
+  id 找不到對應帳號（例如那個帳號後來被刪除了）或這是第一次啟動，
+  就退回帳號清單第一個。其他帳號要等使用者實際點過才會建立
+  `WebContentsView`、才會真的耗用資源。
+- **陣列順序就是使用者排序過的顯示順序**，拖曳排序本質上就是在改這個
+  陣列的順序，跟哪個帳號的頁面有沒有載入是兩件獨立的事。
 
 ---
 
@@ -834,7 +855,7 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
     時額外記一筆錯誤日誌；前端「匯出當前對話」跟「對話庫 → 擷取目前
     對話」失敗時的提示視窗也會直接顯示這組數字，不用另外開日誌視窗才
     看得到。
-- 也掛了頁面層級的診斷：`createAccountView()` 幫每個帳號的
+- 也掛了頁面層級的診斷：`ensureAccountViewLoaded()` 幫每個帳號的
   `WebContentsView` 接了 `did-fail-load`（頁面本身載入失敗，例如網路
   斷線、被導向登入頁）跟 `console-message`（頁面自己的 JS 噴錯）事件，
   轉送進第 16 節的主控台即時輸出，用來排除「根本不是 selector 的問題，
