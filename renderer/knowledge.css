@@ -1,0 +1,250 @@
+body {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+#kb-list-pane {
+  width: 320px;
+  min-width: 260px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+}
+
+#kb-list-toolbar {
+  padding: 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+#kb-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.kb-item {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+}
+.kb-item:hover {
+  background: var(--bg-hover);
+}
+.kb-item.active {
+  background: var(--bg-active);
+}
+.kb-item .kb-title {
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.kb-item .kb-tags {
+  font-size: 11px;
+  color: var(--text-secondary);
+  margin-top: 2px;
+}
+
+.kb-list-empty {
+  padding: 20px 14px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+#kb-list-footer {
+  padding: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  gap: 8px;
+}
+#kb-list-footer button {
+  flex: 1;
+}
+
+#kb-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 10px 12px 0;
+}
+#kb-tabs .tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  padding: 8px 4px;
+  color: var(--text-secondary);
+}
+#kb-tabs .tab-btn.active {
+  color: var(--text-primary);
+  border-bottom-color: var(--accent);
+}
+
+#kb-editor,
+#kb-group-editor {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+#kb-editor .field,
+#kb-group-editor .field {
+  margin-bottom: 14px;
+}
+
+#kb-content {
+  flex: 1;
+  min-height: 200px;
+  resize: none;
+  font-family: inherit;
+  line-height: 1.5;
+}
+
+#kb-editor-actions,
+#kb-group-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+  justify-content: flex-end;
+}
+
+#kb-empty {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-secondary);
+  text-align: center;
+  padding: 20px;
+}
+
+/* --- 檢核表（單一項目自帶） --- */
+#kb-checklist-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.checklist-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+}
+.checklist-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
+.checklist-text {
+  flex: 1;
+  font-size: 13px;
+}
+.checklist-text.checked {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.checklist-remove {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+  flex-shrink: 0;
+}
+.checklist-remove:hover {
+  color: var(--danger);
+}
+
+/* --- 角色配置（提示詞屬於哪些角色的預設提示詞） --- */
+#kb-role-config-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  margin-top: 4px;
+}
+.role-config-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 0;
+  font-size: 13px;
+}
+.role-config-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
+.role-config-row .role-color-dot {
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.role-config-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+/* --- 套餐步驟（群組順序提示詞） --- */
+#grp-steps-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 260px;
+  overflow-y: auto;
+}
+.step-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+.step-row input[type='checkbox'] {
+  width: auto;
+  flex-shrink: 0;
+}
+.step-order {
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.step-text {
+  flex: 1;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.step-text.checked {
+  color: var(--text-secondary);
+  text-decoration: line-through;
+}
+.step-icon-btn {
+  background: transparent;
+  border: none;
+  padding: 2px 6px;
+  color: var(--text-secondary);
+  flex-shrink: 0;
+}
+.step-icon-btn:hover {
+  color: var(--text-primary);
+}
+.step-icon-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+.step-icon-btn.danger-text:hover {
+  color: var(--danger);
+}
+
+#grp-add-step-select {
+  flex: 1;
+}

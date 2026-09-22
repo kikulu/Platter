@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        # 跨兩個 Node 版本跑，跟 lib/utils.js、lib/sqlite.js 主要目標的
+        # LTS 版本對齊，避免只在單一版本上測試出現「本機能跑、CI 用的
+        # 版本卻壞掉」的落差。
+        node-version: [18.x, 20.x]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Install dependencies
+        # 這裡只需要跑 eslint + node --test，不需要真的啟動 Electron App
+        # （GitHub Actions 的 runner 沒有顯示器，也沒辦法互動點視窗——
+        # 那部分永遠要靠 npm start 手動驗證，見 ROADMAP.md）。跳過
+        # electron 本身平台安裝檔的下載，避免拖慢/卡住 CI。
+        run: npm install
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test

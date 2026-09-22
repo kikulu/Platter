@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>日誌主控台</title>
+    <link rel="stylesheet" href="renderer.css" />
+    <link rel="stylesheet" href="log.css" />
+  </head>
+  <body>
+    <div id="log-page">
+      <div id="log-toolbar">
+        <h2 class="log-title" data-i18n="logs.title">日誌主控台</h2>
+        <div id="log-tabs" class="tabbar">
+          <button id="tab-errors" class="tab-btn active" data-i18n="logs.tabErrors">
+            錯誤日誌
+          </button>
+          <button id="tab-audits" class="tab-btn" data-i18n="logs.tabAudits">
+            稽核日誌
+          </button>
+          <button id="tab-console" class="tab-btn" data-i18n="logs.tabConsole">
+            主控台
+          </button>
+        </div>
+      </div>
+
+      <div id="panel-errors" class="tab-panel active">
+        <div class="log-filter-row">
+          <select id="error-scope-filter">
+            <option value="" data-i18n="logs.filterAllScopes">全部來源</option>
+          </select>
+          <input
+            type="text"
+            id="error-search"
+            data-i18n-placeholder="logs.searchErrorsPlaceholder"
+          />
+          <span class="log-spacer"></span>
+          <span id="error-count" class="log-count"></span>
+          <button id="btn-clear-errors" class="danger" data-i18n="logs.clearErrors">
+            清除錯誤日誌
+          </button>
+        </div>
+        <div id="error-list"></div>
+      </div>
+
+      <div id="panel-audits" class="tab-panel">
+        <div class="log-filter-row">
+          <select id="audit-category-filter">
+            <option value="" data-i18n="logs.filterAllCategories">全部類別</option>
+          </select>
+          <input
+            type="text"
+            id="audit-search"
+            data-i18n-placeholder="logs.searchAuditsPlaceholder"
+          />
+          <span class="log-spacer"></span>
+          <span id="audit-count" class="log-count"></span>
+          <button id="btn-clear-audits" class="danger" data-i18n="logs.clearAudits">
+            清除稽核日誌
+          </button>
+        </div>
+        <div id="audit-list"></div>
+      </div>
+
+      <div id="panel-console" class="tab-panel">
+        <div class="log-filter-row">
+          <label class="console-autoscroll-label">
+            <input type="checkbox" id="console-autoscroll" checked />
+            <span data-i18n="logs.autoScroll">自動捲動</span>
+          </label>
+          <span class="log-spacer"></span>
+          <span id="console-count" class="log-count"></span>
+          <button id="btn-clear-console" class="danger" data-i18n="logs.clearConsole">
+            清除主控台
+          </button>
+        </div>
+        <div id="console-output"></div>
+      </div>
+
+      <div id="log-footer">
+        <button id="btn-export-logs" data-i18n="logs.export">匯出日誌</button>
+      </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="log.js"></script>
+  </body>
+</html>
