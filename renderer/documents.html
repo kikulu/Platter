@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>文件庫</title>
+    <link rel="stylesheet" href="renderer.css" />
+    <link rel="stylesheet" href="documents.css" />
+  </head>
+  <body>
+    <div id="doc-list-pane">
+      <div id="doc-list-toolbar">
+        <select id="doc-tag-filter">
+          <option value="" data-i18n="knowledge.filterAll">全部標籤</option>
+        </select>
+        <button id="btn-import-doc" class="primary" data-i18n="documents.import">
+          匯入檔案
+        </button>
+      </div>
+      <div id="doc-list"></div>
+    </div>
+
+    <div id="doc-empty" data-i18n="documents.selectPrompt">
+      從左側選擇一個文件，或點「匯入檔案」加入新的
+    </div>
+
+    <div id="doc-editor" style="display: none">
+      <div
+        id="doc-missing-banner"
+        style="display: none"
+        data-i18n="documents.missingWarning"
+      >
+        ⚠ 找不到原始檔案，可能已被移動或刪除
+      </div>
+
+      <div class="field">
+        <label class="label" data-i18n="documents.name">名稱</label>
+        <input type="text" id="doc-name" />
+      </div>
+      <div class="field">
+        <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
+        <input
+          type="text"
+          id="doc-tags"
+          data-i18n-placeholder="knowledge.tagsPlaceholder"
+        />
+      </div>
+      <div class="field">
+        <label class="label" data-i18n="documents.notes">備註</label>
+        <textarea id="doc-notes" style="min-height: 80px"></textarea>
+      </div>
+
+      <div id="doc-info-box">
+        <div class="doc-info-row">
+          <span data-i18n="documents.originalName">原始檔名</span
+          ><span id="doc-info-original"></span>
+        </div>
+        <div class="doc-info-row">
+          <span data-i18n="documents.source">來源</span><span id="doc-info-source"></span>
+        </div>
+        <div class="doc-info-row">
+          <span data-i18n="documents.size">大小</span><span id="doc-info-size"></span>
+        </div>
+        <div class="doc-info-row">
+          <span data-i18n="documents.createdAt">建立時間</span
+          ><span id="doc-info-created"></span>
+        </div>
+        <div class="doc-info-row">
+          <span data-i18n="documents.path">路徑</span
+          ><span id="doc-info-path" class="doc-info-path"></span>
+        </div>
+      </div>
+
+      <div id="doc-preview-box" style="display: none">
+        <div id="doc-preview-content" class="doc-preview-content"></div>
+      </div>
+
+      <div id="doc-editor-actions">
+        <button id="btn-open-file" data-i18n="documents.openFile">開啟檔案</button>
+        <button
+          id="btn-preview-md"
+          data-i18n="documents.previewMarkdown"
+          style="display: none"
+        >
+          預覽 Markdown
+        </button>
+        <button id="btn-show-in-folder" data-i18n="documents.showInFolder">
+          在資料夾中顯示
+        </button>
+        <button id="btn-delete-doc" class="danger" data-i18n="documents.remove">
+          移除
+        </button>
+        <button id="btn-save-doc" class="primary" data-i18n="knowledge.save">儲存</button>
+      </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="documents.js"></script>
+  </body>
+</html>

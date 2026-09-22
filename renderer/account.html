@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>新增帳號</title>
+    <link rel="stylesheet" href="renderer.css" />
+    <style>
+      body {
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+      }
+      h2 {
+        margin: 0 0 16px;
+        font-size: 16px;
+      }
+      .field {
+        margin-bottom: 16px;
+      }
+      .actions {
+        margin-top: auto;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <h2 data-i18n="account.title">新增帳號</h2>
+
+    <div class="field">
+      <label class="label" data-i18n="account.platform">平台</label>
+      <select id="platform">
+        <option value="claude">Claude</option>
+        <option value="chatgpt">ChatGPT</option>
+        <option value="gemini">Gemini</option>
+        <option value="grok">Grok</option>
+      </select>
+    </div>
+
+    <div class="field">
+      <label class="label" data-i18n="account.name">帳號名稱</label>
+      <input
+        type="text"
+        id="name"
+        data-i18n-placeholder="account.namePlaceholder"
+        placeholder="例如：工作用、個人用"
+      />
+    </div>
+
+    <div class="field">
+      <label class="label" data-i18n="account.role">角色（可選）</label>
+      <select id="role"></select>
+    </div>
+
+    <div class="actions">
+      <button id="btn-cancel" data-i18n="account.cancel">取消</button>
+      <button id="btn-confirm" class="primary" data-i18n="account.confirm">
+        確認新增
+      </button>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="account.js"></script>
+  </body>
+</html>
