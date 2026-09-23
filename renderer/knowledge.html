@@ -1,107 +1,193 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
-  <title>知識庫</title>
-  <link rel="stylesheet" href="renderer.css" />
-  <link rel="stylesheet" href="knowledge.css" />
-</head>
-<body>
-  <div id="kb-list-pane">
-    <div id="kb-tabs">
-      <button id="tab-items" class="tab-btn active" data-i18n="knowledge.tabItems">提示詞</button>
-      <button id="tab-groups" class="tab-btn" data-i18n="knowledge.tabGroups">套餐</button>
-    </div>
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>知識庫</title>
+    <link rel="stylesheet" href="renderer.css" />
+    <link rel="stylesheet" href="knowledge.css" />
+  </head>
+  <body>
+    <div id="kb-list-pane">
+      <div id="kb-tabs">
+        <button id="tab-items" class="tab-btn active" data-i18n="knowledge.tabItems">
+          提示詞
+        </button>
+        <button id="tab-groups" class="tab-btn" data-i18n="knowledge.tabGroups">
+          套餐
+        </button>
+      </div>
 
-    <div id="kb-list-toolbar">
-      <select id="kb-tag-filter">
-        <option value="" data-i18n="knowledge.filterAll">全部標籤</option>
-      </select>
-      <button id="btn-new-item" class="primary" data-i18n="knowledge.newItem">新增項目</button>
-      <button id="btn-new-group" class="primary" data-i18n="knowledge.newGroup" style="display:none;">新增套餐</button>
-    </div>
-    <div id="kb-list"></div>
-    <div id="kb-list-footer">
-      <button id="btn-export-all" data-i18n="knowledge.exportAll">匯出全部</button>
-      <button id="btn-import" data-i18n="knowledge.import">匯入</button>
-    </div>
-  </div>
-
-  <div id="kb-empty" data-i18n="knowledge.selectPrompt">從左側選擇一個項目，或點「新增項目」建立新的</div>
-
-  <!-- 單一提示詞項目編輯（含獨立檢核表） -->
-  <div id="kb-editor" style="display:none;">
-    <div class="field">
-      <label class="label" data-i18n="knowledge.name">名稱</label>
-      <input type="text" id="kb-title" />
-    </div>
-    <div class="field">
-      <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
-      <input type="text" id="kb-tags" data-i18n-placeholder="knowledge.tagsPlaceholder" />
-    </div>
-    <div class="field" style="flex:1; display:flex; flex-direction:column; min-height:160px;">
-      <label class="label" data-i18n="knowledge.content">內容</label>
-      <textarea id="kb-content"></textarea>
-    </div>
-
-    <div class="field">
-      <label class="label" data-i18n="knowledge.checklist">檢核表</label>
-      <div id="kb-checklist-list"></div>
-      <div class="row" style="margin-top:6px;">
-        <input type="text" id="kb-checklist-new-input" data-i18n-placeholder="knowledge.checklistPlaceholder" />
-        <button id="btn-add-checklist-entry">＋</button>
+      <div id="kb-list-toolbar">
+        <input
+          type="search"
+          id="kb-search"
+          data-i18n-placeholder="knowledge.searchPlaceholder"
+        />
+        <select id="kb-tag-filter">
+          <option value="" data-i18n="knowledge.filterAll">全部標籤</option>
+        </select>
+        <button id="btn-new-item" class="primary" data-i18n="knowledge.newItem">
+          新增項目
+        </button>
+        <button
+          id="btn-new-group"
+          class="primary"
+          data-i18n="knowledge.newGroup"
+          style="display: none"
+        >
+          新增套餐
+        </button>
+        <button id="btn-import-md" data-i18n="knowledge.importMarkdown">
+          匯入 Markdown
+        </button>
+      </div>
+      <div id="kb-list"></div>
+      <div id="kb-list-footer">
+        <button id="btn-export-all" data-i18n="knowledge.exportAll">匯出全部</button>
+        <button id="btn-import" data-i18n="knowledge.import">匯入</button>
       </div>
     </div>
 
-    <div class="field">
-      <label class="label" data-i18n="knowledge.roleConfig">角色配置（設為哪些角色的預設提示詞）</label>
-      <div id="kb-role-config-list"></div>
+    <div id="kb-empty" data-i18n="knowledge.selectPrompt">
+      從左側選擇一個項目，或點「新增項目」建立新的
     </div>
 
-    <div id="kb-editor-actions">
-      <button id="btn-copy" data-i18n="knowledge.copy">複製內容</button>
-      <button id="btn-delete" class="danger" data-i18n="knowledge.delete">刪除</button>
-      <button id="btn-save" class="primary" data-i18n="knowledge.save">儲存</button>
-    </div>
-  </div>
-
-  <!-- 群組順序提示詞套餐編輯 -->
-  <div id="kb-group-editor" style="display:none;">
-    <div class="field">
-      <label class="label" data-i18n="knowledge.groupTitle">套餐名稱</label>
-      <input type="text" id="grp-title" />
-    </div>
-    <div class="field">
-      <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
-      <input type="text" id="grp-tags" data-i18n-placeholder="knowledge.tagsPlaceholder" />
-    </div>
-    <div class="field">
-      <label class="label" data-i18n="knowledge.groupDescription">套餐說明</label>
-      <textarea id="grp-description" style="min-height:56px; flex:none;"></textarea>
-    </div>
-
-    <div class="field" style="flex:1; display:flex; flex-direction:column;">
-      <div class="row" style="justify-content:space-between; margin-bottom:4px;">
-        <label class="label" style="margin:0;" data-i18n="knowledge.groupSteps">步驟（依序）</label>
-        <span id="grp-progress" class="settings-hint" style="margin:0;"></span>
+    <!-- 單一提示詞項目編輯（含獨立檢核表） -->
+    <div id="kb-editor" style="display: none">
+      <div class="field">
+        <label class="label" data-i18n="knowledge.name">名稱</label>
+        <input type="text" id="kb-title" />
       </div>
-      <div id="grp-steps-list"></div>
-      <div class="row" style="margin-top:8px;">
-        <select id="grp-add-step-select"></select>
-        <button id="btn-add-step">＋</button>
+      <div class="field">
+        <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
+        <input
+          type="text"
+          id="kb-tags"
+          data-i18n-placeholder="knowledge.tagsPlaceholder"
+        />
+      </div>
+      <div
+        class="field"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
+      >
+        <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+          <label class="label" style="margin: 0" data-i18n="knowledge.systemPrompt"
+            >系統提示詞（System Prompt）</label
+          >
+          <button id="btn-copy-system" data-i18n="knowledge.copy">複製內容</button>
+        </div>
+        <textarea
+          id="kb-system-prompt"
+          data-i18n-placeholder="knowledge.systemPromptPlaceholder"
+        ></textarea>
+      </div>
+      <div
+        class="field"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
+      >
+        <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+          <label class="label" style="margin: 0" data-i18n="knowledge.userPrompt"
+            >使用者提示詞（User Prompt）</label
+          >
+          <button id="btn-copy-user" data-i18n="knowledge.copy">複製內容</button>
+        </div>
+        <textarea
+          id="kb-user-prompt"
+          data-i18n-placeholder="knowledge.userPromptPlaceholder"
+        ></textarea>
+      </div>
+      <div
+        class="field"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
+      >
+        <label class="label" data-i18n="knowledge.content">內容</label>
+        <div class="settings-hint" data-i18n="knowledge.contentHint">
+          若已填寫上方的系統／使用者提示詞，這裡可以留空；沒有拆分的舊式提示詞才需要用這欄。
+        </div>
+        <textarea id="kb-content"></textarea>
+      </div>
+
+      <div class="field">
+        <label class="label" data-i18n="knowledge.checklist">檢核表</label>
+        <div id="kb-checklist-list"></div>
+        <div class="row" style="margin-top: 6px">
+          <input
+            type="text"
+            id="kb-checklist-new-input"
+            data-i18n-placeholder="knowledge.checklistPlaceholder"
+          />
+          <button id="btn-add-checklist-entry">＋</button>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label" data-i18n="knowledge.roleConfig"
+          >角色配置（設為哪些角色的預設提示詞）</label
+        >
+        <div id="kb-role-config-list"></div>
+      </div>
+
+      <div id="kb-editor-actions">
+        <button id="btn-copy" data-i18n="knowledge.copy">複製內容</button>
+        <button id="btn-delete" class="danger" data-i18n="knowledge.delete">刪除</button>
+        <button id="btn-save" class="primary" data-i18n="knowledge.save">儲存</button>
       </div>
     </div>
 
-    <div id="kb-group-editor-actions">
-      <button id="btn-copy-all-group" data-i18n="knowledge.copyAll">複製全部內容</button>
-      <button id="btn-reset-progress" data-i18n="knowledge.resetProgress">重置進度</button>
-      <button id="btn-delete-group" class="danger" data-i18n="knowledge.deleteGroup">刪除套餐</button>
-      <button id="btn-save-group" class="primary" data-i18n="knowledge.saveGroup">儲存套餐</button>
-    </div>
-  </div>
+    <!-- 群組順序提示詞套餐編輯 -->
+    <div id="kb-group-editor" style="display: none">
+      <div class="field">
+        <label class="label" data-i18n="knowledge.groupTitle">套餐名稱</label>
+        <input type="text" id="grp-title" />
+      </div>
+      <div class="field">
+        <label class="label" data-i18n="knowledge.tags">標籤（逗號分隔）</label>
+        <input
+          type="text"
+          id="grp-tags"
+          data-i18n-placeholder="knowledge.tagsPlaceholder"
+        />
+      </div>
+      <div class="field">
+        <label class="label" data-i18n="knowledge.groupDescription">套餐說明</label>
+        <textarea id="grp-description" style="min-height: 56px; flex: none"></textarea>
+      </div>
 
-  <script src="i18n.js"></script>
-  <script src="knowledge.js"></script>
-</body>
+      <div class="field" style="flex: 1; display: flex; flex-direction: column">
+        <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+          <label class="label" style="margin: 0" data-i18n="knowledge.groupSteps"
+            >步驟（依序）</label
+          >
+          <span id="grp-progress" class="settings-hint" style="margin: 0"></span>
+        </div>
+        <div id="grp-steps-list"></div>
+        <div class="row" style="margin-top: 8px">
+          <select id="grp-add-step-select"></select>
+          <button id="btn-add-step">＋</button>
+        </div>
+      </div>
+
+      <div id="kb-group-editor-actions">
+        <button id="btn-copy-all-group" data-i18n="knowledge.copyAll">
+          複製全部內容
+        </button>
+        <button id="btn-reset-progress" data-i18n="knowledge.resetProgress">
+          重置進度
+        </button>
+        <button id="btn-delete-group" class="danger" data-i18n="knowledge.deleteGroup">
+          刪除套餐
+        </button>
+        <button id="btn-save-group" class="primary" data-i18n="knowledge.saveGroup">
+          儲存套餐
+        </button>
+      </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="knowledge.js"></script>
+  </body>
 </html>

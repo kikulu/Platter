@@ -1,4 +1,7 @@
-body { height: 100vh; overflow-y: auto; }
+body {
+  height: 100vh;
+  overflow-y: auto;
+}
 
 .settings-section-title {
   font-size: 14px;
@@ -23,15 +26,21 @@ body { height: 100vh; overflow-y: auto; }
   word-break: break-all;
 }
 
-.ext-item, .selector-platform-tabs .tab {
+.ext-item,
+.selector-platform-tabs .tab {
   display: flex;
   align-items: center;
   gap: 10px;
   padding: 8px 0;
   border-bottom: 1px solid var(--border);
 }
-.ext-item .ext-name { flex: 1; }
-.ext-item .ext-version { color: var(--text-secondary); font-size: 12px; }
+.ext-item .ext-name {
+  flex: 1;
+}
+.ext-item .ext-version {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
 
 .selector-platform-tabs {
   display: flex;
@@ -47,13 +56,49 @@ body { height: 100vh; overflow-y: auto; }
   color: #fff;
 }
 
+.selector-test-result {
+  background: var(--bg-hover);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  font-size: 12px;
+}
+.selector-test-summary {
+  color: var(--text-primary);
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+.selector-test-error {
+  color: var(--danger);
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.selector-test-msg {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 4px 0;
+  border-top: 1px solid var(--border);
+  color: var(--text-secondary);
+  word-break: break-word;
+}
+.selector-test-msg:first-of-type {
+  border-top: none;
+}
+.selector-test-msg-role {
+  flex-shrink: 0;
+}
+
 .checkbox-row {
   display: flex;
   align-items: center;
   gap: 8px;
   margin-top: 8px;
 }
-.checkbox-row input { width: auto; }
+.checkbox-row input {
+  width: auto;
+}
 
 /* --- 帳號角色機制 --- */
 .role-item {
