@@ -346,18 +346,43 @@
       const name = document.createElement('span');
       name.className = 'prompt-row-name';
       name.textContent = item.title;
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'prompt-row-copy';
-      copyBtn.textContent = '⧉';
-      copyBtn.title = window.i18n.t('knowledge.copy');
-      copyBtn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        await navigator.clipboard.writeText(item.content);
-      });
-
       row.appendChild(name);
-      row.appendChild(copyBtn);
+
+      // 有拆分系統／使用者提示詞的項目（企業角色範本）分別給一顆複製
+      // 按鈕；沒有拆分的舊式項目維持原本單一「複製內容」按鈕。
+      if (item.systemPrompt || item.userPrompt) {
+        const copySystemBtn = document.createElement('button');
+        copySystemBtn.className = 'prompt-row-copy';
+        copySystemBtn.textContent = 'S';
+        copySystemBtn.title = window.i18n.t('sidebar.copySystemPrompt');
+        copySystemBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await navigator.clipboard.writeText(item.systemPrompt || '');
+        });
+
+        const copyUserBtn = document.createElement('button');
+        copyUserBtn.className = 'prompt-row-copy';
+        copyUserBtn.textContent = 'U';
+        copyUserBtn.title = window.i18n.t('sidebar.copyUserPrompt');
+        copyUserBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await navigator.clipboard.writeText(item.userPrompt || '');
+        });
+
+        row.appendChild(copySystemBtn);
+        row.appendChild(copyUserBtn);
+      } else {
+        const copyBtn = document.createElement('button');
+        copyBtn.className = 'prompt-row-copy';
+        copyBtn.textContent = '⧉';
+        copyBtn.title = window.i18n.t('knowledge.copy');
+        copyBtn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          await navigator.clipboard.writeText(item.content);
+        });
+        row.appendChild(copyBtn);
+      }
+
       promptListEl.appendChild(row);
     });
   }
