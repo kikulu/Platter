@@ -146,6 +146,17 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
   8 色色票之一（`#4f8cff #e5484d #f5a623 #2ecc71 #9b59b6 #1abc9c #e91e8c
 #95a5a6`）。
 - 存在 `app-state.json` 的 `roles: []`。
+- **內建預設角色**：`app-state.json` 完全不存在時（全新安裝、第一次
+  開啟），`lib/stores.js` 的 `loadAppState()` 會用
+  `extractors/default-roles.json` 裡內建的 8 種企業角色（人力資源、
+  行銷企劃、業務銷售、客服支援、專案經理、軟體工程師、財務會計、
+  高階主管）當 `roles` 起始內容，`id` 是固定字串（例如 `role_hr`），
+  跟 `default-knowledge-base.json` 裡「企業角色範本」分類的提示詞項目
+  的 `roleIds` 對得上，所以全新安裝一開機側邊欄「預設提示詞」（見
+  第 5.4 節、第 8 節）就已經依角色分好內容，不用使用者自己重新建立
+  一輪角色。跟 `seedDefaultKnowledgeBase()`／`loadSelectors()` 是同一套
+  慣例：種子邏輯只在 `app-state.json` 完全不存在時觸發一次，一旦存過檔
+  （哪怕使用者把角色刪光）就永遠讀使用者自己的版本。
 - 帳號物件新增 `roleId`（可為 `null`）。
 - **管理位置**：設定視窗「帳號角色管理」區塊——新增/編輯/刪除角色、色票
   選色、「複製提示詞」一鍵複製角色描述到剪貼簿。
@@ -172,13 +183,19 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 **內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
 開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
-`extractors/default-knowledge-base.json` 裡內建的 25 組提示詞範本當
-起始內容，涵蓋 5 個領域各 5 組（標籤對應領域名稱）：企業日常作業、
-醫療軟體研發、論文寫作、研究計畫、專案開發。每組範本都用 Markdown
-格式撰寫（標題、角色與目標、輸入資訊、輸出要求），並刻意在輸出要求裡
-加入「資訊不足就明確指出來問使用者，不要自己編造/假設」的指示——這是
-跟 `default-selectors.json` 讓 `loadSelectors()` 有起手式一樣的慣例，
-種子邏輯只在檔案完全不存在時觸發一次：一旦寫過一次
+`extractors/default-knowledge-base.json` 裡內建的 41 組提示詞範本當
+起始內容，涵蓋 6 個分類（標籤對應分類名稱）：企業日常作業、
+醫療軟體研發、論文寫作、研究計畫、專案開發（各 5 組，共 25 組，沿用
+Stage 5 原始設計），以及**企業角色範本**（8 種常見企業職務各 2 組，共
+16 組，1.26.0 新增）。前 25 組都用單一 `content` 欄位、Markdown 格式
+撰寫（標題、角色與目標、輸入資訊、輸出要求）；企業角色範本則額外帶
+`roleIds`（對應 `default-roles.json` 種子角色的固定 id，見第 4 節）跟
+`systemPrompt`／`userPrompt` 拆分欄位——`systemPrompt` 定義這組範本的
+人設／任務框架，`userPrompt` 是這次要交代的具體任務（沿用既有「資訊
+不足就用 `[請填入]` 明確標示、不要自己編造」的風格），`content` 欄位
+則是兩者合併起來的版本（向下相容舊有只認 `content` 的搜尋／匯出／
+側邊欄複製邏輯）。這是跟 `default-selectors.json` 讓 `loadSelectors()`
+有起手式一樣的慣例，種子邏輯只在檔案完全不存在時觸發一次：一旦寫過一次
 `knowledge-base.json`（哪怕使用者把範本全部刪光只剩空清單），之後
 永遠讀使用者自己的版本，絕對不會回頭覆蓋使用者已經編輯過的內容。
 使用者可以自由編輯、刪除、或增加更多範本，內建範本不是唯讀的。
@@ -189,28 +206,40 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 { id, title, content, tags: string[],
   checklist: [{ id, text, checked }],
   roleIds: string[],
+  systemPrompt: string, userPrompt: string,
   createdAt, updatedAt }
 ```
 
 - 兩欄式版面：左邊項目清單（含標籤篩選下拉選單）+ 匯出全部/匯入按鈕，
-  右邊編輯表單（名稱、標籤（逗號分隔）、內容 textarea）。
+  右邊編輯表單（名稱、標籤（逗號分隔）、系統提示詞 textarea、使用者
+  提示詞 textarea、內容 textarea）。
+- **系統提示詞／使用者提示詞（1.26.0 新增）**：`systemPrompt`／
+  `userPrompt` 是 `content` 之外新增的可選拆分欄位，分別對應各自的
+  textarea 跟「複製內容」按鈕（`btn-copy-system`／`btn-copy-user`），
+  方便貼到不同用途的欄位（例如系統提示詞貼到平台的 Custom
+  Instructions、使用者提示詞貼到對話輸入框）。兩者皆空字串時代表這個
+  項目沿用舊式的單一 `content` 寫法；`content` 欄位保留供舊資料與
+  自由格式提示詞使用，並在編輯器顯示提示文字說明「已填寫上方兩欄時
+  這裡可以留空」。主要的「複製內容」按鈕（`btn-copy`）在 `content`
+  為空時，會自動改複製 `systemPrompt`＋`userPrompt` 組合起來的版本，
+  維持「一鍵複製完整提示詞」的行為不變。
 - 「複製內容」用瀏覽器原生 `navigator.clipboard.writeText()`。
 - 標籤篩選：從目前所有項目的標籤動態組出下拉選單選項，選了就在記憶體裡
   篩選清單（不用重打 IPC）。
 - **全文搜尋**：工具列的搜尋框即時（`input` 事件，不用按 Enter）在記憶體
   裡篩選清單，跟標籤篩選是 AND 關係（可以同時用）。提示詞項目比對標題／
-  內容／標籤；套餐額外比對說明，以及**套餐裡任一步驟引用的提示詞標題**
-  （方便直接搜「這個提示詞被用在哪些套餐裡」，不用逐一點開套餐檢查
-  步驟）。篩選後完全沒有符合的項目時，清單區塊顯示「沒有符合搜尋條件的
-  項目」，跟「這個分頁本來就還沒建立任何項目/套餐」的空狀態提示分開，
-  避免使用者誤以為是清單本身是空的。
+  內容／`systemPrompt`／`userPrompt`／標籤；套餐額外比對說明，以及**套餐
+  裡任一步驟引用的提示詞標題**（方便直接搜「這個提示詞被用在哪些套餐
+  裡」，不用逐一點開套餐檢查步驟）。篩選後完全沒有符合的項目時，清單
+  區塊顯示「沒有符合搜尋條件的項目」，跟「這個分頁本來就還沒建立任何
+  項目/套餐」的空狀態提示分開，避免使用者誤以為是清單本身是空的。
 - 「匯入」按鈕匯入的是完整的知識庫 JSON 備份格式（`{items, groups}`，
   沿用 Stage 5 原始設計）；「匯入 Markdown」是另一個按鈕，只在「提示詞」
   分頁顯示，可一次多選任意 `.md`/`.markdown`/`.txt` 檔案，逐一讀成新的
   提示詞項目（檔名去掉副檔名當標題，檔案全文塞進 `content`，`tags`/
-  `checklist`/`roleIds` 都是空的），匯入完自動把最後一個匯入的項目打開
-  在編輯器裡，方便馬上檢視/編輯內容，不用另外手動點開。這兩個「匯入」
-  按鈕處理的是完全不同的檔案格式，不要搞混。
+  `checklist`/`roleIds`/`systemPrompt`/`userPrompt` 都是空的），匯入完
+  自動把最後一個匯入的項目打開在編輯器裡，方便馬上檢視/編輯內容，不用
+  另外手動點開。這兩個「匯入」按鈕處理的是完全不同的檔案格式，不要搞混。
 
 ### 5.2 檢核表機制（單一項目自帶）
 
@@ -253,13 +282,17 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 ### 5.6 匯出／匯入
 
 - 匯出：存檔對話框可選 **Markdown**（項目用 `##` 標題、標籤顯示成
-  `#tag1 #tag2`、檢核表用 `- [x]/[ ]` 條列；套餐額外標示 `📦 套餐：`、
-  步驟依序條列並標示完成狀態；項目間用 `---` 分隔）或 **JSON**（結構化，
-  給匯入用，包含完整 `items`/`groups`）。
+  `#tag1 #tag2`、檢核表用 `- [x]/[ ]` 條列；有拆分 `systemPrompt`／
+  `userPrompt` 的項目分成「### 系統提示詞（System Prompt）」「### 使用者
+  提示詞（User Prompt）」兩個小節匯出，沒有拆分的項目維持原本直接輸出
+  `content` 的寫法；套餐額外標示 `📦 套餐：`、步驟依序條列並標示完成
+  狀態；項目間用 `---` 分隔）或 **JSON**（結構化，給匯入用，包含完整
+  `items`/`groups`，`systemPrompt`/`userPrompt` 原樣保留）。
 - 匯入：只接受 JSON。項目重新產生 id（避免撞號），`roleIds` **不**帶入
-  來源檔案的角色配置（角色是各安裝環境自己的資料）；套餐的 `steps.itemId`
-  依新舊 id 對照表自動轉換，找不到對照的步驟捨棄。全部附加到現有清單
-  後面，不覆蓋既有項目。
+  來源檔案的角色配置（角色是各安裝環境自己的資料）；`systemPrompt`/
+  `userPrompt` 則照原樣帶入；套餐的 `steps.itemId` 依新舊 id 對照表
+  自動轉換，找不到對照的步驟捨棄。全部附加到現有清單後面，不覆蓋既有
+  項目。
 
 ---
 
@@ -883,23 +916,20 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
 ## 14. 打包（electron-builder）
 
 `package.json` 的 `build` 欄位設定 `appId`、`productName`、
-`directories.output: "dist"`、`files`（main.js/preload.js/**`lib/**/*`**/
-renderer/**/extractors/**，另外排除 `node_modules/sql.js/dist/` 裡用不到
-的 asm.js/worker/browser 變體跟壓縮包，減少打包體積）、
-`asarUnpack: ["extractors/**/*"]`、各平台 `target`
+`directories.output: "dist"`、`files`（main.js/preload.js/**`lib/**/_`**/
+renderer/**/extractors/**，另外排除 `node_modules/sql.js/dist/`裡用不到
+的 asm.js/worker/browser 變體跟壓縮包，減少打包體積）、`asarUnpack: ["extractors/\*\*/_"]`、各平台 `target`
 （win: nsis, mac: dmg, linux: AppImage）與對應 icon 路徑
 （`assets/icons/icon.ico`/`.icns`/`.png`）。npm scripts：`start`、
 `build`、`build:win`、`build:mac`、`build:linux`、`build:dir`（免安裝
 資料夾，快速測試用）。
 
-**`files` 陣列務必包含 `lib/**/*`**：electron-builder 只要你自己指定了
+**`files` 陣列務必包含 `lib/**/\*`**：electron-builder 只要你自己指定了
 `files`，就只打包陣列裡列到的東西，不會自動囊括專案根目錄下所有檔案。
-`main.js` 用 `require('./lib/utils')`、`require('./lib/sqlite')` 依賴
-`lib/` 資料夾，如果漏掉沒列進 `files`，打包出來的成品會在啟動時直接
+`main.js`用`require('./lib/utils')`、`require('./lib/sqlite')`依賴`lib/`資料夾，如果漏掉沒列進`files`，打包出來的成品會在啟動時直接
 噴 `Cannot find module './lib/...'` 崩潰——這是本專案曾經真的存在過的
-設定疏漏（`lib/utils.js` 一直都有在用，但 `files` 陣列一直沒列到它，
-只是因為開發時都用 `npm start` 直接跑原始碼所以沒發現），加入
-`lib/sqlite.js` 的時候一併修正。
+設定疏漏（`lib/utils.js`一直都有在用，但`files`陣列一直沒列到它，
+只是因為開發時都用`npm start`直接跑原始碼所以沒發現），加入`lib/sqlite.js` 的時候一併修正。
 
 **`sql.js` 不需要 `asarUnpack`**：它是純 WebAssembly，main.js 用一般的
 `fs.readFileSync` 讀取 `.wasm` 檔（不是 `dlopen` 原生模組），Electron 的
@@ -971,7 +1001,8 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
-extractors/default-knowledge-base.json  # 內建的25組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發，各5組）
+extractors/default-knowledge-base.json  # 內建的41組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，企業角色範本8種職務各2組）
+extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗
 renderer/knowledge.html, knowledge.js, knowledge.css # 知識庫（提示詞/套餐/檢核表/角色配置）
