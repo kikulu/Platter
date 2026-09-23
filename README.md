@@ -1,4 +1,5 @@
-# AI 參與度 ☕
+
+# AI 參與度 ☕ 
 
 烘焙深度：用咖啡「杯數」表示 AI 介入程度。
 AI做越多，人需要喝的咖啡就越少。
@@ -58,24 +59,21 @@ AI做越多，人需要喝的咖啡就越少。
 
 ## 功能總覽
 
-| 功能                    | 說明                                                                                                                                                                                                 |
-| ----------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 🗂️ 多帳號聚合           | Claude / ChatGPT / Gemini / Grok，每個帳號各自獨立登入、互不干擾，切換是毫秒級的                                                                                                                     |
-| 🔐 登入狀態持久化       | 重開程式不用重新登入                                                                                                                                                                                 |
-| ⚡ 懶載入               | 開機只載入上次選中的帳號，其他帳號等你點了才載入，帳號多也不會拖慢開機                                                                                                                               |
-| 📐 側邊欄摺疊           | 可摺成只顯示 icon 的窄版                                                                                                                                                                             |
-| 🔍 跨模組快速搜尋       | `Ctrl/⌘+K` 打開命令面板，一次搜尋知識庫、文件庫、對話庫、專案（含任務/議題），選了直接跳到對應視窗跟項目                                                                                             |
-| 📚 知識庫（獨立視窗）   | 內建 41 組跨領域提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發/企業角色範本），支援全文搜尋、標籤篩選，可匯出成 Markdown 或 JSON                                                   |
-| 🧑‍💼 企業角色提示詞範本   | 內建 8 種常見企業職務角色（HR／行銷／業務／客服／PM／工程師／財務／高階主管），每種角色各配好 2 組任務範本，每組都拆成「系統提示詞」與「使用者提示詞」，開機即用，側邊欄「預設提示詞」可分別一鍵複製 |
-| 🧩 虛擬團隊主控台       | 把帳號依角色組織成團隊組織圖，並在「專案計畫管理」裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度、記錄工時                                                                                       |
-| ⏰ 到期提醒             | 側邊欄角標顯示逾期／今天到期的任務與議題數量，有新的到期項目會另外跳一次系統通知                                                                                                                     |
-| 🗃️ 文件庫               | 統一保存對話匯出的檔案與手動匯入的任意檔案，.md 檔可直接預覽                                                                                                                                         |
-| ➕ 新增帳號（獨立視窗） | 選平台、取自訂名稱，新增完直接切過去                                                                                                                                                                 |
-| ⬇️ 對話匯出             | 把畫面上目前看得到的對話存成 Markdown 或 JSON，可另存到指定路徑、可勾選同時加入知識庫，也可設定自動存檔不跳對話框                                                                                    |
-| ⚙️ 設定（獨立視窗）     | 語言切換、設定檔存放位置、擴充功能、預設匯出路徑、備份還原、選擇器設定（含測試擷取預覽）、滑鼠選取工具、疑難排解                                                                                     |
-| 🌐 多國語系             | 繁體中文 / English / 日本語，可擴充                                                                                                                                                                  |
-| 🧩 擴充功能             | 全域套用「已解壓縮」格式的 Chrome 擴充功能                                                                                                                                                           |
-| 🛡️ 資料安全             | 設定檔原子寫入 + 覆蓋前自動備份，匯入格式嚴格驗證                                                                                                                                                    |
+| 功能 | 說明 |
+|---|---|
+| 🗂️ 多帳號聚合 | Claude / ChatGPT / Gemini / Grok，每個帳號各自獨立登入、互不干擾，切換是毫秒級的 |
+| 🔐 登入狀態持久化 | 重開程式不用重新登入 |
+| ⚡ 懶載入 | 開機只載入上次選中的帳號，其他帳號等你點了才載入，帳號多也不會拖慢開機 |
+| 📐 側邊欄摺疊 | 可摺成只顯示 icon 的窄版 |
+| 📚 知識庫（獨立視窗） | 儲存常用的提示詞 / skill 範本，支援標籤篩選，可匯出成 Markdown 或 JSON |
+| 🧩 虛擬團隊主控台 | 把帳號依角色組織成團隊組織圖，並在「專案計畫管理」裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度。 |
+| 🗃️ 文件管理 |統一保存對話匯出的檔案與手動匯入的任意檔案。 |
+| ➕ 新增帳號（獨立視窗） | 選平台、取自訂名稱，新增完直接切過去 |
+| ⬇️ 對話匯出 | 把畫面上目前看得到的對話存成 Markdown 或 JSON，可設定自動存檔不跳對話框 |
+| ⚙️ 設定（獨立視窗） | 語言切換、設定檔存放位置、擴充功能、預設匯出路徑、備份還原、選擇器設定、滑鼠選取工具、疑難排解 |
+| 🌐 多國語系 | 繁體中文 / English，可擴充 |
+| 🧩 擴充功能 | 全域套用「已解壓縮」格式的 Chrome 擴充功能 |
+| 🛡️ 資料安全 | 設定檔原子寫入 + 覆蓋前自動備份，匯入格式嚴格驗證 |
 
 ## 安裝與執行
 
@@ -96,12 +94,7 @@ npm start
 3. 想匯出對話：切到該帳號、點「匯出當前對話」，選存 Markdown 或 JSON。
    第一次用建議先到「設定 → 選擇器設定」用滑鼠選取工具校正一下（見下方
    說明），不然可能抓不到內容。
-4. 常用的 prompt 存進「知識庫」，之後點開複製貼上就好，不用重打。內建的
-   「企業角色範本」（HR／行銷／業務／客服／PM／工程師／財務／高階主管）
-   已經拆成系統提示詞／使用者提示詞兩欄，把帳號的角色設成對應職務後，
-   側邊欄「預設提示詞」就能直接分別複製這兩欄，貼到不同的欄位（例如
-   ChatGPT 的 Custom Instructions 用系統提示詞、對話輸入框用使用者
-   提示詞）。
+4. 常用的 prompt 存進「知識庫」，之後點開複製貼上就好，不用重打。
 5. 「設定」裡可以調語言、換設定檔存放資料夾、裝擴充功能、備份還原整份
    設定。
 
@@ -167,28 +160,20 @@ selector，不用手動開 DevTools 找——點「選取範例：使用者訊�
 ## 開發
 
 ```bash
-npm test              # 單元測試（lib/utils.js + lib/sqlite.js，node --test 內建測試框架，不需要額外套件）
-npm run lint          # ESLint（main.js/preload.js/lib/test 用 Node 規則，renderer/** 用瀏覽器規則）
-npm run format        # Prettier 自動排版（會直接覆寫檔案，跑之前建議先 commit）
-npm run format:check  # 只檢查格式，不覆寫檔案
+npm test          # 單元測試（lib/utils.js，node:test，不需要額外套件）
+npm run lint       # ESLint
+npm run format     # Prettier 自動排版
 ```
+<!-- 
+`lib/utils.js` 放不依賴 Electron API 的純函式（字串處理、檔案系統輔助
+函式），跟 `main.js` 分開才能直接用 `node --test` 測。這是把
+`main.js`（目前已經破千行）拆成模組的第一步，完整模組化見
+[ROADMAP.md](./ROADMAP.md)。
 
-`main.js` 已經模組化完成：現在只剩 App 生命週期本身（約 70 行），資料層、
-視窗管理、對話擷取/匯出、IPC handlers 都拆進 `lib/**`（依業務領域分成
-`lib/ipc/` 底下 9 個檔案）。`lib/utils.js` 放不依賴 Electron API 的純函式
-（字串處理、檔案系統輔助函式），跟其他模組分開才能直接用 `node --test`
-測，不需要啟動 Electron。各模組職責分工、跨模組共用狀態的慣例見
-`PROJECT_SPEC.md` 第 15 節「檔案結構」。
-
-`lib/sqlite.js` 包了 `sql.js`（純 WebAssembly 版 SQLite，沒有原生模組、
-不需要 `electron-rebuild`）的最小存取介面，目前給「日誌主控台」的
-`logs.sqlite` 用；選型取捨見 `PROJECT_SPEC.md` 第 9.7 節。`npm install`
-時會一併裝進 `sql.js` 這個 dependency，不需要額外設定。
-
-> 目前 `main.js`/`preload.js`/`renderer/**` 還沒有整批套用過
-> `npm run format`，先跑 `npm run format:check` 看目前有多少檔案不符合
-> 排版規則；要一次套用到整個專案，直接跑 `npm run format` 即可，但這會
-> 產生大量非功能性的排版 diff，建議跟其他改動分開提交。
+Push / PR 時 [GitHub Actions](./.github/workflows/ci.yml) 會自動跑語法
+檢查、lint、單元測試——不含實際啟動 Electron App 互動的測試（CI 環境沒有
+顯示器），那部分要自己 `npm start` 手動驗證。
+-->
 
 ## 打包發布
 
@@ -210,29 +195,13 @@ npm run build:dir     # 免安裝資料夾，快速測試用
 
 ```
 Platter/
-├── main.js                # App 生命週期入口（單一實例鎖、視窗全關/啟用），其餘邏輯拆進 lib/**
+├── main.js                # 主程序：視窗、Session、IPC、設定持久化
 ├── preload.js              # contextBridge，所有視窗共用
 ├── package.json              # npm scripts + electron-builder 設定
-├── lib/
-│   ├── constants.js           # 平台網址、側邊欄寬度、UI 狀態預設值
-│   ├── state.js                # 共用可變狀態單例（視窗參照、appState、console 緩衝區……）
-│   ├── dataDir.js               # DATA_DIR 讀寫/搬移、各資料檔路徑
-│   ├── broadcast.js              # broadcastToAllWindows（跨視窗即時同步）
-│   ├── console.js                 # 主控台：攔截全域 console.*
-│   ├── logs.js                     # 日誌主控台：錯誤日誌 + 稽核日誌（sql.js/SQLite）
-│   ├── stores.js                    # 資料層：各資料檔的 loadX()/saveX()
-│   ├── windows.js                    # 視窗與帳號 WebContentsView 管理
-│   ├── conversationCapture.js         # 對話擷取/匯出、選取器工具
-│   ├── reminders.js                    # 任務到期日提醒：到期摘要、排程、系統通知
-│   ├── utils.js                        # 不依賴 Electron API 的純函式
-│   ├── sqlite.js                        # sql.js 的最小包裝：開檔/存檔/查詢
-│   └── ipc/                              # 依業務領域分組的 IPC handler 註冊檔（9 個 + index.js，含 search.js）
 ├── extractors/
 │   ├── domCapture.js         # 注入頁面的對話擷取腳本
 │   ├── selectorPicker.js      # 注入頁面的滑鼠選取工具
-│   ├── default-selectors.json # 出廠預設 selector
-│   ├── default-knowledge-base.json # 內建41組提示詞範本（一般25組＋企業角色範本16組）
-│   └── default-roles.json     # 內建8種企業角色（app-state.json 不存在時當 roles 起始內容）
+│   └── default-selectors.json # 出廠預設 selector
 ├── renderer/
 │   ├── index.html / renderer.js / renderer.css   # 主視窗
 │   ├── account.html / account.js                 # 新增帳號（獨立視窗）
@@ -240,7 +209,7 @@ Platter/
 │   ├── settings.html / settings.js / settings.css     # 設定（獨立視窗）
 │   ├── team.html, team.js, team.css              # 虛擬團隊主控台
 │   ├── project.html, project.js, project.css     # 專案計畫管理
-│   ├── documents.html, documents.js, documents.css # 文件庫（含 Markdown 預覽）
+│   ├── documents.html, documents.js, documents.css # 文件管理
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json
 └── assets/                    # App 圖示與生成提示詞
@@ -264,32 +233,24 @@ extensions.json         # 已安裝的擴充功能清單
 
 ## 文件索引
 
-| 文件                                                               | 內容                                                                                                  |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
-| [CHANGELOG.md](./CHANGELOG.md)                                     | 版本歷程，每次加了什麼功能                                                                            |
-| [ROADMAP.md](./ROADMAP.md)                                         | 還沒做、之後可能會做的方向                                                                            |
-| [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | 完整規格提示詞，適合給有檔案系統工具的 agent（Claude Code / Cursor）重現整個專案                      |
-| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 分階段（目前 16 階段）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
-| [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既有階段都做完之後，要加新功能時用的提示詞模板                                                        |
-| [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板                                                                      |
-| [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | 開新對話只附文件、不附原始碼時用的提示詞模板                                                          |
-| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | 開新對話只附規格文件＋指定的部分檔案（不是整包原始碼）時用的提示詞模板                                |
+| 文件 | 內容 |
+|---|---|
+| [CHANGELOG.md](./CHANGELOG.md) | 版本歷程，每次加了什麼功能 |
+| [ROADMAP.md](./ROADMAP.md) | 還沒做、之後可能會做的方向 |
+| [PROJECT_SPEC.md](./PROJECT_SPEC.md) | 完整規格提示詞，適合給有檔案系統工具的 agent（Claude Code / Cursor）重現整個專案 |
+| [BUILD_PLAN.md](./BUILD_PLAN.md) | 分成 8 階段的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
+| [CHECKLIST.md](./CHECKLIST.md) | 搭配 `BUILD_PLAN.md`，橫跨全部階段的總檢核表 |
 
 ## 貢獻
 
-歡迎 fork 之後開 PR。目前還沒有接 CI，以下檢查都要自己在本機跑過一次，
-送 PR 前請確認：
+歡迎 fork 之後開 PR。送 PR 前請確認：
 
-1. `npm test` 全部通過（`lib/utils.js` 的單元測試，`node --test`）
-2. `npm run lint` 沒有新增的 error（既有的 1 個 warning 是預期中的，見
-   `extractors/domCapture.js` 的說明，不用處理）
-3. 有牽動到功能行為的改動，實際 `npm start` 跑過一輪再送出——上面兩項
-   只涵蓋 `lib/utils.js` 這類純函式，Electron 視窗互動、IPC、UI 這些都
-   要手動驗證
+1. `npm test` 全部通過
+2. `npm run lint` 沒有新增的錯誤
+3. 有牽動到功能行為的改動，實際 `npm start` 跑過一輪再送出（CI 不含
+   Electron 互動測試）
 4. 新功能如果違反上面「設計原則」三條（呼叫未公開 API、繞過網站保護
    機制、把登入憑證放進備份檔案），不會被接受
-5. 如果順手跑了 `npm run format`，記得跟功能改動分開成不同的 commit/PR，
-   方便 review（格式化 diff 會很大，混在一起不好看變更內容）
 
 ## License
 

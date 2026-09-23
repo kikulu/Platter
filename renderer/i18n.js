@@ -54,13 +54,5 @@
     await window.workspaceAPI.setLanguage(lang);
   }
 
-  window.i18n = {
-    t,
-    applyToDOM,
-    init,
-    setLanguage,
-    get lang() {
-      return state.lang;
-    },
-  };
+  window.i18n = { t, applyToDOM, init, setLanguage, get lang() { return state.lang; } };
 })();
