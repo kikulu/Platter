@@ -9,8 +9,7 @@
 
   document.getElementById('btn-confirm').addEventListener('click', async () => {
     const platform = platformSelect.value;
-    const name =
-      nameInput.value.trim() || platformSelect.options[platformSelect.selectedIndex].text;
+    const name = nameInput.value.trim() || platformSelect.options[platformSelect.selectedIndex].text;
     const roleId = roleSelect.value || null;
 
     const account = await window.workspaceAPI.addAccount(platform, name, roleId);
@@ -41,3 +40,4 @@
     nameInput.focus();
   })();
 })();
+

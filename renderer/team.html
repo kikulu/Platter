@@ -1,34 +1,29 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-Hant">
-  <head>
-    <meta charset="UTF-8" />
-    <meta
-      http-equiv="Content-Security-Policy"
-      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
-    />
-    <title>虛擬團隊</title>
-    <link rel="stylesheet" href="renderer.css" />
-    <link rel="stylesheet" href="team.css" />
-  </head>
-  <body>
-    <div id="team-header">
-      <div id="team-header-title" data-i18n="team.title">虛擬團隊主控台</div>
-      <div class="spacer"></div>
-      <button id="btn-add-account" data-i18n="sidebar.addAccount">新增帳號</button>
-      <button id="btn-manage-roles" data-i18n="team.manageRoles">管理角色</button>
-    </div>
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
+  <title>虛擬團隊</title>
+  <link rel="stylesheet" href="renderer.css" />
+  <link rel="stylesheet" href="team.css" />
+</head>
+<body>
+  <div id="team-header">
+    <div id="team-header-title" data-i18n="team.title">虛擬團隊主控台</div>
+    <div class="spacer"></div>
+    <button id="btn-add-account" data-i18n="sidebar.addAccount">新增帳號</button>
+    <button id="btn-manage-roles" data-i18n="team.manageRoles">管理角色</button>
+  </div>
 
-    <div id="team-body">
-      <div id="team-root-wrap">
-        <div id="team-root-box" data-i18n="team.rootLabel">虛擬團隊</div>
-      </div>
-      <div id="role-columns"></div>
-      <div id="team-empty" style="display: none" data-i18n="team.noAccounts">
-        尚未新增任何帳號
-      </div>
+  <div id="team-body">
+    <div id="team-root-wrap">
+      <div id="team-root-box" data-i18n="team.rootLabel">虛擬團隊</div>
     </div>
+    <div id="role-columns"></div>
+    <div id="team-empty" style="display:none;" data-i18n="team.noAccounts">尚未新增任何帳號</div>
+  </div>
 
-    <script src="i18n.js"></script>
-    <script src="team.js"></script>
-  </body>
+  <script src="i18n.js"></script>
+  <script src="team.js"></script>
+</body>
 </html>

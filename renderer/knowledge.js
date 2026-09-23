@@ -4,9 +4,7 @@
   const tabGroupsBtn = document.getElementById('tab-groups');
   const btnNewItem = document.getElementById('btn-new-item');
   const btnNewGroup = document.getElementById('btn-new-group');
-  const btnImportMd = document.getElementById('btn-import-md');
   const listEl = document.getElementById('kb-list');
-  const searchInput = document.getElementById('kb-search');
   const tagFilterEl = document.getElementById('kb-tag-filter');
   const emptyEl = document.getElementById('kb-empty');
 
@@ -14,8 +12,6 @@
   const titleInput = document.getElementById('kb-title');
   const tagsInput = document.getElementById('kb-tags');
   const contentInput = document.getElementById('kb-content');
-  const systemPromptInput = document.getElementById('kb-system-prompt');
-  const userPromptInput = document.getElementById('kb-user-prompt');
   const checklistListEl = document.getElementById('kb-checklist-list');
   const checklistNewInput = document.getElementById('kb-checklist-new-input');
   const roleConfigListEl = document.getElementById('kb-role-config-list');
@@ -59,7 +55,6 @@
     tabGroupsBtn.classList.toggle('active', mode === 'groups');
     btnNewItem.style.display = mode === 'items' ? 'inline-block' : 'none';
     btnNewGroup.style.display = mode === 'groups' ? 'inline-block' : 'none';
-    btnImportMd.style.display = mode === 'items' ? 'inline-block' : 'none';
 
     itemEditorEl.style.display = 'none';
     groupEditorEl.style.display = 'none';
@@ -99,11 +94,6 @@
   tagFilterEl.addEventListener('change', renderList);
 
   // ---------------------------------------------------------------------
-  // 全文搜尋（即時篩選，不用按 Enter；跟標籤篩選是 AND 關係）
-  // ---------------------------------------------------------------------
-  searchInput.addEventListener('input', renderList);
-
-  // ---------------------------------------------------------------------
   // List rendering
   // ---------------------------------------------------------------------
   function renderList() {
@@ -114,19 +104,7 @@
 
   function renderItemList() {
     const filterTag = tagFilterEl.value;
-    const query = searchInput.value.trim().toLowerCase();
-    const filtered = allItems.filter((it) => {
-      if (filterTag && !(it.tags || []).includes(filterTag)) return false;
-      if (query && !itemMatchesQuery(it, query)) return false;
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      renderListEmptyHint(
-        allItems.length === 0 ? 'knowledge.selectPrompt' : 'knowledge.searchNoResult'
-      );
-      return;
-    }
+    const filtered = filterTag ? allItems.filter((it) => (it.tags || []).includes(filterTag)) : allItems;
 
     filtered.forEach((it) => {
       const div = document.createElement('div');
@@ -141,12 +119,7 @@
       const tagText = (it.tags || []).map((t) => `#${t}`).join(' ');
       const checklistTotal = (it.checklist || []).length;
       const checklistDone = (it.checklist || []).filter((c) => c.checked).length;
-      const hasSplitPrompt = it.systemPrompt || it.userPrompt;
-      meta.textContent = [
-        tagText,
-        hasSplitPrompt ? window.i18n.t('knowledge.splitPromptBadge') : '',
-        checklistTotal ? `☑ ${checklistDone}/${checklistTotal}` : '',
-      ]
+      meta.textContent = [tagText, checklistTotal ? `☑ ${checklistDone}/${checklistTotal}` : '']
         .filter(Boolean)
         .join('  ');
 
@@ -157,35 +130,9 @@
     });
   }
 
-  // 全文搜尋比對範圍：標題、內容、標籤——標籤篩選下拉選單已經可以精準篩
-  // 單一標籤，這裡額外也比對標籤是為了「只記得標籤片段、不確定完整拼法」
-  // 這種情況也能搜到。
-  function itemMatchesQuery(it, query) {
-    if ((it.title || '').toLowerCase().includes(query)) return true;
-    if ((it.content || '').toLowerCase().includes(query)) return true;
-    if ((it.systemPrompt || '').toLowerCase().includes(query)) return true;
-    if ((it.userPrompt || '').toLowerCase().includes(query)) return true;
-    if ((it.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
-    return false;
-  }
-
   function renderGroupList() {
     const filterTag = tagFilterEl.value;
-    const query = searchInput.value.trim().toLowerCase();
-    const filtered = allGroups.filter((g) => {
-      if (filterTag && !(g.tags || []).includes(filterTag)) return false;
-      if (query && !groupMatchesQuery(g, query)) return false;
-      return true;
-    });
-
-    if (filtered.length === 0) {
-      renderListEmptyHint(
-        allGroups.length === 0
-          ? 'knowledge.selectGroupPrompt'
-          : 'knowledge.searchNoResult'
-      );
-      return;
-    }
+    const filtered = filterTag ? allGroups.filter((g) => (g.tags || []).includes(filterTag)) : allGroups;
 
     filtered.forEach((g) => {
       const div = document.createElement('div');
@@ -207,31 +154,6 @@
       div.addEventListener('click', () => selectGroup(g.id));
       listEl.appendChild(div);
     });
-  }
-
-  // 全文搜尋比對範圍：套餐標題、說明、標籤，外加「套餐裡任一步驟引用的
-  // 提示詞標題」——這樣可以直接搜「這個提示詞被用在哪些套餐裡」，不用
-  // 自己一個個套餐點開看步驟。itemTitleById() 定義在後面（函式宣告會
-  // hoist，執行順序沒問題）。
-  function groupMatchesQuery(g, query) {
-    if ((g.title || '').toLowerCase().includes(query)) return true;
-    if ((g.description || '').toLowerCase().includes(query)) return true;
-    if ((g.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
-    if (
-      (g.steps || []).some((s) => itemTitleById(s.itemId).toLowerCase().includes(query))
-    )
-      return true;
-    return false;
-  }
-
-  // 標籤/搜尋篩選後完全沒有符合的項目時顯示的提示；如果清單本身就是空的
-  // （還沒建立過任何項目/套餐），顯示原本的「選擇或新增」提示，不要誤導
-  // 使用者以為是搜尋沒搜到。
-  function renderListEmptyHint(i18nKey) {
-    const hint = document.createElement('div');
-    hint.className = 'kb-list-empty';
-    hint.textContent = window.i18n.t(i18nKey);
-    listEl.appendChild(hint);
   }
 
   // ---------------------------------------------------------------------
@@ -330,16 +252,12 @@
       titleInput.value = item.title || '';
       tagsInput.value = (item.tags || []).join(', ');
       contentInput.value = item.content || '';
-      systemPromptInput.value = item.systemPrompt || '';
-      userPromptInput.value = item.userPrompt || '';
       editingChecklist = (item.checklist || []).map((c) => ({ ...c }));
       editingRoleIds = [...(item.roleIds || [])];
     } else {
       titleInput.value = '';
       tagsInput.value = '';
       contentInput.value = '';
-      systemPromptInput.value = '';
-      userPromptInput.value = '';
       editingChecklist = [];
       editingRoleIds = [];
     }
@@ -359,8 +277,6 @@
       title: titleInput.value.trim() || '未命名',
       tags: parseTags(tagsInput.value),
       content: contentInput.value,
-      systemPrompt: systemPromptInput.value,
-      userPrompt: userPromptInput.value,
       checklist: editingChecklist,
       roleIds: editingRoleIds,
     };
@@ -379,9 +295,7 @@
       return;
     }
     const item = allItems.find((i) => i.id === currentItemId);
-    const ok = window.confirm(
-      window.i18n.t('knowledge.deleteConfirm', { title: item ? item.title : '' })
-    );
+    const ok = window.confirm(window.i18n.t('knowledge.deleteConfirm', { title: item ? item.title : '' }));
     if (!ok) return;
     const kb = await window.workspaceAPI.deleteKnowledge(currentItemId);
     allItems = kb.items;
@@ -394,22 +308,7 @@
   });
 
   document.getElementById('btn-copy').addEventListener('click', async () => {
-    // 內容欄位留空（改用系統／使用者提示詞拆分欄位）時，「複製內容」改
-    // 複製兩者組合起來的版本，維持這顆按鈕「一鍵複製完整提示詞」的用途。
-    const text =
-      contentInput.value ||
-      [systemPromptInput.value, userPromptInput.value].filter(Boolean).join('\n\n');
-    await navigator.clipboard.writeText(text);
-    alert(window.i18n.t('knowledge.copied'));
-  });
-
-  document.getElementById('btn-copy-system').addEventListener('click', async () => {
-    await navigator.clipboard.writeText(systemPromptInput.value);
-    alert(window.i18n.t('knowledge.copied'));
-  });
-
-  document.getElementById('btn-copy-user').addEventListener('click', async () => {
-    await navigator.clipboard.writeText(userPromptInput.value);
+    await navigator.clipboard.writeText(contentInput.value);
     alert(window.i18n.t('knowledge.copied'));
   });
 
@@ -442,11 +341,7 @@
         renderList();
         // 檢核表機制：套餐的勾選狀態即時持久化，不用等按「儲存套餐」
         if (currentGroupId) {
-          const kb = await window.workspaceAPI.toggleGroupStep(
-            currentGroupId,
-            step.id,
-            step.checked
-          );
+          const kb = await window.workspaceAPI.toggleGroupStep(currentGroupId, step.id, step.checked);
           allGroups = kb.groups;
         }
       });
@@ -464,10 +359,7 @@
       upBtn.textContent = '↑';
       upBtn.disabled = idx === 0;
       upBtn.addEventListener('click', () => {
-        [editingSteps[idx - 1], editingSteps[idx]] = [
-          editingSteps[idx],
-          editingSteps[idx - 1],
-        ];
+        [editingSteps[idx - 1], editingSteps[idx]] = [editingSteps[idx], editingSteps[idx - 1]];
         renderSteps();
       });
 
@@ -476,10 +368,7 @@
       downBtn.textContent = '↓';
       downBtn.disabled = idx === editingSteps.length - 1;
       downBtn.addEventListener('click', () => {
-        [editingSteps[idx + 1], editingSteps[idx]] = [
-          editingSteps[idx],
-          editingSteps[idx + 1],
-        ];
+        [editingSteps[idx + 1], editingSteps[idx]] = [editingSteps[idx], editingSteps[idx + 1]];
         renderSteps();
       });
 
@@ -593,9 +482,7 @@
       return;
     }
     const group = allGroups.find((g) => g.id === currentGroupId);
-    const ok = window.confirm(
-      window.i18n.t('knowledge.deleteGroupConfirm', { title: group ? group.title : '' })
-    );
+    const ok = window.confirm(window.i18n.t('knowledge.deleteGroupConfirm', { title: group ? group.title : '' }));
     if (!ok) return;
     const kb = await window.workspaceAPI.deleteKnowledgeGroup(currentGroupId);
     allGroups = kb.groups;
@@ -649,20 +536,6 @@
     renderList();
   });
 
-  // 匯入現成的 .md 檔案（例如之前匯出的對話紀錄），直接變成新的提示詞
-  // 項目，匯入完直接把最後一個開起來，方便馬上檢視/編輯內容
-  btnImportMd.addEventListener('click', async () => {
-    const result = await window.workspaceAPI.importKnowledgeMarkdown();
-    allItems = result.kb.items;
-    allGroups = result.kb.groups;
-    rebuildTagOptions();
-    if (result.importedIds && result.importedIds.length > 0) {
-      selectItem(result.importedIds[result.importedIds.length - 1]);
-    } else {
-      renderList();
-    }
-  });
-
   // 語言切換後，重新套用動態產生內容裡的翻譯字串（空狀態提示、進度文字等）
   document.addEventListener('i18n:updated', () => {
     emptyEl.textContent = window.i18n.t(
@@ -671,21 +544,6 @@
     renderList();
     if (groupEditorEl.style.display !== 'none') renderGroupProgress();
   });
-
-  // ---------------------------------------------------------------------
-  // 跨模組快速搜尋（命令面板）跳轉過來時要選中的項目
-  // ---------------------------------------------------------------------
-  function applySearchSelection(payload) {
-    if (!payload) return;
-    if (payload.tab === 'groups') {
-      switchTab('groups');
-      selectGroup(payload.id);
-    } else {
-      switchTab('items');
-      selectItem(payload.id);
-    }
-  }
-  window.workspaceAPI.onSearchSelect(applySearchSelection);
 
   // ---------------------------------------------------------------------
   // 初始化
@@ -698,11 +556,6 @@
     allRoles = await window.workspaceAPI.listRoles();
     rebuildTagOptions();
     renderList();
-
-    // 如果是命令面板叫我們開起來的（視窗剛建立），主動拉一次待選項目；
-    // 如果視窗本來就開著，上面的 onSearchSelect 監聽器已經處理過了，這裡
-    // 通常會拉到 null。
-    applySearchSelection(await window.workspaceAPI.consumePendingSelection('knowledge'));
   })();
 
   // 角色是在設定視窗管理的，異動時會廣播 accounts:changed；
