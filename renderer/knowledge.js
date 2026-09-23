@@ -14,6 +14,8 @@
   const titleInput = document.getElementById('kb-title');
   const tagsInput = document.getElementById('kb-tags');
   const contentInput = document.getElementById('kb-content');
+  const systemPromptInput = document.getElementById('kb-system-prompt');
+  const userPromptInput = document.getElementById('kb-user-prompt');
   const checklistListEl = document.getElementById('kb-checklist-list');
   const checklistNewInput = document.getElementById('kb-checklist-new-input');
   const roleConfigListEl = document.getElementById('kb-role-config-list');
@@ -139,8 +141,10 @@
       const tagText = (it.tags || []).map((t) => `#${t}`).join(' ');
       const checklistTotal = (it.checklist || []).length;
       const checklistDone = (it.checklist || []).filter((c) => c.checked).length;
+      const hasSplitPrompt = it.systemPrompt || it.userPrompt;
       meta.textContent = [
         tagText,
+        hasSplitPrompt ? window.i18n.t('knowledge.splitPromptBadge') : '',
         checklistTotal ? `☑ ${checklistDone}/${checklistTotal}` : '',
       ]
         .filter(Boolean)
@@ -159,6 +163,8 @@
   function itemMatchesQuery(it, query) {
     if ((it.title || '').toLowerCase().includes(query)) return true;
     if ((it.content || '').toLowerCase().includes(query)) return true;
+    if ((it.systemPrompt || '').toLowerCase().includes(query)) return true;
+    if ((it.userPrompt || '').toLowerCase().includes(query)) return true;
     if ((it.tags || []).some((t) => t.toLowerCase().includes(query))) return true;
     return false;
   }
@@ -324,12 +330,16 @@
       titleInput.value = item.title || '';
       tagsInput.value = (item.tags || []).join(', ');
       contentInput.value = item.content || '';
+      systemPromptInput.value = item.systemPrompt || '';
+      userPromptInput.value = item.userPrompt || '';
       editingChecklist = (item.checklist || []).map((c) => ({ ...c }));
       editingRoleIds = [...(item.roleIds || [])];
     } else {
       titleInput.value = '';
       tagsInput.value = '';
       contentInput.value = '';
+      systemPromptInput.value = '';
+      userPromptInput.value = '';
       editingChecklist = [];
       editingRoleIds = [];
     }
@@ -349,6 +359,8 @@
       title: titleInput.value.trim() || '未命名',
       tags: parseTags(tagsInput.value),
       content: contentInput.value,
+      systemPrompt: systemPromptInput.value,
+      userPrompt: userPromptInput.value,
       checklist: editingChecklist,
       roleIds: editingRoleIds,
     };
@@ -382,7 +394,22 @@
   });
 
   document.getElementById('btn-copy').addEventListener('click', async () => {
-    await navigator.clipboard.writeText(contentInput.value);
+    // 內容欄位留空（改用系統／使用者提示詞拆分欄位）時，「複製內容」改
+    // 複製兩者組合起來的版本，維持這顆按鈕「一鍵複製完整提示詞」的用途。
+    const text =
+      contentInput.value ||
+      [systemPromptInput.value, userPromptInput.value].filter(Boolean).join('\n\n');
+    await navigator.clipboard.writeText(text);
+    alert(window.i18n.t('knowledge.copied'));
+  });
+
+  document.getElementById('btn-copy-system').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(systemPromptInput.value);
+    alert(window.i18n.t('knowledge.copied'));
+  });
+
+  document.getElementById('btn-copy-user').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(userPromptInput.value);
     alert(window.i18n.t('knowledge.copied'));
   });
 

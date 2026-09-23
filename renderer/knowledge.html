@@ -72,9 +72,42 @@
       </div>
       <div
         class="field"
-        style="flex: 1; display: flex; flex-direction: column; min-height: 160px"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
+      >
+        <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+          <label class="label" style="margin: 0" data-i18n="knowledge.systemPrompt"
+            >系統提示詞（System Prompt）</label
+          >
+          <button id="btn-copy-system" data-i18n="knowledge.copy">複製內容</button>
+        </div>
+        <textarea
+          id="kb-system-prompt"
+          data-i18n-placeholder="knowledge.systemPromptPlaceholder"
+        ></textarea>
+      </div>
+      <div
+        class="field"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
+      >
+        <div class="row" style="justify-content: space-between; margin-bottom: 4px">
+          <label class="label" style="margin: 0" data-i18n="knowledge.userPrompt"
+            >使用者提示詞（User Prompt）</label
+          >
+          <button id="btn-copy-user" data-i18n="knowledge.copy">複製內容</button>
+        </div>
+        <textarea
+          id="kb-user-prompt"
+          data-i18n-placeholder="knowledge.userPromptPlaceholder"
+        ></textarea>
+      </div>
+      <div
+        class="field"
+        style="flex: 1; display: flex; flex-direction: column; min-height: 120px"
       >
         <label class="label" data-i18n="knowledge.content">內容</label>
+        <div class="settings-hint" data-i18n="knowledge.contentHint">
+          若已填寫上方的系統／使用者提示詞，這裡可以留空；沒有拆分的舊式提示詞才需要用這欄。
+        </div>
         <textarea id="kb-content"></textarea>
       </div>
 
