@@ -1,329 +1,684 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="zh-Hant">
-<head>
-  <meta charset="UTF-8" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';" />
-  <title>AI Workspace Aggregator</title>
-  <link rel="stylesheet" href="renderer.css" />
-  <style>
-    body { display: flex; height: 100vh; overflow: hidden; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>AI Workspace Aggregator</title>
+    <link rel="stylesheet" href="renderer.css" />
+    <style>
+      body {
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+      }
 
-    #sidebar {
-      width: 220px;
-      min-width: 220px;
-      background: var(--bg-sidebar);
-      display: flex;
-      flex-direction: column;
-      border-right: 1px solid var(--border);
-      transition: width 0.15s ease, min-width 0.15s ease;
-    }
-    #sidebar.collapsed {
-      width: 56px;
-      min-width: 56px;
-    }
+      #sidebar {
+        width: 220px;
+        min-width: 220px;
+        background: var(--bg-sidebar);
+        display: flex;
+        flex-direction: column;
+        border-right: 1px solid var(--border);
+        transition:
+          width 0.15s ease,
+          min-width 0.15s ease;
+      }
+      #sidebar.collapsed {
+        width: 56px;
+        min-width: 56px;
+      }
 
-    #sidebar-header {
-      display: flex;
-      align-items: center;
-      padding: 14px 12px;
-      border-bottom: 1px solid var(--border);
-    }
-    #sidebar-header .title {
-      flex: 1;
-      font-weight: 600;
-      white-space: nowrap;
-      overflow: hidden;
-    }
-    #sidebar.collapsed #sidebar-header .title { display: none; }
-    #collapse-btn {
-      background: transparent;
-      border: none;
-      padding: 4px 6px;
-      font-size: 16px;
-    }
+      #sidebar-header {
+        display: flex;
+        align-items: center;
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border);
+      }
+      #sidebar-header .title {
+        flex: 1;
+        font-weight: 600;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+      #sidebar.collapsed #sidebar-header .title {
+        display: none;
+      }
+      #collapse-btn {
+        background: transparent;
+        border: none;
+        padding: 4px 6px;
+        font-size: 16px;
+      }
 
-    #sidebar-menu {
-      flex: 1;
-      overflow-y: auto;
-      padding: 6px 0;
-    }
+      #sidebar-menu {
+        flex: 1;
+        overflow-y: auto;
+        padding: 6px 0;
+      }
 
-    /* --- 多層清單：群組標題 + 可收合子項目 --- */
-    .menu-group {
-      margin-bottom: 2px;
-    }
-    .group-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      width: 100%;
-      padding: 10px 14px;
-      margin: 2px 8px;
-      width: calc(100% - 16px);
-      border-radius: 6px;
-      background: transparent;
-      border: none;
-      text-align: left;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      font-weight: 600;
-      font-size: 13px;
-    }
-    .group-header:hover { background: var(--bg-hover); }
-    .group-header .icon { width: 18px; text-align: center; flex-shrink: 0; }
-    .group-header .label-text { flex: 1; overflow: hidden; text-overflow: ellipsis; }
-    .group-header .chevron {
-      flex-shrink: 0;
-      font-size: 10px;
-      color: var(--text-secondary);
-      transition: transform 0.15s ease;
-    }
-    .group-header.expanded .chevron { transform: rotate(90deg); }
+      /* --- 多層清單：群組標題 + 可收合子項目 --- */
+      .menu-group {
+        margin-bottom: 2px;
+      }
+      .group-header {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        width: 100%;
+        padding: 10px 14px;
+        margin: 2px 8px;
+        width: calc(100% - 16px);
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        text-align: left;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        font-weight: 600;
+        font-size: 13px;
+      }
+      .group-header:hover {
+        background: var(--bg-hover);
+      }
+      .group-header .icon {
+        width: 18px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .group-header .label-text {
+        flex: 1;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .group-header .chevron {
+        flex-shrink: 0;
+        font-size: 10px;
+        color: var(--text-secondary);
+        transition: transform 0.15s ease;
+      }
+      .group-header.expanded .chevron {
+        transform: rotate(90deg);
+      }
 
-    .group-children {
-      display: none;
-    }
-    .group-children.expanded {
-      display: block;
-    }
+      .group-children {
+        display: none;
+      }
+      .group-children.expanded {
+        display: block;
+      }
 
-    .sidebar-action {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 9px 14px;
-      margin: 2px 8px;
-      border-radius: 6px;
-      background: transparent;
-      border: none;
-      text-align: left;
-      color: var(--text-primary);
-      white-space: nowrap;
-      overflow: hidden;
-      font-size: 13px;
-    }
-    .sidebar-action:hover { background: var(--bg-hover); }
-    .sidebar-action .icon { width: 18px; text-align: center; flex-shrink: 0; }
-    .sidebar-action.indent { padding-left: 30px; }
+      .sidebar-action {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 9px 14px;
+        margin: 2px 8px;
+        border-radius: 6px;
+        background: transparent;
+        border: none;
+        text-align: left;
+        color: var(--text-primary);
+        white-space: nowrap;
+        overflow: hidden;
+        font-size: 13px;
+      }
+      .sidebar-action:hover {
+        background: var(--bg-hover);
+      }
+      .sidebar-action .icon {
+        width: 18px;
+        text-align: center;
+        flex-shrink: 0;
+      }
+      .sidebar-action.indent {
+        padding-left: 30px;
+      }
+      .due-badge {
+        margin-left: auto;
+        flex-shrink: 0;
+        background: var(--danger);
+        color: #fff;
+        font-size: 10px;
+        font-weight: 600;
+        line-height: 1;
+        padding: 2px 6px;
+        border-radius: 999px;
+      }
+      #sidebar.collapsed .due-badge {
+        display: none;
+      }
 
-    #sidebar.collapsed .sidebar-action .label-text { display: none; }
-    #sidebar.collapsed .sidebar-action { justify-content: center; padding-left: 14px; }
-    #sidebar.collapsed .group-header .label-text,
-    #sidebar.collapsed .group-header .chevron { display: none; }
-    #sidebar.collapsed .group-header { justify-content: center; }
-    /* 整個側邊欄摺疊成 icon 版時，忽略群組展開/收合狀態，一律以平面 icon 呈現 */
-    #sidebar.collapsed .group-children { display: block !important; }
+      #sidebar.collapsed .sidebar-action .label-text {
+        display: none;
+      }
+      #sidebar.collapsed .sidebar-action {
+        justify-content: center;
+        padding-left: 14px;
+      }
+      #sidebar.collapsed .group-header .label-text,
+      #sidebar.collapsed .group-header .chevron {
+        display: none;
+      }
+      #sidebar.collapsed .group-header {
+        justify-content: center;
+      }
+      /* 整個側邊欄摺疊成 icon 版時，忽略群組展開/收合狀態，一律以平面 icon 呈現 */
+      #sidebar.collapsed .group-children {
+        display: block !important;
+      }
 
-    #account-list {
-      padding-top: 4px;
-    }
+      #account-list {
+        padding-top: 4px;
+      }
 
-    .account-item {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px 10px 30px;
-      margin: 2px 8px;
-      border-radius: 6px;
-      cursor: pointer;
-      position: relative;
-    }
-    #sidebar.collapsed .account-item { padding-left: 14px; }
-    .account-item:hover { background: var(--bg-hover); }
-    .account-item.active { background: var(--bg-active); }
-    .account-item .avatar {
-      width: 26px; height: 26px; border-radius: 50%;
-      background: var(--accent); color: #fff;
-      display: flex; align-items: center; justify-content: center;
-      font-size: 12px; flex-shrink: 0;
-    }
-    .account-item .meta { flex: 1; min-width: 0; }
-    .account-item .name { font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .account-item .platform { font-size: 11px; color: var(--text-secondary); }
-    #sidebar.collapsed .account-item .meta { display: none; }
-    #sidebar.collapsed .account-item { justify-content: center; }
+      .account-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 14px 10px 30px;
+        margin: 2px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+        position: relative;
+      }
+      #sidebar.collapsed .account-item {
+        padding-left: 14px;
+      }
+      .account-item:hover {
+        background: var(--bg-hover);
+      }
+      .account-item.active {
+        background: var(--bg-active);
+      }
+      .account-item.dragging {
+        opacity: 0.4;
+      }
+      .account-item.drag-over {
+        box-shadow: inset 0 2px 0 var(--accent);
+      }
+      .account-item .avatar {
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        background: var(--accent);
+        color: #fff;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+      .account-item .meta {
+        flex: 1;
+        min-width: 0;
+      }
+      .account-item .name {
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .account-item .platform {
+        font-size: 11px;
+        color: var(--text-secondary);
+      }
+      #sidebar.collapsed .account-item .meta {
+        display: none;
+      }
+      #sidebar.collapsed .account-item {
+        justify-content: center;
+      }
 
-    .account-item .role-select {
-      margin-top: 3px;
-      width: 100%;
-      background: transparent;
-      border: none;
-      padding: 0;
-      font-size: 11px;
-      color: var(--text-secondary);
-      cursor: pointer;
-    }
-    .account-item .role-select:focus { outline: none; }
+      .account-item .role-select {
+        margin-top: 3px;
+        width: 100%;
+        background: transparent;
+        border: none;
+        padding: 0;
+        font-size: 11px;
+        color: var(--text-secondary);
+        cursor: pointer;
+      }
+      .account-item .role-select:focus {
+        outline: none;
+      }
 
-    .account-item .delete-btn {
-      display: none;
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 4px;
-      border-radius: 4px;
-      flex-shrink: 0;
-    }
-    .account-item:hover .delete-btn { display: block; }
-    #sidebar.collapsed .account-item .delete-btn { display: none !important; }
-    .account-item .delete-btn:hover { color: var(--danger); background: var(--bg-active); }
+      .account-item .delete-btn {
+        display: none;
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 4px;
+        border-radius: 4px;
+        flex-shrink: 0;
+      }
+      .account-item:hover .delete-btn {
+        display: block;
+      }
+      #sidebar.collapsed .account-item .delete-btn {
+        display: none !important;
+      }
+      .account-item .delete-btn:hover {
+        color: var(--danger);
+        background: var(--bg-active);
+      }
 
-    #empty-hint {
-      padding: 12px 16px 12px 30px;
-      color: var(--text-secondary);
-      font-size: 12px;
-    }
-    #sidebar.collapsed #empty-hint { display: none; }
+      #empty-hint {
+        padding: 12px 16px 12px 30px;
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+      #sidebar.collapsed #empty-hint {
+        display: none;
+      }
 
-    /* --- 預設提示詞區塊 --- */
-    .prompt-empty-hint {
-      padding: 6px 14px 10px 30px;
-      color: var(--text-secondary);
-      font-size: 11px;
-      line-height: 1.5;
-    }
-    #sidebar.collapsed .prompt-empty-hint { display: none; }
-    .prompt-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      padding: 7px 14px 7px 30px;
-      margin: 1px 8px;
-      border-radius: 6px;
-    }
-    .prompt-row:hover { background: var(--bg-hover); }
-    .prompt-row-name {
-      flex: 1;
-      font-size: 12px;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .prompt-row-copy {
-      background: transparent;
-      border: none;
-      color: var(--text-secondary);
-      padding: 2px 4px;
-      flex-shrink: 0;
-      font-size: 12px;
-    }
-    .prompt-row-copy:hover { color: var(--accent); }
-    #sidebar.collapsed .prompt-row .prompt-row-name { display: none; }
-    #sidebar.collapsed .prompt-row { justify-content: center; padding-left: 14px; }
+      /* --- 預設提示詞區塊 --- */
+      .prompt-empty-hint {
+        padding: 6px 14px 10px 30px;
+        color: var(--text-secondary);
+        font-size: 11px;
+        line-height: 1.5;
+      }
+      #sidebar.collapsed .prompt-empty-hint {
+        display: none;
+      }
+      .prompt-row {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 7px 14px 7px 30px;
+        margin: 1px 8px;
+        border-radius: 6px;
+      }
+      .prompt-row:hover {
+        background: var(--bg-hover);
+      }
+      .prompt-row-name {
+        flex: 1;
+        font-size: 12px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .prompt-row-copy {
+        background: transparent;
+        border: none;
+        color: var(--text-secondary);
+        padding: 2px 4px;
+        flex-shrink: 0;
+        font-size: 12px;
+      }
+      .prompt-row-copy:hover {
+        color: var(--accent);
+      }
+      #sidebar.collapsed .prompt-row .prompt-row-name {
+        display: none;
+      }
+      #sidebar.collapsed .prompt-row {
+        justify-content: center;
+        padding-left: 14px;
+      }
 
-    #settings-btn-wrap {
-      border-top: 1px solid var(--border);
-      padding: 6px 0;
-    }
+      #settings-btn-wrap {
+        border-top: 1px solid var(--border);
+        padding: 6px 0;
+      }
+      #app-version-label {
+        text-align: center;
+        font-size: 10px;
+        color: var(--text-secondary);
+        padding: 2px 0 4px;
+        user-select: text;
+        cursor: default;
+      }
+      #sidebar.collapsed #app-version-label {
+        display: none;
+      }
 
-    #main-content {
-      flex: 1;
-      position: relative;
-      background: var(--bg-main);
-    }
-    #main-content .placeholder {
-      position: absolute;
-      inset: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--text-secondary);
-    }
-  </style>
-</head>
-<body>
-  <div id="sidebar">
-    <div id="sidebar-header">
-      <div class="title" data-i18n="sidebar.title">AI 工作台</div>
-      <button id="collapse-btn" data-i18n-title="sidebar.collapse" title="摺疊側邊欄">☰</button>
-    </div>
+      #main-content {
+        flex: 1;
+        position: relative;
+        background: var(--bg-main);
+      }
+      #main-content .placeholder {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-secondary);
+      }
 
-    <div id="sidebar-menu">
-      <!-- 群組：帳號 -->
-      <div class="menu-group" data-group="accounts">
-        <button class="group-header" data-group-key="accounts">
-          <span class="icon">👤</span>
-          <span class="label-text" data-i18n="sidebar.groupAccounts">帳號</span>
-          <span class="chevron">▸</span>
+      /* 跨模組快速搜尋（命令面板） */
+      #command-palette-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: flex-start;
+        justify-content: center;
+        padding-top: 12vh;
+        z-index: 1000;
+      }
+      #command-palette-overlay.open {
+        display: flex;
+      }
+      #command-palette {
+        width: min(560px, 88vw);
+        max-height: 60vh;
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+      }
+      #command-palette-input {
+        border: none;
+        border-bottom: 1px solid var(--border);
+        border-radius: 0;
+        background: transparent;
+        font-size: 15px;
+        padding: 14px 16px;
+      }
+      #command-palette-input:focus {
+        outline: none;
+        box-shadow: none;
+      }
+      #command-palette-results {
+        overflow-y: auto;
+        padding: 6px;
+      }
+      .cmdp-empty {
+        padding: 20px 14px;
+        text-align: center;
+        color: var(--text-secondary);
+        font-size: 12px;
+      }
+      .cmdp-result {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 10px;
+        border-radius: 6px;
+        cursor: pointer;
+      }
+      .cmdp-result:hover,
+      .cmdp-result.active {
+        background: var(--bg-hover);
+      }
+      .cmdp-result-icon {
+        flex-shrink: 0;
+        font-size: 16px;
+      }
+      .cmdp-result-main {
+        flex: 1;
+        min-width: 0;
+      }
+      .cmdp-result-title {
+        color: var(--text-primary);
+        font-size: 13px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cmdp-result-snippet {
+        color: var(--text-secondary);
+        font-size: 11px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cmdp-result-kind {
+        flex-shrink: 0;
+        font-size: 10px;
+        color: var(--text-secondary);
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 8px;
+      }
+
+      /* 匯出對話選項對話框 */
+      #export-options-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.5);
+        display: none;
+        align-items: center;
+        justify-content: center;
+        z-index: 1000;
+      }
+      #export-options-overlay.open {
+        display: flex;
+      }
+      #export-options-dialog {
+        width: min(420px, 88vw);
+        background: var(--bg-sidebar);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+        padding: 18px;
+      }
+      #export-options-dialog .settings-section-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 14px;
+      }
+      #export-options-dialog .row {
+        margin-bottom: 12px;
+      }
+      #export-options-dialog .export-hint {
+        font-size: 11px;
+        color: var(--text-secondary);
+        flex: 1;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      #export-options-dialog label {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 13px;
+        color: var(--text-primary);
+        cursor: pointer;
+      }
+      #export-options-dialog input[type='radio'],
+      #export-options-dialog input[type='checkbox'] {
+        width: auto;
+      }
+      #export-options-dialog .row.actions {
+        justify-content: flex-end;
+        margin-bottom: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="sidebar">
+      <div id="sidebar-header">
+        <div class="title" data-i18n="sidebar.title">AI 工作台</div>
+        <button id="collapse-btn" data-i18n-title="sidebar.collapse" title="摺疊側邊欄">
+          ☰
         </button>
-        <div class="group-children" id="group-accounts-children">
-          <button class="sidebar-action indent" id="btn-add-account">
-            <span class="icon">➕</span>
-            <span class="label-text" data-i18n="sidebar.addAccount">新增帳號</span>
-          </button>
-          <div id="account-list"></div>
-        </div>
       </div>
 
-      <!-- 群組：預設提示詞（依目前選中帳號的角色列出） -->
-      <div class="menu-group" data-group="prompts">
-        <button class="group-header" data-group-key="prompts">
-          <span class="icon">💡</span>
-          <span class="label-text" data-i18n="sidebar.groupPrompts">預設提示詞</span>
-          <span class="chevron">▸</span>
-        </button>
-        <div class="group-children" id="group-prompts-children">
-          <div id="prompt-list"></div>
-        </div>
-      </div>
-
-      <!-- 群組：內容工具 -->
-      <div class="menu-group" data-group="content">
-        <button class="group-header" data-group-key="content">
-          <span class="icon">🧰</span>
-          <span class="label-text" data-i18n="sidebar.groupContent">內容工具</span>
-          <span class="chevron">▸</span>
-        </button>
-        <div class="group-children" id="group-content-children">
-          <button class="sidebar-action indent" id="btn-export">
-            <span class="icon">📤</span>
-            <span class="label-text" data-i18n="sidebar.exportConversation">匯出當前對話</span>
-          </button>
-          <button class="sidebar-action indent" id="btn-knowledge">
-            <span class="icon">📚</span>
-            <span class="label-text" data-i18n="sidebar.knowledgeBase">知識庫</span>
-          </button>
-          <button class="sidebar-action indent" id="btn-documents">
-            <span class="icon">🗃️</span>
-            <span class="label-text" data-i18n="sidebar.documents">文件管理</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- 群組：團隊與專案 -->
-      <div class="menu-group" data-group="team">
-        <button class="group-header" data-group-key="team">
-          <span class="icon">🧩</span>
-          <span class="label-text" data-i18n="sidebar.groupTeam">團隊與專案</span>
-          <span class="chevron">▸</span>
-        </button>
-        <div class="group-children" id="group-team-children">
-          <button class="sidebar-action indent" id="btn-team">
-            <span class="icon">🧑‍🤝‍🧑</span>
-            <span class="label-text" data-i18n="sidebar.teamConsole">虛擬團隊</span>
-          </button>
-          <button class="sidebar-action indent" id="btn-projects">
-            <span class="icon">🗂️</span>
-            <span class="label-text" data-i18n="sidebar.projectPlans">專案計畫</span>
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <div id="settings-btn-wrap">
-      <button class="sidebar-action" id="btn-settings">
-        <span class="icon">⚙️</span>
-        <span class="label-text" data-i18n="sidebar.settings">設定</span>
+      <button
+        id="btn-open-command-palette"
+        class="sidebar-action"
+        style="margin: 0 8px 6px"
+      >
+        <span class="icon">🔍</span>
+        <span class="label-text" data-i18n="search.openPalette">快速搜尋</span>
+        <span
+          class="due-badge"
+          style="background: var(--bg-hover); color: var(--text-secondary)"
+          >Ctrl/⌘+K</span
+        >
       </button>
+
+      <div id="sidebar-menu">
+        <!-- 群組：帳號 -->
+        <div class="menu-group" data-group="accounts">
+          <button class="group-header" data-group-key="accounts">
+            <span class="icon">👤</span>
+            <span class="label-text" data-i18n="sidebar.groupAccounts">帳號</span>
+            <span class="chevron">▸</span>
+          </button>
+          <div class="group-children" id="group-accounts-children">
+            <button class="sidebar-action indent" id="btn-add-account">
+              <span class="icon">➕</span>
+              <span class="label-text" data-i18n="sidebar.addAccount">新增帳號</span>
+            </button>
+            <div id="account-list"></div>
+          </div>
+        </div>
+
+        <!-- 群組：預設提示詞（依目前選中帳號的角色列出） -->
+        <div class="menu-group" data-group="prompts">
+          <button class="group-header" data-group-key="prompts">
+            <span class="icon">💡</span>
+            <span class="label-text" data-i18n="sidebar.groupPrompts">預設提示詞</span>
+            <span class="chevron">▸</span>
+          </button>
+          <div class="group-children" id="group-prompts-children">
+            <div id="prompt-list"></div>
+          </div>
+        </div>
+
+        <!-- 群組：內容工具 -->
+        <div class="menu-group" data-group="content">
+          <button class="group-header" data-group-key="content">
+            <span class="icon">🧰</span>
+            <span class="label-text" data-i18n="sidebar.groupContent">內容工具</span>
+            <span class="chevron">▸</span>
+          </button>
+          <div class="group-children" id="group-content-children">
+            <button class="sidebar-action indent" id="btn-export">
+              <span class="icon">📤</span>
+              <span class="label-text" data-i18n="sidebar.exportConversation"
+                >匯出當前對話</span
+              >
+            </button>
+            <button class="sidebar-action indent" id="btn-knowledge">
+              <span class="icon">📚</span>
+              <span class="label-text" data-i18n="sidebar.knowledgeBase">知識庫</span>
+            </button>
+            <button class="sidebar-action indent" id="btn-documents">
+              <span class="icon">🗃️</span>
+              <span class="label-text" data-i18n="sidebar.documents">文件庫</span>
+            </button>
+            <button class="sidebar-action indent" id="btn-conversations">
+              <span class="icon">🗨️</span>
+              <span class="label-text" data-i18n="sidebar.conversationLibrary"
+                >對話庫</span
+              >
+            </button>
+            <button class="sidebar-action indent" id="btn-logs">
+              <span class="icon">🧾</span>
+              <span class="label-text" data-i18n="sidebar.logConsole">日誌主控台</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 群組：團隊與專案 -->
+        <div class="menu-group" data-group="team">
+          <button class="group-header" data-group-key="team">
+            <span class="icon">🧩</span>
+            <span class="label-text" data-i18n="sidebar.groupTeam">團隊與專案</span>
+            <span class="chevron">▸</span>
+          </button>
+          <div class="group-children" id="group-team-children">
+            <button class="sidebar-action indent" id="btn-team">
+              <span class="icon">🧑‍🤝‍🧑</span>
+              <span class="label-text" data-i18n="sidebar.teamConsole">虛擬團隊</span>
+            </button>
+            <button class="sidebar-action indent" id="btn-projects">
+              <span class="icon">🗂️</span>
+              <span class="label-text" data-i18n="sidebar.projectPlans">專案計畫</span>
+              <span
+                class="due-badge"
+                id="projects-due-badge"
+                style="display: none"
+              ></span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="settings-btn-wrap">
+        <button class="sidebar-action" id="btn-settings">
+          <span class="icon">⚙️</span>
+          <span class="label-text" data-i18n="sidebar.settings">設定</span>
+        </button>
+        <div id="app-version-label"></div>
+      </div>
     </div>
-  </div>
 
-  <div id="main-content">
-    <div class="placeholder" id="placeholder" data-i18n="sidebar.noAccounts">尚未新增任何帳號</div>
-  </div>
+    <div id="main-content">
+      <div class="placeholder" id="placeholder" data-i18n="sidebar.noAccounts">
+        尚未新增任何帳號
+      </div>
+    </div>
 
-  <script src="i18n.js"></script>
-  <script src="renderer.js"></script>
-</body>
+    <div id="command-palette-overlay">
+      <div id="command-palette">
+        <input
+          type="text"
+          id="command-palette-input"
+          data-i18n-placeholder="search.placeholder"
+          autocomplete="off"
+        />
+        <div id="command-palette-results"></div>
+      </div>
+    </div>
+
+    <div id="export-options-overlay">
+      <div id="export-options-dialog">
+        <div class="settings-section-title" data-i18n="export.optionsTitle">匯出對話</div>
+
+        <div class="row">
+          <label
+            ><input type="radio" name="export-format" value="md" checked />
+            Markdown</label
+          >
+          <label><input type="radio" name="export-format" value="json" /> JSON</label>
+        </div>
+
+        <div class="row">
+          <span id="export-path-hint" class="export-hint"></span>
+          <button id="btn-export-choose-path" data-i18n="export.choosePath">
+            另存到其他路徑…
+          </button>
+        </div>
+
+        <div class="row">
+          <label>
+            <input type="checkbox" id="export-add-knowledge" />
+            <span data-i18n="export.addToKnowledge">同時加入知識庫</span>
+          </label>
+        </div>
+
+        <div class="row actions">
+          <button id="btn-export-cancel" data-i18n="common.cancel">取消</button>
+          <button
+            id="btn-export-confirm"
+            class="primary"
+            data-i18n="export.confirmExport"
+          >
+            匯出
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="renderer.js"></script>
+  </body>
 </html>

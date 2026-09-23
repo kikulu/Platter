@@ -12,7 +12,9 @@
 
   async function refreshDataDir() {
     const { dataDir, isDefault } = await window.workspaceAPI.getDataDir();
-    dataDirDisplay.textContent = window.i18n.t('settings.dataDir.current', { path: dataDir });
+    dataDirDisplay.textContent = window.i18n.t('settings.dataDir.current', {
+      path: dataDir,
+    });
     btnResetDataDir.style.display = isDefault ? 'none' : 'inline-block';
   }
 
@@ -80,8 +82,11 @@
   const skipDialogCheckbox = document.getElementById('skip-dialog-checkbox');
 
   async function refreshSavePath() {
-    const { defaultSavePath, skipSaveDialog } = await window.workspaceAPI.getSavePathConfig();
-    savePathDisplay.textContent = window.i18n.t('settings.savePath.current', { path: defaultSavePath });
+    const { defaultSavePath, skipSaveDialog } =
+      await window.workspaceAPI.getSavePathConfig();
+    savePathDisplay.textContent = window.i18n.t('settings.savePath.current', {
+      path: defaultSavePath,
+    });
     skipDialogCheckbox.checked = skipSaveDialog;
   }
 
@@ -97,7 +102,8 @@
   // --- 備份與還原 ---
   document.getElementById('btn-export-backup').addEventListener('click', async () => {
     const result = await window.workspaceAPI.exportBackup();
-    if (result.ok) alert(window.i18n.t('settings.backup.exportSuccess', { path: result.filePath }));
+    if (result.ok)
+      alert(window.i18n.t('settings.backup.exportSuccess', { path: result.filePath }));
   });
 
   document.getElementById('btn-import-backup').addEventListener('click', async () => {
@@ -115,10 +121,18 @@
   const selectorTurnInput = document.getElementById('selector-turn');
   const selectorUserHintInput = document.getElementById('selector-user-hint');
 
+  const selectorTestResultEl = document.getElementById('selector-test-result');
+
   let allSelectors = {};
   let currentPlatform = 'claude';
   let pendingUserSample = null;
   let pendingAiSample = null;
+  let testCaptureInFlight = false;
+
+  function hideTestResult() {
+    selectorTestResultEl.style.display = 'none';
+    selectorTestResultEl.innerHTML = '';
+  }
 
   function loadSelectorIntoForm(platform) {
     const sel = allSelectors[platform] || { turn: '', userHint: '' };
@@ -128,12 +142,15 @@
 
   selectorTabs.querySelectorAll('button').forEach((btn) => {
     btn.addEventListener('click', () => {
-      selectorTabs.querySelectorAll('button').forEach((b) => b.classList.remove('active'));
+      selectorTabs
+        .querySelectorAll('button')
+        .forEach((b) => b.classList.remove('active'));
       btn.classList.add('active');
       currentPlatform = btn.getAttribute('data-platform');
       pendingUserSample = null;
       pendingAiSample = null;
       loadSelectorIntoForm(currentPlatform);
+      hideTestResult();
     });
   });
 
@@ -153,13 +170,114 @@
   document.getElementById('btn-reset-selector').addEventListener('click', async () => {
     allSelectors = await window.workspaceAPI.resetSelector(currentPlatform);
     loadSelectorIntoForm(currentPlatform);
+    hideTestResult();
+  });
+
+  // --- 選擇器設定：測試擷取預覽 ---
+  // 用表單裡目前填的內容（不管有沒有按過「儲存」）直接測試擷取，方便
+  // 邊調整 selector 邊確認結果，不用真的匯出一次才知道有沒有抓對。
+  function renderTestResult(result) {
+    selectorTestResultEl.innerHTML = '';
+    selectorTestResultEl.style.display = 'block';
+
+    if (!result || result.error === 'NO_ACCOUNT_FOR_PLATFORM') {
+      const err = document.createElement('div');
+      err.className = 'selector-test-error';
+      err.textContent = window.i18n.t('settings.selectors.testNoAccount');
+      selectorTestResultEl.appendChild(err);
+      return;
+    }
+
+    if (!result.ok) {
+      const debug = result.debug || {};
+      const err = document.createElement('div');
+      err.className = 'selector-test-error';
+      err.textContent = window.i18n.t('settings.selectors.testFailed', {
+        error: result.error || 'UNKNOWN',
+      });
+      selectorTestResultEl.appendChild(err);
+
+      const hint = document.createElement('div');
+      hint.className = 'settings-hint';
+      hint.textContent = window.i18n.t('settings.selectors.testDebug', {
+        matched: debug.matchedNodeCount != null ? debug.matchedNodeCount : '?',
+        nonEmpty: debug.nonEmptyMessageCount != null ? debug.nonEmptyMessageCount : '?',
+      });
+      selectorTestResultEl.appendChild(hint);
+      return;
+    }
+
+    const summary = document.createElement('div');
+    summary.className = 'selector-test-summary';
+    summary.textContent = window.i18n.t('settings.selectors.testSuccess', {
+      count: result.messages.length,
+    });
+    selectorTestResultEl.appendChild(summary);
+
+    const previewCount = 5;
+    result.messages.slice(0, previewCount).forEach((m) => {
+      const row = document.createElement('div');
+      row.className = 'selector-test-msg';
+
+      const roleSpan = document.createElement('span');
+      roleSpan.className = 'selector-test-msg-role';
+      roleSpan.textContent = m.role === 'user' ? '🧑' : '🤖';
+
+      const textSpan = document.createElement('span');
+      textSpan.className = 'selector-test-msg-text';
+      textSpan.textContent = m.text.length > 80 ? `${m.text.slice(0, 80)}…` : m.text;
+
+      row.appendChild(roleSpan);
+      row.appendChild(textSpan);
+      selectorTestResultEl.appendChild(row);
+    });
+
+    if (result.messages.length > previewCount) {
+      const more = document.createElement('div');
+      more.className = 'settings-hint';
+      more.textContent = window.i18n.t('settings.selectors.testMore', {
+        count: result.messages.length - previewCount,
+      });
+      selectorTestResultEl.appendChild(more);
+    }
+  }
+
+  document.getElementById('btn-test-capture').addEventListener('click', async () => {
+    if (testCaptureInFlight) return;
+    testCaptureInFlight = true;
+
+    selectorTestResultEl.innerHTML = '';
+    selectorTestResultEl.style.display = 'block';
+    const loading = document.createElement('div');
+    loading.className = 'settings-hint';
+    loading.textContent = window.i18n.t('settings.selectors.testing');
+    selectorTestResultEl.appendChild(loading);
+
+    const selector = {
+      turn: selectorTurnInput.value.trim(),
+      userHint: selectorUserHintInput.value.trim(),
+    };
+
+    try {
+      const result = await window.workspaceAPI.testCaptureSelector(
+        currentPlatform,
+        selector
+      );
+      renderTestResult(result);
+    } finally {
+      testCaptureInFlight = false;
+    }
   });
 
   async function tryDeriveAndFill() {
     if (!pendingUserSample || !pendingAiSample) return;
-    const derived = await window.workspaceAPI.deriveSelector(pendingUserSample, pendingAiSample);
+    const derived = await window.workspaceAPI.deriveSelector(
+      pendingUserSample,
+      pendingAiSample
+    );
     selectorTurnInput.value = derived.turn || '';
     selectorUserHintInput.value = derived.userHint || '';
+    hideTestResult();
     if (!derived.userHint) {
       alert(window.i18n.t('settings.selectors.derivedNoHint'));
     }
@@ -190,10 +308,23 @@
     await window.workspaceAPI.openCurrentDevTools();
   });
 
+  document.getElementById('btn-clear-cache').addEventListener('click', async () => {
+    const ok = window.confirm(window.i18n.t('settings.troubleshoot.clearCacheConfirm'));
+    if (!ok) return;
+    await window.workspaceAPI.clearAppCache();
+    alert(window.i18n.t('settings.troubleshoot.clearCacheDone'));
+  });
+
   // --- 帳號角色機制 ---
   const ROLE_COLOR_PALETTE = [
-    '#4f8cff', '#e5484d', '#f5a623', '#2ecc71',
-    '#9b59b6', '#1abc9c', '#e91e8c', '#95a5a6',
+    '#4f8cff',
+    '#e5484d',
+    '#f5a623',
+    '#2ecc71',
+    '#9b59b6',
+    '#1abc9c',
+    '#e91e8c',
+    '#95a5a6',
   ];
 
   const roleListEl = document.getElementById('role-list');
@@ -211,7 +342,8 @@
     ROLE_COLOR_PALETTE.forEach((color) => {
       const swatch = document.createElement('button');
       swatch.type = 'button';
-      swatch.className = 'color-swatch' + (color === selectedRoleColor ? ' selected' : '');
+      swatch.className =
+        'color-swatch' + (color === selectedRoleColor ? ' selected' : '');
       swatch.style.background = color;
       swatch.addEventListener('click', () => {
         selectedRoleColor = color;
@@ -284,7 +416,9 @@
       deleteBtn.className = 'danger';
       deleteBtn.textContent = window.i18n.t('settings.roles.delete');
       deleteBtn.addEventListener('click', async () => {
-        const ok = window.confirm(window.i18n.t('settings.roles.deleteConfirm', { name: role.name }));
+        const ok = window.confirm(
+          window.i18n.t('settings.roles.deleteConfirm', { name: role.name })
+        );
         if (!ok) return;
         await window.workspaceAPI.deleteRole(role.id);
         if (editingRoleId === role.id) resetRoleForm();
@@ -320,6 +454,16 @@
     resetRoleForm();
   });
 
+  // 語言切換後，「關於」區塊的版本文字要重新套用翻譯格式（不是靠
+  // data-i18n 靜態字串替換，因為裡面要內插版本號）
+  document.addEventListener('i18n:updated', async () => {
+    const version = await window.workspaceAPI.getAppVersion();
+    document.getElementById('about-version').textContent = window.i18n.t(
+      'settings.about.version',
+      { version }
+    );
+  });
+
   // --- 初始化 ---
   (async () => {
     await window.i18n.init();
@@ -330,5 +474,11 @@
     await refreshSelectors();
     resetRoleForm();
     await refreshRoles();
+
+    const version = await window.workspaceAPI.getAppVersion();
+    document.getElementById('about-version').textContent = window.i18n.t(
+      'settings.about.version',
+      { version }
+    );
   })();
 })();
