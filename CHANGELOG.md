@@ -1,5 +1,77 @@
 # Changelog
 
+## [1.26.0]
+
+### 新增：企業角色預設提示詞範本庫（系統提示詞／使用者提示詞拆分）
+
+- **需求**：知識庫原本內建的 25 組提示詞範本都是單一 `content` 欄位、
+  沒有跟任何角色綁定，使用者想要「一開機就能針對某個企業職務（HR／
+  行銷／業務……）直接套用一組現成提示詞」得自己從零建立角色、自己
+  寫提示詞、自己想怎麼拆系統設定跟當次任務。這次補上這一塊：內建
+  企業角色清單 + 每個角色配好的多組任務範本，並且範本本身拆成
+  「系統提示詞（人設／規則）」跟「使用者提示詞（這次要做的事）」
+  兩段，對應大部分 AI 平台「System Prompt / Custom Instructions」跟
+  「對話輸入框」是分開欄位的實際用法。
+- **新增 `extractors/default-roles.json`**：8 種常見企業職務角色——
+  人力資源（HR）、行銷企劃、業務銷售、客服支援、專案經理、軟體工程師、
+  財務會計、高階主管，`id` 用固定字串（`role_hr` 等），`color` 沿用
+  第 4 節既有的 8 色色票（剛好一色一個角色）。`lib/stores.js` 的
+  `loadAppState()` 在 `app-state.json` **完全不存在**時（全新安裝）
+  用這份檔案當 `roles` 的起始內容，跟 `seedDefaultKnowledgeBase()`／
+  `loadSelectors()` 是同一套「只在檔案不存在時種子一次，之後永遠讀
+  使用者版本」的慣例——即使使用者把角色刪光，重開程式也不會被種子
+  資料覆蓋回來。
+- **`extractors/default-knowledge-base.json` 從 25 組擴充到 41 組**：
+  新增 16 組「企業角色範本」（每個角色 2 組，標籤 `企業角色範本` +
+  角色名稱），例如 HR 的「職缺說明（JD）撰寫」「面試問題設計」、
+  業務的「業務開發信（Cold Email）」「業務提案大綱」、工程師的
+  「Pull Request 說明撰寫」「Bug 回報整理」等。每組都帶：
+  - `roleIds`：對應到上面 8 個角色的固定 id，讓側邊欄「預設提示詞」
+    （第 3.1、8 節）一開機就依角色分好內容，不用手動配置。
+  - `systemPrompt` / `userPrompt`：知識庫項目schema 新增的拆分欄位
+    （見下），系統提示詞定義這組範本的人設跟輸出規範，使用者提示詞是
+    帶 `[請填入]` 占位符的具體任務範本，沿用既有 25 組範本「資訊不足
+    要求使用者補、不自己編造」的風格。
+  - `content`：兩者合併起來的版本，向下相容既有只認 `content` 的
+    全文搜尋／Markdown 匯出／側邊欄單顆複製按鈕邏輯，不用同時改一輪
+    所有消費端才能上線這個功能。
+- **知識庫項目 schema 新增 `systemPrompt`／`userPrompt`（第 5.1 節）**：
+  不只企業角色範本能用，任何提示詞項目現在都可以選擇拆成這兩欄。
+  `knowledge.html` 編輯器新增對應的兩個 textarea，各自有獨立的
+  「複製內容」按鈕（`btn-copy-system`／`btn-copy-user`）；原本的
+  `content` 欄位保留（標示「若已填寫上方兩欄可留空」），主要的
+  「複製內容」按鈕在 `content` 為空時自動改複製系統＋使用者提示詞
+  組合版本。全文搜尋（`itemMatchesQuery`、`lib/ipc/search.js` 的
+  跨模組快速搜尋）、Markdown 匯出（`knowledge:exportAll`）都同步支援
+  比對／輸出這兩個新欄位；JSON 匯出／匯入、備份還原（`lib/ipc/
+settings.js`）也都補齊欄位預設值，舊資料檔案（沒有這兩個欄位）
+  一律視為空字串，不影響既有項目的顯示與編輯。
+- **側邊欄「預設提示詞」（第 3.1、8 節）**：項目有拆分系統／使用者
+  提示詞時，清單每一列改成顯示兩顆小按鈕（`S`／`U`，各自有 tooltip
+  「複製系統提示詞」「複製使用者提示詞」），可以分別一鍵複製到剪貼簿；
+  沒有拆分的舊式項目維持原本單顆 `⧉` 複製按鈕不變，兩種項目可以在
+  同一份清單裡混用。
+- 三語系（`zh-TW.json`/`en.json`/`ja.json`）同步新增
+  `knowledge.systemPrompt`/`knowledge.userPrompt`/
+  `knowledge.systemPromptPlaceholder`/`knowledge.userPromptPlaceholder`/
+  `knowledge.contentHint`/`knowledge.splitPromptBadge`/
+  `sidebar.copySystemPrompt`/`sidebar.copyUserPrompt`，三個檔案 key
+  數量維持一致（323 個），確認過沒有語系互相缺 key。
+- 驗證方式：獨立寫一段腳本直接呼叫跟 `lib/stores.js` 種子邏輯等價的
+  程式碼（不依賴 Electron），確認全新安裝情境下 8 個角色會被種進
+  `roles`、41 組知識庫項目會被種進 `items`、16 組企業角色範本的
+  `roleIds` 全部對得到剛種好的角色 id（沒有懸空引用）、16 組都同時
+  帶有非空的 `systemPrompt`／`userPrompt`。另外用 `node --check` 確認
+  所有修改過的 `.js` 檔語法正確、用 `python3 -m json.tool` 等價方式
+  確認所有修改過的 `.json` 檔仍是合法 JSON、`npm test`（26 個測試，
+  跟修改前一樣 21 過 5 個既有失敗——這 5 個失敗跟這次改動無關，
+  是既有環境缺少 Electron/原生模組造成的，修改前後結果一致）、
+  `npx prettier --check` 對所有修改過的檔案（含新增的 2 份 JSON）全過。
+- 詳見 `PROJECT_SPEC.md` 第 4 節（帳號角色機制：內建預設角色段落）、
+  第 5 節（知識庫：內建預設範本、5.1 提示詞項目、5.6 匯出／匯入）。
+
+---
+
 ## [1.25.1]
 
 ### 修正：帳號沒有真正懶載入，多帳號時拖累滾動流暢度
