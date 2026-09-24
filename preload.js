@@ -150,6 +150,15 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('projects:workflow:compose', { projectId, stepId }),
   saveWorkflowAsTemplate: (projectId, payload) =>
     ipcRenderer.invoke('projects:workflow:saveAsTemplate', { projectId, ...payload }),
+  // OpenSpec 整合：匯出成 openspec/changes/<變更名稱>/、匯入現有 openspec/specs 當既有規格
+  getOpenSpecInfo: (projectId) =>
+    ipcRenderer.invoke('projects:workflow:openspecInfo', { projectId }),
+  importOpenSpecSpecs: (projectId) =>
+    ipcRenderer.invoke('projects:workflow:importOpenSpecSpecs', { projectId }),
+  clearOpenSpecBaseContext: (projectId) =>
+    ipcRenderer.invoke('projects:workflow:clearBaseContext', { projectId }),
+  exportOpenSpec: (projectId, changeId) =>
+    ipcRenderer.invoke('projects:workflow:exportOpenSpec', { projectId, changeId }),
   onRemindersChanged: (cb) => {
     const handler = (e, summary) => cb(summary);
     ipcRenderer.on('reminders:changed', handler);
