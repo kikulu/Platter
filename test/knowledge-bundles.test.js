@@ -310,3 +310,86 @@ test('舊資料：套餐沒有 steps 或步驟沒有 stage 欄位時，載入會
   assert.deepEqual(a.steps, []);
   assert.equal(b.steps[0].stage, '');
 });
+
+// --- SDD（規格驅動開發）套餐 ---------------------------------------------------
+
+const SDD_TAG = 'SDD規格驅動開發';
+const SDD_GROUP_ID = 'kb-group-default-006';
+
+test('SDD 套餐範本：3 個階段、7 個步驟，依 原則→規格→釐清→規劃→任務→分析→實作 排序', () => {
+  const g = DEFAULTS.groups.find((x) => x.defaultId === SDD_GROUP_ID);
+  assert.ok(g, '找不到 SDD 套餐範本');
+  assert.ok(g.tags.includes('分階段範本') && g.tags.includes(SDD_TAG));
+  assert.equal(g.stages.length, 3);
+
+  const titleByDefaultId = new Map(DEFAULTS.items.map((it) => [it.defaultId, it.title]));
+  const titles = g.stages.flatMap((st) =>
+    st.itemDefaultIds.map((id) => titleByDefaultId.get(id))
+  );
+  assert.deepEqual(titles, [
+    'SDD 專案原則（Constitution）',
+    'SDD 功能規格撰寫（Specify）',
+    'SDD 規格釐清（Clarify）',
+    'SDD 技術規劃（Plan）',
+    'SDD 任務拆解（Tasks）',
+    'SDD 一致性分析（Analyze）',
+    'SDD 依任務實作（Implement）',
+  ]);
+});
+
+test('SDD 提示詞：7 組都有標籤與內容，且都是套餐引用的（沒有孤兒提示詞）', () => {
+  const sdd = DEFAULTS.items.filter((it) => (it.tags || []).includes(SDD_TAG));
+  assert.equal(sdd.length, 7);
+  const g = DEFAULTS.groups.find((x) => x.defaultId === SDD_GROUP_ID);
+  const referenced = new Set(g.stages.flatMap((st) => st.itemDefaultIds));
+  sdd.forEach((it) => {
+    assert.ok(it.content.trim().length > 200, `${it.title} 內容太短`);
+    assert.ok(referenced.has(it.defaultId), `${it.title} 沒有被 SDD 套餐引用`);
+  });
+});
+
+test('已在上一版（只有前 5 組套餐）的安裝升級：補進 SDD 提示詞與 SDD 套餐，既有內容不動', () => {
+  resetDataDir();
+  const isSdd = (it) => (it.tags || []).includes(SDD_TAG);
+  const oldItems = DEFAULTS.items.filter((it) => !isSdd(it));
+  const oldGroups = DEFAULTS.groups.filter((g) => g.defaultId !== SDD_GROUP_ID);
+  const items = oldItems.map((it, i) => ({
+    id: `kb_old_${i}`,
+    defaultId: it.defaultId,
+    title: it.title,
+    content: it.content || '',
+    tags: it.tags || [],
+    checklist: [],
+    roleIds: [],
+    systemPrompt: '',
+    userPrompt: '',
+  }));
+  fs.writeFileSync(knowledgeFile, JSON.stringify({ items, groups: [] }));
+  fs.writeFileSync(
+    seededFile,
+    JSON.stringify({
+      knowledgeBase: oldItems.map((it) => it.defaultId),
+      knowledgeGroups: oldGroups.map((g) => g.defaultId),
+    })
+  );
+
+  const kb = loadKnowledgeBase();
+  assert.equal(kb.items.length, DEFAULTS.items.length);
+  assert.equal(kb.items.filter(isSdd).length, 7);
+  // 只補進 SDD 這一組套餐（其他 5 組使用者當初可能刪掉了，不會被補回來）
+  assert.equal(kb.groups.length, 1);
+  const g = kb.groups[0];
+  assert.equal(g.defaultId, SDD_GROUP_ID);
+  assert.equal(g.steps.length, 7);
+  // 步驟引用的是「這次新補進來的」SDD 提示詞
+  const idsByTitle = new Map(kb.items.map((it) => [it.id, it.title]));
+  assert.ok(g.steps.every((s) => idsByTitle.get(s.itemId).startsWith('SDD ')));
+  assert.deepEqual(
+    groupStepsByStage(g.steps).map((r) => [r.stage, r.steps.length]),
+    [
+      ['階段 1：原則與規格', 3],
+      ['階段 2：規劃與任務', 2],
+      ['階段 3：檢查與實作', 2],
+    ]
+  );
+});
