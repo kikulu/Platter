@@ -1,5 +1,61 @@
 # Changelog
 
+## [1.30.0]
+
+### 新增：整合 OpenSpec（提示詞範本、專案範本、匯出成 openspec/changes/、匯入現有規格）
+
+- **背景**：OpenSpec（[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)）是輕量的規格驅動
+  開發框架，特別適合在既有專案上逐步修改行為：每個變更（change）放在
+  `openspec/changes/<變更名稱>/`，內含 `proposal.md`、差異規格 `specs/<capability>/spec.md`
+  （`ADDED`／`MODIFIED`／`REMOVED Requirements`，每個需求底下用 `#### Scenario:` 寫
+  GIVEN／WHEN／THEN）、`design.md`、`tasks.md`；實作後封存，把差異合併進 `openspec/specs/`。
+  Platter 不執行 OpenSpec CLI、不修改使用者專案的程式碼，整合的方式是「產生規格文件」與
+  「和使用者專案的 OpenSpec 資料夾交換檔案」，之後由使用者用 OpenSpec 自己的指令驗證、實作、封存。
+- **知識庫：8 組 OpenSpec 提示詞＋第 7 組分階段套餐**（`kb-default-049` ~ `056`，標籤「OpenSpec」；
+  `kb-group-default-007`）：探索想法（Explore）、變更提案（proposal.md）、差異規格（Delta Specs）、
+  技術設計（design.md）、任務清單（tasks.md）、依任務實作（Apply）、實作驗證（Verify）、封存前預演
+  （Archive），分 4 個階段。提案／差異規格／設計／任務四組直接要求輸出 OpenSpec 的檔案格式且「只輸出
+  檔案內容」；差異規格要求 MODIFIED 貼完整需求（封存時整段取代）、需求名稱與現有規格一字不差（找不到就標
+  「待確認」、不杜撰）；探索、驗證、封存預演都是唯讀，封存預演明確聲明只是預演、實際封存要用
+  `/opsx:archive`（或 `openspec archive`）。既有安裝升級後由增量補種自動補進。內建提示詞 48 → 56
+  （一般 32 → 40），內建套餐 6 → 7。
+- **專案管理：第 5 組內建專案範本「OpenSpec 變更流程」**（4 階段 8 步，重用上述提示詞）。
+- **匯出成 `openspec/changes/<變更名稱>/`**：把提案、差異規格、設計、任務的產出寫成 OpenSpec 的資料夾
+  結構。預設整份產出寫到步驟的預設檔案；產出裡用 `=== FILE: specs/<capability>/spec.md ===` 標記行
+  拆成多個 capability；自動拿掉 AI 包在最外層的 ``` 圍欄與提案末尾的「建議變更名稱」行；沒有標記的差異
+  規格寫到 `specs/general/spec.md` 並警告；沒有產出的步驟略過並回報。變更名稱建議值優先用 AI 在提案
+  裡建議的名稱，否則由專案主題轉 kebab-case，全中文退回 `change-YYYYMMDD`。目標已有同名檔案時列出清單、
+  確認才覆蓋；成功後提醒尚未 `openspec init` 的專案先初始化。
+- **安全**：AI 的產出是不可信輸入。所有匯出路徑經 `sanitizeRelativePath()`（只允許相對 `.md` 路徑、片段
+  只含英數與 `._-` 且不以點開頭所以沒有 `..`、深度與長度上限），不合法的標記記入 `rejected` 並在畫面顯示、
+  不寫；寫檔前再確認最終路徑仍在變更資料夾內；變更名稱必須是 kebab-case。
+- **匯入現有規格**（brownfield）：選專案資料夾（根目錄、`openspec` 或 `specs` 皆可），讀
+  `openspec/specs/<capability>/spec.md`（單檔 > 200KB 略過），組成「既有規格」（上限 6 萬字，放不下的
+  capability 註明未帶入）。標了 `useBaseContext` 的步驟（差異規格、封存預演）的提示詞會自動帶入，
+  MODIFIED／REMOVED 才對得上現有需求名稱；其他步驟不帶。可隨時清除。
+- **畫面**：帶匯出步驟的流程，「階段流程」分頁多一個「OpenSpec 整合」區塊（既有規格狀態與匯入／清除、
+  變更名稱與匯出、即將匯出的檔案預覽、警告）；SDD／Scrum／瀑布式／MVP 範本不顯示。
+- **資料模型**：範本步驟新增選填旗標 `artifact`、`useBaseContext`（建立專案時複製進
+  `workflow.steps[]`、另存為範本時保留）；workflow 新增選填 `baseContext`。舊專案與舊備份不受影響。
+  新增 `lib/openspec.js`（純函式與 `fs`，不依賴 Electron）與 4 個 IPC：`projects:workflow:openspecInfo`／
+  `importOpenSpecSpecs`／`clearBaseContext`／`exportOpenSpec`。
+- 三語系新增 19 個鍵（zh-TW／en／ja 各 389 個，鍵集合一致）。三份 README 與 `PROJECT_SPEC.md`（第 5 節、
+  第 7.6 節範本表、新增第 7.7 節、第 15 節）同步更新。
+- 驗證方式：新增 `test/openspec.test.js`（22 項：路徑檢查含各種穿越與怪字元、FILE 標記解析、匯出計畫、
+  寫檔與穿越防護、匯入、內建範本與套餐完整性）與 `test/openspec-ipc.test.js`（8 項，假 dialog 直接呼叫
+  真正 handler：建議名稱、匯入、匯出、覆蓋確認、穿越路徑）；`npm test` 103 項全過、lint 0 錯誤、
+  `format:check` 全過。專案視窗另用 jsdom 載入真正的 `project.html` + `project.js` 並接上真實主行程
+  handler 做端到端冒煙測試，全數通過。**尚未在真正的 Electron 視窗手動操作過**，也未用真正的 OpenSpec
+  CLI 驗證過匯出的資料夾——下次請優先在一個裝了 OpenSpec 的專案上實測 `openspec validate` 是否能
+  通過匯出的差異規格，並確認資料夾選擇對話框。
+- 已知限制：不自動把提示詞送進 AI 帳號視窗；不做 OpenSpec 語法驗證（請用 `openspec validate`）；不處理
+  `openspec/config.yaml` 與 `changes/archive/`；匯出不寫 `.openspec.yaml`（選填檔）。提示詞與流程依
+  OpenSpec 官方文件（2026-09 查閱）撰寫，OpenSpec 更新格式或指令名稱時請同步調整
+  `kb-default-049` ~ `056`。
+- 詳見 `PROJECT_SPEC.md` 第 7.7 節。
+
+---
+
 ## [1.29.0]
 
 ### 新增：專案管理支援專案範本與 SDD 階段流程（輸入主題，依各階段提示詞逐步執行）

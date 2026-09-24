@@ -183,12 +183,13 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 **內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
 開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
-`extractors/default-knowledge-base.json` 裡內建的 48 組提示詞範本當
-起始內容，涵蓋 7 個分類（標籤對應分類名稱）：企業日常作業、
+`extractors/default-knowledge-base.json` 裡內建的 56 組提示詞範本當
+起始內容，涵蓋 8 個分類（標籤對應分類名稱）：企業日常作業、
 醫療軟體研發、論文寫作、研究計畫、專案開發（各 5 組，共 25 組，沿用
-Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增，見下方
-「內建分階段套餐範本」），以及**企業角色範本**（8 種常見企業職務各 2 組，
-共 16 組，1.26.0 新增）。前 32 組都用單一 `content` 欄位、Markdown 格式
+Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增）、
+**OpenSpec**（8 組，1.30.0 新增；兩者見下方「內建分階段套餐範本」），
+以及**企業角色範本**（8 種常見企業職務各 2 組，共 16 組，1.26.0 新增）。
+前 40 組都用單一 `content` 欄位、Markdown 格式
 撰寫（標題、角色與目標、輸入資訊、輸出要求）；企業角色範本則額外帶
 `roleIds`（對應 `default-roles.json` 種子角色的固定 id，見第 4 節）跟
 `systemPrompt`／`userPrompt` 拆分欄位——`systemPrompt` 定義這組範本的
@@ -211,9 +212,9 @@ Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增，�
 回溯標記既有的內建提示詞，避免整批重複塞入。
 
 **內建分階段套餐範本**（1.27.0 新增）：`default-knowledge-base.json` 除了
-`items` 還有 `groups`，內含 6 組分階段套餐（論文寫作、研究計畫、軟體專案
+`items` 還有 `groups`，內含 7 組分階段套餐（論文寫作、研究計畫、軟體專案
 開發、醫療器材軟體合規、專案例行溝通，以及 1.28.0 新增的 **SDD 規格驅動
-開發流程**，標籤都帶「分階段範本」）。範本用
+開發流程**、1.30.0 新增的 **OpenSpec 變更流程**，標籤都帶「分階段範本」）。範本用
 `stages: [{ title, itemDefaultIds: [...] }]` 描述，以內建提示詞的
 `defaultId` 引用（不綁死使用者資料裡隨機產生的 item id）；種入時由
 `lib/utils.js` 的 `buildGroupFromDefault()` 對照使用者知識庫實際的 item id，
@@ -235,6 +236,25 @@ Implement）。撰寫時的幾個刻意設計：規格只談做什麼、不談�
 實作遇到與規格衝突要停下來詢問，不自行改規格。建議在同一段 AI 對話裡
 依序貼上，讓前面的產出成為後面的上下文，並把每份產出存成
 `constitution.md`／`spec.md`／`plan.md`／`tasks.md`。
+
+**OpenSpec 變更流程套餐**（1.30.0 新增）：OpenSpec
+（[Fission-AI/OpenSpec](https://github.com/Fission-AI/OpenSpec)）是輕量的規格
+驅動開發框架，特別適合在既有專案上逐步修改行為（brownfield）：每個變更
+（change）放在 `openspec/changes/<變更名稱>/`，內含 `proposal.md`、差異規格
+`specs/<capability>/spec.md`（用 `ADDED`／`MODIFIED`／`REMOVED Requirements`
+描述「相對現有規格改了什麼」，每個需求 `### Requirement:` 底下用
+`#### Scenario:` 寫 GIVEN／WHEN／THEN）、`design.md`、`tasks.md`；實作後封存，
+把差異規格合併進 `openspec/specs/`。內含 8 組標籤為「OpenSpec」的提示詞
+（`kb-default-049` ~ `056`），由 `kb-group-default-007` 分四個階段串起來：
+**階段 1 探索與提案**（探索想法 Explore → 變更提案 proposal.md）、**階段 2 規格與
+設計**（差異規格 Delta Specs → 技術設計 design.md）、**階段 3 任務與實作**（任務清單
+tasks.md → 依任務實作 Apply）、**階段 4 驗證與封存**（實作驗證 Verify → 封存前預演
+Archive）。提案、差異規格、設計、任務四組提示詞直接要求輸出 OpenSpec 的檔案格式且
+「只輸出檔案內容」；差異規格要求 MODIFIED 貼完整需求（封存時整段取代）、需求名稱與現有
+規格一字不差（找不到就標「待確認」、不杜撰）、多個 capability 各加一行
+`=== FILE: specs/<capability>/spec.md ===` 標記（供匯出成檔案，見第 7.7 節）；提案在最後補
+「建議變更名稱：xxx」；探索、驗證、封存預演都是唯讀，且封存預演明確聲明只是預演、實際封存
+要用 OpenSpec 的 `/opsx:archive`（或 CLI 的 `openspec archive`）。
 
 ### 5.1 提示詞項目（items）
 
@@ -511,16 +531,18 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 （`lib/ipc/projects.js`）只負責讀寫資料與廣播。
 
 **內建範本**（`extractors/default-project-templates.json`，唯讀、隨程式版本更新，
-不複製進資料目錄）共 4 組軟體開發流程：
+不複製進資料目錄）共 5 組軟體開發流程：
 
-| 範本                     | 階段                                                                                                                                                                 |
-| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SDD 規格驅動開發         | 原則與規格（Constitution → Specify → Clarify）→ 規劃與任務（Plan → Tasks）→ 檢查與實作（Analyze → Implement），重用知識庫 7 組 SDD 提示詞，順序與 SDD 分階段套餐一致 |
-| 敏捷 Scrum 迭代開發      | 產品願景與 Backlog → Sprint 規劃 → 開發與驗收 → Sprint 回顧                                                                                                          |
-| 傳統瀑布式開發           | 需求分析 → 系統設計 → 實作與測試 → 部署與維運                                                                                                                        |
-| MVP 快速原型（精實驗證） | 問題與假設 → 原型實作 → 驗證與迭代                                                                                                                                   |
+| 範本                     | 階段                                                                                                                                                                                                                                  |
+| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SDD 規格驅動開發         | 原則與規格（Constitution → Specify → Clarify）→ 規劃與任務（Plan → Tasks）→ 檢查與實作（Analyze → Implement），重用知識庫 7 組 SDD 提示詞，順序與 SDD 分階段套餐一致                                                                  |
+| OpenSpec 變更流程        | 探索與提案（Explore → proposal.md）→ 規格與設計（差異規格 → design.md）→ 任務與實作（tasks.md → Apply）→ 驗證與封存（Verify → Archive 預演），重用知識庫 8 組 OpenSpec 提示詞，可匯出成專案的 `openspec/changes/` 資料夾（第 7.7 節） |
+| 敏捷 Scrum 迭代開發      | 產品願景與 Backlog → Sprint 規劃 → 開發與驗收 → Sprint 回顧                                                                                                                                                                           |
+| 傳統瀑布式開發           | 需求分析 → 系統設計 → 實作與測試 → 部署與維運                                                                                                                                                                                         |
+| MVP 快速原型（精實驗證） | 問題與假設 → 原型實作 → 驗證與迭代                                                                                                                                                                                                    |
 
-範本格式：`{ id, name, description, stages: [{ title, steps: [{ title?, prompt?, itemDefaultId? }] }] }`。
+範本格式：`{ id, name, description, stages: [{ title, steps: [{ title?, prompt?, itemDefaultId?, artifact?, useBaseContext? }] }] }`
+（`artifact`／`useBaseContext` 是 1.30.0 新增的選填旗標，OpenSpec 整合用，見第 7.7 節）。
 步驟可以**內嵌 `prompt`**，或用 **`itemDefaultId` 引用知識庫的內建提示詞**（大量重用，
 不重複維護同一段文字）。引用時優先用**使用者知識庫裡**帶有該 `defaultId` 的項目——
 使用者調整過提示詞，之後建立的專案就會用調整後的版本；項目被刪掉時退回內建檔的原始
@@ -583,6 +605,56 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 
 備份與還原同步支援專案資料（含 `tasks`、`issues` 與 `workflow`），匯入時已存在的
 專案 id 略過。
+
+### 7.7 OpenSpec 整合
+
+「OpenSpec 變更流程」範本（第 7.6 節）多了兩個與使用者專案的 OpenSpec 資料夾交換檔案的功能。
+Platter **不執行 OpenSpec CLI、不修改使用者專案的程式碼**——它只負責產生規格文件，再由使用者
+用 OpenSpec 的指令驗證、實作、封存。邏輯在 `lib/openspec.js`（純函式與 `fs`，不依賴 Electron，
+有單元測試）。
+
+**範本步驟的兩個選填旗標**（建立專案時複製進 `workflow.steps[]`，另存為範本時保留）：
+
+- `artifact`：這一步的產出要匯出成變更資料夾裡的哪個檔案（`proposal.md`、`design.md`、
+  `tasks.md`、`specs/general/spec.md`）。
+- `useBaseContext`：這一步的提示詞要不要帶入「既有規格」（範本裡只有差異規格與封存預演兩步）。
+
+**匯出成 `openspec/changes/<變更名稱>/`**：
+
+- 檔案怎麼拆：預設整份產出寫到步驟的 `artifact` 路徑；產出裡若有 `=== FILE: 路徑 ===` 標記行，
+  則每個標記到下一個標記之間是一份檔案（差異規格一個 capability 一份，例如
+  `specs/membership/spec.md`），第一個標記之前的前言忽略。AI 常把整份檔案包在 ``` 圍欄裡，
+  最外層剛好是一個圍欄時會自動拿掉；提案提示詞請 AI 在最後補的「建議變更名稱：xxx」那行不屬於
+  檔案內容，寫檔前移除。沒有標記的差異規格寫到 `specs/general/spec.md` 並警告使用者匯出後自行
+  改 capability 資料夾名稱；沒有產出的步驟略過並回報；同一路徑被多個步驟寫到時，後面的覆蓋前面的。
+- **AI 的產出是不可信輸入**：所有路徑都經 `sanitizeRelativePath()`——只允許相對路徑、副檔名必須
+  是 `.md`、每個片段只含英數與 `._-` 且不以點開頭（所以沒有 `.`／`..`／隱藏檔）、深度 ≤ 5、長度
+  ≤ 120；不合法的標記路徑記入 `rejected` 並在畫面顯示，不寫。寫檔前 `writeExportFiles()` 再確認
+  最終路徑仍在變更資料夾之內（縱深防禦）。變更名稱必須是 kebab-case（小寫英數與連字號、≤ 60 字）。
+- 變更名稱建議值：優先用 AI 在提案產出裡建議的名稱，否則由專案主題轉 kebab-case，全中文（轉完是空的）
+  就退回 `change-YYYYMMDD`；畫面上的輸入框使用者可自行修改，改過之後不再被建議值覆蓋。
+- 流程：`projects:workflow:exportOpenSpec` 讓使用者選專案資料夾 → 目標已有同名檔案時列出清單、
+  問是否覆蓋（取消不動任何檔案）→ 寫入 `<專案資料夾>/openspec/changes/<名稱>/…` → 寫稽核日誌。
+  畫面上的檔案清單預覽（`projects:workflow:openspecInfo`，不寫檔）會隨產出變化即時更新。
+
+**匯入現有規格**（brownfield 專案）：差異規格的 `MODIFIED`／`REMOVED` 要對得上現有需求的名稱才寫得對，
+所以可以「匯入現有規格…」——選專案根目錄（或 `openspec`、`specs` 資料夾），讀
+`openspec/specs/<capability>/spec.md`（每個 capability 一層子資料夾；單檔 > 200KB 略過），依名稱
+排序組成文字存進 `workflow.baseContext`（`{ source, text, capabilityCount, includedCount, truncated,
+chars, importedAt }`，總長上限 6 萬字，放不下的 capability 記入 `truncated` 並在文字裡註明）。
+`composeStepPrompt()` 在標了 `useBaseContext` 的步驟的「目前步驟」與「前面步驟的產出」之間插入
+`# 既有規格（專案 openspec/specs 目前的內容）` 段落；其他步驟不帶，避免提示詞無謂膨脹。可隨時清除。
+
+**畫面**：帶 `artifact` 或 `useBaseContext` 步驟的流程，「階段流程」分頁多一個「OpenSpec 整合」
+區塊（既有規格狀態＋匯入／清除、變更名稱＋匯出、即將匯出的檔案預覽與警告）；SDD、Scrum、瀑布式、
+MVP 範本不顯示。
+
+**IPC**：`projects:workflow:openspecInfo`、`projects:workflow:importOpenSpecSpecs`、
+`projects:workflow:clearBaseContext`、`projects:workflow:exportOpenSpec`（見 `preload.js`）。
+
+**已知限制**：不會自動把提示詞送進 AI 帳號視窗或讀取專案的程式碼；不做 OpenSpec 語法驗證
+（請用 OpenSpec 自己的 `openspec validate`）；不處理 `openspec/config.yaml` 與 `changes/archive/`；
+匯出不寫 `.openspec.yaml` 變更中繼資料（選填檔，OpenSpec 會依預設處理）。
 
 ---
 
@@ -1136,6 +1208,7 @@ lib/ipc/logs.js          # logs:* / console:* IPC
 lib/ipc/search.js        # 跨模組快速搜尋（命令面板）：search:* IPC
 lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
 lib/workflow.js          # 專案階段流程（第 7.6 節）：範本展開、組合提示詞、步驟/任務狀態同步（純函式）
+lib/openspec.js          # OpenSpec 整合（第 7.7 節）：匯出成 openspec/changes/、匯入現有規格、路徑安全檢查
 lib/sqlite.js            # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
@@ -1143,8 +1216,8 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
-extractors/default-knowledge-base.json  # 內建的48組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，企業角色範本8種職務各2組）＋6組分階段套餐範本（groups）
-extractors/default-project-templates.json # 內建的4組軟體開發專案範本（SDD／Scrum／瀑布式／MVP，第 7.6 節）
+extractors/default-knowledge-base.json  # 內建的56組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，OpenSpec 8組，企業角色範本8種職務各2組）＋7組分階段套餐範本（groups）
+extractors/default-project-templates.json # 內建的5組軟體開發專案範本（SDD／OpenSpec／Scrum／瀑布式／MVP，第 7.6 節）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗
