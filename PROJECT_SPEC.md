@@ -384,6 +384,7 @@ Implement）。撰寫時的幾個刻意設計：規格只談做什麼、不談�
                 "priority": "low|medium|high|urgent",
                 "status": "open|inprogress|resolved|closed",
                 "assigneeId", "dueDate", "tags": ["..."] } ],
+  "workflow": { ... },   // 選填，從範本建立的專案才有，見第 7.6 節
   "createdAt", "updatedAt"
 } ] }
 ```
@@ -500,7 +501,87 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 - 因為資料來源是「已存檔」的 `allProjects`，正在某個專案編輯中但還沒按
   「儲存專案」的變更不會出現在總覽裡。
 
-備份與還原同步支援專案資料（含 `tasks` 與 `issues`），匯入時已存在的
+### 7.6 專案範本與階段流程（SDD）
+
+專案可以從**範本**建立，並帶一份**階段流程（`project.workflow`）**：一串分階段的
+提示詞步驟。使用者輸入專案主題後，依序把每個步驟的提示詞（自動帶入主題與前面
+步驟的產出）複製給 AI、把 AI 的產出貼回來、標記完成，再進下一步——把「分階段提示詞
+套餐」（第 5.3 節）和專案管理接在一起，並多了「主題」「產出接力」「進度」。邏輯放在
+`lib/workflow.js`（不依賴 Electron 的純函式，有單元測試），IPC handler
+（`lib/ipc/projects.js`）只負責讀寫資料與廣播。
+
+**內建範本**（`extractors/default-project-templates.json`，唯讀、隨程式版本更新，
+不複製進資料目錄）共 4 組軟體開發流程：
+
+| 範本                     | 階段                                                                                                                                                                 |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SDD 規格驅動開發         | 原則與規格（Constitution → Specify → Clarify）→ 規劃與任務（Plan → Tasks）→ 檢查與實作（Analyze → Implement），重用知識庫 7 組 SDD 提示詞，順序與 SDD 分階段套餐一致 |
+| 敏捷 Scrum 迭代開發      | 產品願景與 Backlog → Sprint 規劃 → 開發與驗收 → Sprint 回顧                                                                                                          |
+| 傳統瀑布式開發           | 需求分析 → 系統設計 → 實作與測試 → 部署與維運                                                                                                                        |
+| MVP 快速原型（精實驗證） | 問題與假設 → 原型實作 → 驗證與迭代                                                                                                                                   |
+
+範本格式：`{ id, name, description, stages: [{ title, steps: [{ title?, prompt?, itemDefaultId? }] }] }`。
+步驟可以**內嵌 `prompt`**，或用 **`itemDefaultId` 引用知識庫的內建提示詞**（大量重用，
+不重複維護同一段文字）。引用時優先用**使用者知識庫裡**帶有該 `defaultId` 的項目——
+使用者調整過提示詞，之後建立的專案就會用調整後的版本；項目被刪掉時退回內建檔的原始
+內容（`lib/stores.js` 的 `makeKnowledgePromptResolver()`）。
+
+**使用者範本**存在資料目錄 `project-templates.json`（`{ templates: [...] }`，格式同上，
+步驟一律內嵌 `prompt`），由專案的「另存為專案範本」產生，可在範本選擇畫面刪除；內建範本
+不能刪。備份匯出的 `projectTemplates` 欄位一併帶上、還原時已存在的 id 略過。
+
+**`project.workflow`**：
+
+```json
+{ "templateId", "templateName", "topic",
+  "contextMode": "all|previous|none", "currentStepId",
+  "steps": [ { "id", "stage", "title", "prompt", "output",
+               "status": "todo|doing|done", "taskId" } ] }
+```
+
+- 階段沿用套餐的做法：`step.stage` 是階段名稱字串，相鄰且相同的步驟屬於同一階段。
+- **建立時提示詞「快照」進 `steps[].prompt`**：之後改動或刪除知識庫項目，不影響已經在跑的
+  專案，備份還原也自成一體。使用者可在專案內改單一步驟的提示詞原文（只影響這個專案）。
+- **一步一任務**：建立專案時每個步驟同時建立一個任務（標題如 `1-1 SDD 專案原則
+（Constitution）`，編號是「階段序號-階段內序號」），`taskId` 互相對應。步驟狀態與任務
+  狀態**雙向一致**：步驟改狀態 → `projects:workflow:setStepStatus` 同步對應任務；使用者
+  在任務清單改任務狀態（`projects:task:setStatus`，或按「儲存專案」）→
+  `syncStepStatusFromTasks()` 反向同步。所以既有的任務清單、月曆、甘特圖、進度、到期提醒
+  都直接可用。對應任務被使用者刪掉時，步驟照常運作、只是不再同步。
+- **組合提示詞**（`composeStepPrompt()`）：`# 專案主題` → `# 目前步驟`（階段、編號、第 n/總數
+  步）→ `# 前面步驟的產出` → `# 本步驟提示詞` → `# 補充說明`（請 AI 依主題與前面產出帶入提示詞
+  裡的 `[請填入]`，無法得知的標「待確認」、不要編造）。提示詞內的 `{{topic}}` 會被替換成專案
+  主題（給自訂範本用）。`contextMode` 決定帶入哪些前面步驟的產出：`all`（預設，所有有產出的
+  前面步驟）／`previous`（只帶緊鄰的上一步）／`none`（同一段 AI 對話已經有前面內容時省 token）。
+  沒有產出的步驟不會出現空段落。組合只在主行程做（`projects:workflow:compose`），畫面端只
+  顯示與複製，避免兩邊各寫一份。
+- `nextCurrentStepId()`：標成完成時「目前步驟」往後移到第一個還沒完成的步驟（全做完就留在
+  原地）；選取步驟也會記住，重開視窗後接續。
+- 一般 `projects:save` **不會蓋掉 `workflow`**：渲染層送來的專案物件沒有這個欄位，沿用既有的
+  展開合併保留它（跟 `timeEntries` 同一類要小心的欄位，有測試守著）。`loadProjects()` 載入
+  時補齊缺少的欄位，結構壞掉（`steps` 不是陣列）的 workflow 直接丟掉。
+
+**IPC**（見 `preload.js`）：`projectTemplates:list`（內建在前、自訂在後，只回傳階段與
+步驟標題預覽、不含提示詞全文）、`projectTemplates:delete`、`projects:createFromTemplate`
+（`{ templateId, topic, name? }`，主題必填）、`projects:workflow:setMeta`（主題／帶入方式／
+目前步驟）、`projects:workflow:updateStep`（只接受 `output`／`prompt`／`title`）、
+`projects:workflow:setStepStatus`、`projects:workflow:compose`、
+`projects:workflow:saveAsTemplate`。快速搜尋的專案比對也涵蓋專案主題。
+
+**畫面**（`project.html` / `project.js`）：
+
+- 專案清單工具列的「**從範本建立**」：右側顯示範本卡片（名稱、內建/自訂、階段與步驟數、
+  各階段的步驟預覽），輸入專案主題（必填）與專案名稱（選填，預設用主題）後建立，建立完直接
+  切到新專案的「階段流程」分頁。
+- 「**階段流程**」分頁（只有帶 `workflow` 的專案才顯示）：上方是專案主題（可隨時修改）與前面
+  產出的帶入方式；左側依階段列出步驟（○ 待辦／◐ 進行中／● 已完成，每階段完成進度）；右側是
+  目前步驟——提示詞預覽（唯讀、已帶入主題與前面產出）、可展開編輯提示詞原文、「複製提示詞」
+  （順便把待辦步驟標成進行中）、貼回 AI 產出的欄位（離開輸入框即存檔）、上一步／重設為待辦／
+  標記完成並前往下一步；底部可「另存為專案範本」（含專案內改過的提示詞，不含產出與狀態）。
+- 步驟狀態改變後主行程回傳完整專案清單，畫面端把已持久化的任務狀態同步回 `editingTasks`
+  並重繪任務清單——否則之後按「儲存專案」會把任務狀態蓋回舊值。
+
+備份與還原同步支援專案資料（含 `tasks`、`issues` 與 `workflow`），匯入時已存在的
 專案 id 略過。
 
 ---
@@ -1054,6 +1135,7 @@ lib/ipc/conversations.js # conversations:* / export:current IPC
 lib/ipc/logs.js          # logs:* / console:* IPC
 lib/ipc/search.js        # 跨模組快速搜尋（命令面板）：search:* IPC
 lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
+lib/workflow.js          # 專案階段流程（第 7.6 節）：範本展開、組合提示詞、步驟/任務狀態同步（純函式）
 lib/sqlite.js            # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
@@ -1062,6 +1144,7 @@ extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
 extractors/default-knowledge-base.json  # 內建的48組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，企業角色範本8種職務各2組）＋6組分階段套餐範本（groups）
+extractors/default-project-templates.json # 內建的4組軟體開發專案範本（SDD／Scrum／瀑布式／MVP，第 7.6 節）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗
@@ -1102,7 +1185,8 @@ renderer/locales/zh-TW.json, en.json
 app-state.json      # 帳號清單、UI 狀態（含側邊欄群組展開狀態）、擴充功能、角色
 knowledge-base.json # 提示詞項目 + 套餐（步驟可帶 stage 階段名稱）
 seeded-defaults.json # 已種過的內建範本 defaultId（knowledgeBase／knowledgeGroups），升級補種用
-projects.json        # 專案 + 任務 + 每個專案自己的 issue 清單
+projects.json        # 專案 + 任務 + 每個專案自己的 issue 清單（從範本建立的專案另帶 workflow 階段流程）
+project-templates.json # 使用者自訂的專案範本（內建範本不在這裡，見第 7.6 節）
 documents.json        # 文件中繼資料
 documents/             # 文件庫「已管理」檔案複本存放資料夾
 conversations.json     # 對話庫（對話標題/標籤/Markdown 內容/跟文件庫的關聯）
