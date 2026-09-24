@@ -890,3 +890,54 @@ body {
   padding-top: 12px;
   border-top: 1px solid var(--border);
 }
+
+/* --- OpenSpec 整合 --- */
+#wf-openspec {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#wf-osp-title {
+  font-size: 12px;
+  font-weight: 600;
+}
+.wf-osp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf-osp-row .label {
+  margin: 0;
+  white-space: nowrap;
+}
+#wf-osp-base-status {
+  flex: 1;
+  min-width: 0;
+  font-size: 12px;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+#wf-osp-change-id {
+  flex: 1;
+  min-width: 0;
+}
+#wf-osp-files,
+#wf-osp-result {
+  font-size: 12px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  overflow-wrap: anywhere;
+}
+#wf-osp-files .osp-warn {
+  color: #f5a623;
+}
+#wf-osp-result.error {
+  color: #e5484d;
+}
+#wf-osp-result.ok {
+  color: #2ecc71;
+}
