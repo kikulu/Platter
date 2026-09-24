@@ -135,6 +135,21 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   removeTaskTimeEntry: (projectId, taskId, entryId) =>
     ipcRenderer.invoke('projects:task:removeTimeEntry', { projectId, taskId, entryId }),
   getDueSummary: () => ipcRenderer.invoke('projects:getDueSummary'),
+  // 專案範本與階段流程（workflow）
+  listProjectTemplates: () => ipcRenderer.invoke('projectTemplates:list'),
+  deleteProjectTemplate: (id) => ipcRenderer.invoke('projectTemplates:delete', id),
+  createProjectFromTemplate: (payload) =>
+    ipcRenderer.invoke('projects:createFromTemplate', payload),
+  setWorkflowMeta: (projectId, meta) =>
+    ipcRenderer.invoke('projects:workflow:setMeta', { projectId, ...meta }),
+  updateWorkflowStep: (projectId, stepId, patch) =>
+    ipcRenderer.invoke('projects:workflow:updateStep', { projectId, stepId, patch }),
+  setWorkflowStepStatus: (projectId, stepId, status) =>
+    ipcRenderer.invoke('projects:workflow:setStepStatus', { projectId, stepId, status }),
+  composeWorkflowPrompt: (projectId, stepId) =>
+    ipcRenderer.invoke('projects:workflow:compose', { projectId, stepId }),
+  saveWorkflowAsTemplate: (projectId, payload) =>
+    ipcRenderer.invoke('projects:workflow:saveAsTemplate', { projectId, ...payload }),
   onRemindersChanged: (cb) => {
     const handler = (e, summary) => cb(summary);
     ipcRenderer.on('reminders:changed', handler);
