@@ -682,3 +682,211 @@ body {
   color: #c0392b;
   font-weight: 600;
 }
+
+/* --- 從範本建立專案 --- */
+#proj-template-picker {
+  flex: 1;
+  flex-direction: column;
+  padding: 20px;
+  overflow-y: auto;
+  display: flex;
+}
+.tpl-hint {
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.6;
+  margin-bottom: 12px;
+}
+#tpl-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.tpl-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 10px 12px;
+  cursor: pointer;
+}
+.tpl-card:hover {
+  background: var(--bg-hover);
+}
+.tpl-card.active {
+  border-color: var(--accent);
+  background: var(--bg-active);
+}
+.tpl-card-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.tpl-card-name {
+  font-size: 14px;
+  font-weight: 600;
+  flex: 1;
+}
+.tpl-badge {
+  font-size: 10px;
+  padding: 1px 6px;
+  border-radius: 10px;
+  background: var(--bg-hover);
+  color: var(--text-secondary);
+}
+.tpl-card-desc {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+.tpl-card-stages {
+  margin-top: 6px;
+  font-size: 12px;
+  line-height: 1.6;
+}
+.tpl-card-stages .tpl-stage-name {
+  font-weight: 600;
+}
+.tpl-card-stages .tpl-stage-steps {
+  color: var(--text-secondary);
+}
+.tpl-error {
+  min-height: 18px;
+  color: #e5484d;
+  font-size: 12px;
+  margin-bottom: 6px;
+}
+#tpl-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+/* --- 階段流程分頁 --- */
+.wf-meta {
+  display: flex;
+  gap: 12px;
+}
+#wf-progress {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+#wf-body {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+#wf-steps {
+  width: 230px;
+  flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.wf-stage-head {
+  margin-top: 8px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  border-left: 3px solid var(--accent);
+  background: var(--bg-active);
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  gap: 6px;
+}
+.wf-stage-head:first-child {
+  margin-top: 0;
+}
+.wf-stage-head .wf-stage-count {
+  color: var(--text-secondary);
+  font-weight: normal;
+  flex-shrink: 0;
+}
+.wf-step-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+}
+.wf-step-row:hover {
+  background: var(--bg-hover);
+}
+.wf-step-row.active {
+  background: var(--bg-active);
+  outline: 1px solid var(--accent);
+}
+.wf-step-icon {
+  flex-shrink: 0;
+  width: 14px;
+  text-align: center;
+  color: var(--text-secondary);
+}
+.wf-step-row.doing .wf-step-icon {
+  color: #f5a623;
+}
+.wf-step-row.done .wf-step-icon {
+  color: #2ecc71;
+}
+.wf-step-row.done .wf-step-title {
+  color: var(--text-secondary);
+}
+.wf-step-title {
+  flex: 1;
+  min-width: 0;
+}
+#wf-detail {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+#wf-detail-title {
+  font-size: 15px;
+  font-weight: 600;
+}
+#wf-detail-stage {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-prompt-preview {
+  min-height: 190px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  line-height: 1.5;
+}
+#wf-prompt-edit {
+  min-height: 140px;
+  margin-top: 6px;
+  font-size: 12px;
+}
+#wf-prompt-edit-box summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-output {
+  min-height: 160px;
+}
+.wf-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+  margin: 2px 0 6px;
+}
+#wf-saved-hint,
+#wf-template-saved {
+  min-height: 16px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-template-save {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}

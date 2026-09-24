@@ -28,6 +28,8 @@
   const issueListEl = document.getElementById('proj-issue-list');
   const issueFilterStatusEl = document.getElementById('issue-filter-status');
 
+  const templatePickerEl = document.getElementById('proj-template-picker');
+
   let allProjects = [];
   let allAccounts = [];
   let currentProjectId = null;
@@ -125,7 +127,7 @@
   // ---------------------------------------------------------------------
   // 分頁切換
   // ---------------------------------------------------------------------
-  const TAB_IDS = ['tasks', 'calendar', 'gantt', 'issues'];
+  const TAB_IDS = ['tasks', 'calendar', 'gantt', 'issues', 'workflow'];
   function switchTab(tab) {
     TAB_IDS.forEach((id) => {
       document.getElementById(`tab-${id}`).classList.toggle('active', id === tab);
@@ -134,6 +136,7 @@
     if (tab === 'calendar') renderCalendar();
     if (tab === 'gantt') renderGantt();
     if (tab === 'issues') renderIssues();
+    if (tab === 'workflow') renderWorkflow();
   }
   TAB_IDS.forEach((id) => {
     document.getElementById(`tab-${id}`).addEventListener('click', () => switchTab(id));
@@ -854,6 +857,9 @@
     document
       .getElementById('btn-overview')
       .classList.toggle('active', mode === 'overview');
+    document
+      .getElementById('btn-new-from-template')
+      .classList.toggle('active', mode === 'template');
   }
 
   function renderOverviewLegend() {
@@ -1237,6 +1243,7 @@
 
   function showOverview() {
     currentProjectId = null;
+    templatePickerEl.style.display = 'none';
     editorEl.style.display = 'none';
     emptyEl.style.display = 'none';
     document.getElementById('proj-overview').style.display = 'flex';
@@ -1248,10 +1255,436 @@
   document.getElementById('btn-overview').addEventListener('click', showOverview);
 
   // ---------------------------------------------------------------------
+  // 從範本建立專案（選範本 + 輸入專案主題）
+  //
+  // 範本清單與展開成專案的邏輯都在主行程（lib/workflow.js、lib/ipc/projects.js），
+  // 這裡只負責挑選與送出。
+  // ---------------------------------------------------------------------
+  let templates = [];
+  let selectedTemplateId = null;
+  const tplListEl = document.getElementById('tpl-list');
+  const tplTopicEl = document.getElementById('tpl-topic');
+  const tplNameEl = document.getElementById('tpl-name');
+  const tplErrorEl = document.getElementById('tpl-error');
+
+  function renderTemplateList() {
+    tplListEl.innerHTML = '';
+    templates.forEach((tpl) => {
+      const card = document.createElement('div');
+      card.className = 'tpl-card' + (tpl.id === selectedTemplateId ? ' active' : '');
+
+      const head = document.createElement('div');
+      head.className = 'tpl-card-head';
+      const name = document.createElement('span');
+      name.className = 'tpl-card-name';
+      name.textContent = tpl.name;
+      const badge = document.createElement('span');
+      badge.className = 'tpl-badge';
+      badge.textContent = window.i18n.t(
+        tpl.builtIn ? 'project.tplBuiltIn' : 'project.tplCustom'
+      );
+      const stepCount = tpl.stages.reduce((n, st) => n + st.steps.length, 0);
+      const count = document.createElement('span');
+      count.className = 'tpl-badge';
+      count.textContent = window.i18n.t('project.tplCount', {
+        stages: tpl.stages.length,
+        steps: stepCount,
+      });
+      head.appendChild(name);
+      head.appendChild(badge);
+      head.appendChild(count);
+      if (!tpl.builtIn) {
+        const del = document.createElement('button');
+        del.className = 'step-icon-btn';
+        del.textContent = '✕';
+        del.title = window.i18n.t('project.tplDelete');
+        del.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          if (
+            !window.confirm(window.i18n.t('project.tplDeleteConfirm', { name: tpl.name }))
+          )
+            return;
+          await window.workspaceAPI.deleteProjectTemplate(tpl.id);
+          templates = await window.workspaceAPI.listProjectTemplates();
+          if (!templates.some((t) => t.id === selectedTemplateId)) {
+            selectedTemplateId = templates.length ? templates[0].id : null;
+          }
+          renderTemplateList();
+        });
+        head.appendChild(del);
+      }
+      card.appendChild(head);
+
+      if (tpl.description) {
+        const desc = document.createElement('div');
+        desc.className = 'tpl-card-desc';
+        desc.textContent = tpl.description;
+        card.appendChild(desc);
+      }
+
+      const stages = document.createElement('div');
+      stages.className = 'tpl-card-stages';
+      tpl.stages.forEach((st) => {
+        const line = document.createElement('div');
+        const stageName = document.createElement('span');
+        stageName.className = 'tpl-stage-name';
+        stageName.textContent = st.title ? `${st.title}：` : '';
+        const stageSteps = document.createElement('span');
+        stageSteps.className = 'tpl-stage-steps';
+        stageSteps.textContent = st.steps.map((x) => x.title).join(' → ');
+        line.appendChild(stageName);
+        line.appendChild(stageSteps);
+        stages.appendChild(line);
+      });
+      card.appendChild(stages);
+
+      card.addEventListener('click', () => {
+        selectedTemplateId = tpl.id;
+        renderTemplateList();
+      });
+      tplListEl.appendChild(card);
+    });
+  }
+
+  async function showTemplatePicker() {
+    currentProjectId = null;
+    editorEl.style.display = 'none';
+    emptyEl.style.display = 'none';
+    document.getElementById('proj-overview').style.display = 'none';
+    templatePickerEl.style.display = 'flex';
+    setListToolbarActive('template');
+    tplErrorEl.textContent = '';
+    templates = await window.workspaceAPI.listProjectTemplates();
+    if (!templates.some((t) => t.id === selectedTemplateId)) {
+      selectedTemplateId = templates.length ? templates[0].id : null;
+    }
+    renderTemplateList();
+    renderList();
+    tplTopicEl.focus();
+  }
+  document
+    .getElementById('btn-new-from-template')
+    .addEventListener('click', showTemplatePicker);
+
+  document.getElementById('btn-tpl-cancel').addEventListener('click', () => {
+    templatePickerEl.style.display = 'none';
+    setListToolbarActive('project');
+    emptyEl.style.display = 'flex';
+  });
+
+  document.getElementById('btn-tpl-create').addEventListener('click', async () => {
+    const topic = tplTopicEl.value.trim();
+    if (!topic) {
+      tplErrorEl.textContent = window.i18n.t('project.tplErrTopic');
+      tplTopicEl.focus();
+      return;
+    }
+    if (!selectedTemplateId) {
+      tplErrorEl.textContent = window.i18n.t('project.tplErrGeneric');
+      return;
+    }
+    tplErrorEl.textContent = '';
+    const res = await window.workspaceAPI.createProjectFromTemplate({
+      templateId: selectedTemplateId,
+      topic,
+      name: tplNameEl.value.trim(),
+    });
+    if (!res || !res.ok) {
+      tplErrorEl.textContent = window.i18n.t(
+        res && res.error === 'topic-required'
+          ? 'project.tplErrTopic'
+          : 'project.tplErrGeneric'
+      );
+      return;
+    }
+    tplTopicEl.value = '';
+    tplNameEl.value = '';
+    allProjects = res.projects;
+    selectProject(res.projectId, 'workflow');
+  });
+
+  // ---------------------------------------------------------------------
+  // 階段流程：依序執行範本的分階段提示詞
+  //
+  // 每個步驟：複製「已帶入專案主題與前面步驟產出」的完整提示詞給 AI → 把 AI 的產出貼回來
+  // → 標記完成 → 下一步。提示詞的組合在主行程（projects:workflow:compose），這裡只顯示與複製，
+  // 不重複實作組合邏輯。步驟狀態與對應任務狀態由主行程同步，回傳完整專案清單後，這裡再把
+  // 任務狀態同步回 editingTasks（否則之後按「儲存專案」會把任務狀態蓋回舊值）。
+  // ---------------------------------------------------------------------
+  let wfSelectedStepId = null;
+  let wfComposeToken = 0; // 連續快速切換步驟時，只採用最後一次 compose 的結果
+  const wfTopicEl = document.getElementById('wf-topic');
+  const wfContextEl = document.getElementById('wf-context-mode');
+  const wfProgressEl = document.getElementById('wf-progress');
+  const wfStepsEl = document.getElementById('wf-steps');
+  const wfDetailTitleEl = document.getElementById('wf-detail-title');
+  const wfDetailStageEl = document.getElementById('wf-detail-stage');
+  const wfPreviewEl = document.getElementById('wf-prompt-preview');
+  const wfPromptEditEl = document.getElementById('wf-prompt-edit');
+  const wfOutputEl = document.getElementById('wf-output');
+  const wfSavedHintEl = document.getElementById('wf-saved-hint');
+  const wfCopyBtn = document.getElementById('btn-wf-copy');
+  const wfPrevBtn = document.getElementById('btn-wf-prev');
+  const wfDoneBtn = document.getElementById('btn-wf-done');
+  const wfTemplateNameEl = document.getElementById('wf-template-name');
+  const wfTemplateSavedEl = document.getElementById('wf-template-saved');
+
+  function currentWorkflow() {
+    const project = allProjects.find((p) => p.id === currentProjectId);
+    return project && project.workflow ? project.workflow : null;
+  }
+
+  function wfFlash(text) {
+    wfSavedHintEl.textContent = text;
+    wfTemplateSavedEl.textContent = '';
+  }
+
+  // 「階段序號-階段內序號」編號（跟 lib/workflow.js 的 stepNumbers() 一致：
+  // 相鄰且 stage 相同的步驟屬於同一階段）
+  function wfStepNumbers(steps) {
+    const numbers = [];
+    let stageIdx = 0;
+    let inStage = 0;
+    let prev = null;
+    steps.forEach((s) => {
+      if (prev === null || s.stage !== prev) {
+        stageIdx += 1;
+        inStage = 0;
+      }
+      inStage += 1;
+      prev = s.stage;
+      numbers.push(`${stageIdx}-${inStage}`);
+    });
+    return numbers;
+  }
+
+  // 主行程回傳最新的專案清單：更新本地狀態，並把已持久化的任務狀態同步回 editingTasks
+  function adoptProjects(list) {
+    allProjects = list;
+    const project = allProjects.find((p) => p.id === currentProjectId);
+    if (project) {
+      project.tasks.forEach((persisted) => {
+        const editing = editingTasks.find((t) => t.id === persisted.id);
+        if (editing) editing.status = persisted.status;
+      });
+      renderTasks();
+    }
+    renderList();
+  }
+
+  function renderWorkflow() {
+    const wf = currentWorkflow();
+    if (!wf) return;
+    wfTopicEl.value = wf.topic || '';
+    wfContextEl.value = wf.contextMode || 'all';
+    if (!wf.steps.some((s) => s.id === wfSelectedStepId)) {
+      wfSelectedStepId = wf.currentStepId || (wf.steps[0] && wf.steps[0].id) || null;
+    }
+    renderWorkflowSteps(wf);
+    renderWorkflowDetail(wf);
+  }
+
+  function renderWorkflowSteps(wf) {
+    const done = wf.steps.filter((s) => s.status === 'done').length;
+    wfProgressEl.textContent = window.i18n.t('project.wfProgress', {
+      done,
+      total: wf.steps.length,
+    });
+
+    const numbers = wfStepNumbers(wf.steps);
+    const icons = { todo: '○', doing: '◐', done: '●' };
+    wfStepsEl.innerHTML = '';
+    let prevStage = null;
+    wf.steps.forEach((step, i) => {
+      if (step.stage !== prevStage) {
+        prevStage = step.stage;
+        const inThisStage = wf.steps.filter(
+          (s, j) =>
+            j >= i && wf.steps.slice(i, j + 1).every((x) => x.stage === step.stage)
+        );
+        const head = document.createElement('div');
+        head.className = 'wf-stage-head';
+        const title = document.createElement('span');
+        title.textContent = step.stage || window.i18n.t('project.wfNoStage');
+        const count = document.createElement('span');
+        count.className = 'wf-stage-count';
+        count.textContent = `${inThisStage.filter((s) => s.status === 'done').length}/${inThisStage.length}`;
+        head.appendChild(title);
+        head.appendChild(count);
+        wfStepsEl.appendChild(head);
+      }
+      const row = document.createElement('div');
+      row.className =
+        'wf-step-row' +
+        (step.status !== 'todo' ? ` ${step.status}` : '') +
+        (step.id === wfSelectedStepId ? ' active' : '');
+      const icon = document.createElement('span');
+      icon.className = 'wf-step-icon';
+      icon.textContent = icons[step.status] || icons.todo;
+      const title = document.createElement('span');
+      title.className = 'wf-step-title';
+      title.textContent = `${numbers[i]} ${step.title}`;
+      row.appendChild(icon);
+      row.appendChild(title);
+      row.addEventListener('click', () => selectWorkflowStep(step.id));
+      wfStepsEl.appendChild(row);
+    });
+  }
+
+  async function refreshComposedPrompt() {
+    const token = ++wfComposeToken;
+    const text = await window.workspaceAPI.composeWorkflowPrompt(
+      currentProjectId,
+      wfSelectedStepId
+    );
+    if (token === wfComposeToken) wfPreviewEl.value = text;
+    return text;
+  }
+
+  function renderWorkflowDetail(wf) {
+    const idx = wf.steps.findIndex((s) => s.id === wfSelectedStepId);
+    const step = wf.steps[idx];
+    if (!step) return;
+    const numbers = wfStepNumbers(wf.steps);
+    wfDetailTitleEl.textContent = `${numbers[idx]} ${step.title}`;
+    // 「階段名稱 · 第 n/total 步 · 狀態」；用 ' · ' 分隔（不用全形空白，會被 lint 擋下）
+    wfDetailStageEl.textContent = [
+      step.stage,
+      window.i18n.t('project.wfStepOf', { n: idx + 1, total: wf.steps.length }),
+      window.i18n.t(`project.taskStatus${capitalize(step.status)}`),
+    ]
+      .filter(Boolean)
+      .join(' · ');
+    wfPromptEditEl.value = step.prompt || '';
+    wfOutputEl.value = step.output || '';
+    wfPrevBtn.disabled = idx === 0;
+    wfDoneBtn.textContent = window.i18n.t(
+      idx === wf.steps.length - 1 ? 'project.wfDoneLast' : 'project.wfDoneNext'
+    );
+    wfCopyBtn.textContent = window.i18n.t('project.wfCopy');
+    refreshComposedPrompt();
+  }
+
+  async function selectWorkflowStep(stepId) {
+    wfSelectedStepId = stepId;
+    wfFlash('');
+    renderWorkflow();
+    // 記住停在哪一步，重開視窗後接續
+    adoptProjects(
+      await window.workspaceAPI.setWorkflowMeta(currentProjectId, {
+        currentStepId: stepId,
+      })
+    );
+  }
+
+  wfTopicEl.addEventListener('change', async () => {
+    adoptProjects(
+      await window.workspaceAPI.setWorkflowMeta(currentProjectId, {
+        topic: wfTopicEl.value,
+      })
+    );
+    refreshComposedPrompt();
+  });
+  wfContextEl.addEventListener('change', async () => {
+    adoptProjects(
+      await window.workspaceAPI.setWorkflowMeta(currentProjectId, {
+        contextMode: wfContextEl.value,
+      })
+    );
+    refreshComposedPrompt();
+  });
+
+  // 產出貼回來、提示詞原文改動：離開輸入框（change）就即時存檔，不用按「儲存專案」
+  wfOutputEl.addEventListener('change', async () => {
+    adoptProjects(
+      await window.workspaceAPI.updateWorkflowStep(currentProjectId, wfSelectedStepId, {
+        output: wfOutputEl.value,
+      })
+    );
+    wfSavedHintEl.textContent = window.i18n.t('project.wfSaved');
+    renderWorkflowSteps(currentWorkflow());
+  });
+  wfPromptEditEl.addEventListener('change', async () => {
+    adoptProjects(
+      await window.workspaceAPI.updateWorkflowStep(currentProjectId, wfSelectedStepId, {
+        prompt: wfPromptEditEl.value,
+      })
+    );
+    refreshComposedPrompt();
+  });
+
+  async function setWfStatus(stepId, status) {
+    adoptProjects(
+      await window.workspaceAPI.setWorkflowStepStatus(currentProjectId, stepId, status)
+    );
+  }
+
+  wfCopyBtn.addEventListener('click', async () => {
+    const text = await refreshComposedPrompt();
+    await navigator.clipboard.writeText(text);
+    wfCopyBtn.textContent = window.i18n.t('project.wfCopied');
+    setTimeout(() => {
+      wfCopyBtn.textContent = window.i18n.t('project.wfCopy');
+    }, 1500);
+    // 複製提示詞 = 這一步開始了
+    const wf = currentWorkflow();
+    const step = wf && wf.steps.find((s) => s.id === wfSelectedStepId);
+    if (step && step.status === 'todo') {
+      await setWfStatus(step.id, 'doing');
+      renderWorkflow();
+    }
+  });
+
+  wfPrevBtn.addEventListener('click', () => {
+    const wf = currentWorkflow();
+    const idx = wf.steps.findIndex((s) => s.id === wfSelectedStepId);
+    if (idx > 0) selectWorkflowStep(wf.steps[idx - 1].id);
+  });
+
+  document.getElementById('btn-wf-reset').addEventListener('click', async () => {
+    await setWfStatus(wfSelectedStepId, 'todo');
+    renderWorkflow();
+  });
+
+  wfDoneBtn.addEventListener('click', async () => {
+    await setWfStatus(wfSelectedStepId, 'done');
+    // 主行程標成完成時會把「目前步驟」移到下一個還沒完成的步驟，跟著過去
+    const wf = currentWorkflow();
+    wfSelectedStepId = wf.currentStepId;
+    wfFlash('');
+    renderWorkflow();
+  });
+
+  document.getElementById('btn-wf-save-template').addEventListener('click', async () => {
+    const wf = currentWorkflow();
+    if (!wf) return;
+    const name = wfTemplateNameEl.value.trim() || `${wf.templateName || ''}`.trim();
+    const res = await window.workspaceAPI.saveWorkflowAsTemplate(currentProjectId, {
+      name,
+    });
+    if (res && res.ok) {
+      wfTemplateNameEl.value = '';
+      wfTemplateSavedEl.textContent = window.i18n.t('project.wfTemplateSaved', { name });
+    }
+  });
+
+  // 切換語言時，動態產生的內容也要跟著換
+  document.addEventListener('i18n:updated', () => {
+    if (templatePickerEl.style.display !== 'none') renderTemplateList();
+    if (
+      editorEl.style.display !== 'none' &&
+      document.getElementById('panel-workflow').classList.contains('active')
+    ) {
+      renderWorkflow();
+    }
+  });
+
+  // ---------------------------------------------------------------------
   // 專案編輯
   // ---------------------------------------------------------------------
   function selectProject(id, initialTab) {
     document.getElementById('proj-overview').style.display = 'none';
+    templatePickerEl.style.display = 'none';
     setListToolbarActive('project');
     currentProjectId = id;
     expandedTimeTaskId = null;
@@ -1280,7 +1713,14 @@
     }
     selectedCalendarDate = null;
     calendarMonth = startOfMonth(new Date());
-    switchTab(initialTab || 'tasks');
+    // 「階段流程」分頁只有從範本建立的專案才有；沒有流程的專案要求這個分頁時退回任務清單
+    const hasWorkflow = !!(project && project.workflow);
+    document.getElementById('tab-workflow').style.display = hasWorkflow ? '' : 'none';
+    wfSelectedStepId = null;
+    wfFlash('');
+    switchTab(
+      initialTab === 'workflow' && !hasWorkflow ? 'tasks' : initialTab || 'tasks'
+    );
     renderTasks();
     renderList();
   }

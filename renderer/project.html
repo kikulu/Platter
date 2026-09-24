@@ -16,6 +16,9 @@
         <button id="btn-new-project" class="primary" data-i18n="project.newProject">
           新增專案
         </button>
+        <button id="btn-new-from-template" data-i18n="project.newFromTemplate">
+          從範本建立
+        </button>
         <button id="btn-overview" data-i18n="project.overview">跨專案總覽</button>
       </div>
       <div id="proj-list"></div>
@@ -23,6 +26,37 @@
 
     <div id="proj-empty" data-i18n="project.selectPrompt">
       從左側選擇一個專案，或點「新增專案」建立新的
+    </div>
+
+    <!-- 從範本建立專案：選範本 + 輸入專案主題 -->
+    <div id="proj-template-picker" style="display: none">
+      <h2 class="overview-title" data-i18n="project.tplTitle">從範本建立專案</h2>
+      <div class="tpl-hint" data-i18n="project.tplHint">
+        選一組專案範本並輸入專案主題，就會建立一個帶有分階段提示詞流程的專案；接著在專案的「階段流程」分頁，依序把每個步驟的提示詞複製給
+        AI、貼回產出，逐步完成專案。
+      </div>
+      <div id="tpl-list"></div>
+      <div class="field">
+        <label class="label" data-i18n="project.tplTopic">專案主題</label>
+        <textarea
+          id="tpl-topic"
+          style="min-height: 64px"
+          data-i18n-placeholder="project.tplTopicPlaceholder"
+        ></textarea>
+      </div>
+      <div class="field">
+        <label class="label" data-i18n="project.tplName"
+          >專案名稱（選填，預設用主題）</label
+        >
+        <input type="text" id="tpl-name" />
+      </div>
+      <div id="tpl-error" class="tpl-error"></div>
+      <div id="tpl-actions">
+        <button id="btn-tpl-cancel" data-i18n="project.tplCancel">取消</button>
+        <button id="btn-tpl-create" class="primary" data-i18n="project.tplCreate">
+          建立專案
+        </button>
+      </div>
     </div>
 
     <div id="proj-editor" style="display: none">
@@ -68,6 +102,14 @@
         </button>
         <button id="tab-issues" class="tab-btn" data-i18n="project.tabIssues">
           Issue 管理
+        </button>
+        <button
+          id="tab-workflow"
+          class="tab-btn"
+          style="display: none"
+          data-i18n="project.tabWorkflow"
+        >
+          階段流程
         </button>
       </div>
 
@@ -142,6 +184,82 @@
         <div id="proj-issue-list"></div>
         <div class="row" style="margin-top: 8px">
           <button id="btn-add-issue" data-i18n="project.addIssue">＋ 新增 Issue</button>
+        </div>
+      </div>
+
+      <!-- 階段流程：依序執行範本的分階段提示詞（只有從範本建立的專案才有） -->
+      <div id="panel-workflow" class="tab-panel">
+        <div class="wf-meta">
+          <div class="field" style="flex: 2">
+            <label class="label" data-i18n="project.wfTopic">專案主題</label>
+            <input type="text" id="wf-topic" />
+          </div>
+          <div class="field" style="flex: 1">
+            <label class="label" data-i18n="project.wfContextMode"
+              >前面步驟產出的帶入方式</label
+            >
+            <select id="wf-context-mode">
+              <option value="all" data-i18n="project.wfContextAll">全部帶入</option>
+              <option value="previous" data-i18n="project.wfContextPrevious">
+                只帶入上一步
+              </option>
+              <option value="none" data-i18n="project.wfContextNone">
+                不帶入（同一段 AI 對話已有）
+              </option>
+            </select>
+          </div>
+        </div>
+        <div id="wf-progress"></div>
+        <div id="wf-body">
+          <div id="wf-steps"></div>
+          <div id="wf-detail">
+            <div id="wf-detail-title"></div>
+            <div id="wf-detail-stage"></div>
+            <label class="label" data-i18n="project.wfPromptLabel"
+              >本步驟要複製給 AI 的提示詞（已帶入主題與前面步驟的產出）</label
+            >
+            <textarea id="wf-prompt-preview" readonly></textarea>
+            <details id="wf-prompt-edit-box">
+              <summary data-i18n="project.wfEditPrompt">編輯本步驟提示詞原文</summary>
+              <textarea id="wf-prompt-edit"></textarea>
+            </details>
+            <div class="wf-actions">
+              <button id="btn-wf-copy" class="primary" data-i18n="project.wfCopy">
+                複製提示詞
+              </button>
+            </div>
+            <label class="label" data-i18n="project.wfOutputLabel"
+              >AI 的產出（貼回這裡；會帶入後面步驟的提示詞）</label
+            >
+            <textarea
+              id="wf-output"
+              data-i18n-placeholder="project.wfOutputPlaceholder"
+            ></textarea>
+            <div id="wf-saved-hint"></div>
+            <div class="wf-actions">
+              <button id="btn-wf-prev" data-i18n="project.wfPrev">上一步</button>
+              <button id="btn-wf-reset" data-i18n="project.wfReset">重設為待辦</button>
+              <button id="btn-wf-done" class="primary" data-i18n="project.wfDoneNext">
+                標記完成並前往下一步
+              </button>
+            </div>
+          </div>
+        </div>
+        <div id="wf-template-save">
+          <label class="label" data-i18n="project.wfSaveTemplateLabel"
+            >把這個流程另存為專案範本（含你在這個專案改過的提示詞，不含產出）</label
+          >
+          <div class="row">
+            <input
+              type="text"
+              id="wf-template-name"
+              data-i18n-placeholder="project.wfTemplateNamePlaceholder"
+            />
+            <button id="btn-wf-save-template" data-i18n="project.wfSaveTemplate">
+              另存為範本
+            </button>
+          </div>
+          <div id="wf-template-saved"></div>
         </div>
       </div>
 
