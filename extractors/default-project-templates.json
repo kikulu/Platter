@@ -193,6 +193,63 @@
           ]
         }
       ]
+    },
+    {
+      "id": "proj-tpl-openspec",
+      "name": "OpenSpec 變更流程（規格先行，可匯出到專案）",
+      "description": "依 OpenSpec 的流程：探索 → 提案（proposal.md）→ 差異規格（ADDED／MODIFIED／REMOVED）→ 設計（design.md）→ 任務（tasks.md）→ 實作 → 驗證 → 封存預演。適合在既有專案上逐步修改行為。流程的產出可以一鍵匯出成專案裡的 openspec/changes/<變更名稱>/ 資料夾，也能先匯入專案現有的 openspec/specs 當作差異規格的依據。",
+      "stages": [
+        {
+          "title": "階段 1：探索與提案",
+          "steps": [
+            {
+              "itemDefaultId": "kb-default-049"
+            },
+            {
+              "itemDefaultId": "kb-default-050",
+              "artifact": "proposal.md"
+            }
+          ]
+        },
+        {
+          "title": "階段 2：規格與設計",
+          "steps": [
+            {
+              "itemDefaultId": "kb-default-051",
+              "artifact": "specs/general/spec.md",
+              "useBaseContext": true
+            },
+            {
+              "itemDefaultId": "kb-default-052",
+              "artifact": "design.md"
+            }
+          ]
+        },
+        {
+          "title": "階段 3：任務與實作",
+          "steps": [
+            {
+              "itemDefaultId": "kb-default-053",
+              "artifact": "tasks.md"
+            },
+            {
+              "itemDefaultId": "kb-default-054"
+            }
+          ]
+        },
+        {
+          "title": "階段 4：驗證與封存",
+          "steps": [
+            {
+              "itemDefaultId": "kb-default-055"
+            },
+            {
+              "itemDefaultId": "kb-default-056",
+              "useBaseContext": true
+            }
+          ]
+        }
+      ]
     }
   ]
 }
