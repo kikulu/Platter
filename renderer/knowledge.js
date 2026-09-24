@@ -37,7 +37,11 @@
   let currentGroupId = null; // null = 新套餐（尚未儲存）
   let editingChecklist = []; // 目前項目編輯器裡的檢核表（記憶體內，按「儲存」才寫入）
   let editingRoleIds = []; // 目前項目編輯器裡的角色配置（記憶體內，按「儲存」才寫入）
-  let editingSteps = []; // 目前套餐編輯器裡的步驟（記憶體內，結構性變更要按「儲存套餐」才寫入）
+  // 目前套餐編輯器裡的列（記憶體內，結構性變更要按「儲存套餐」才寫入）。兩種列混排：
+  //   { type: 'stage', id, title }                階段標題
+  //   { type: 'step', id, itemId, checked }       步驟（屬於它上方最近的一個階段標題）
+  // 資料檔裡不存標題列，儲存時由 rowsToSteps() 攤平成每個步驟的 stage 欄位。
+  let editingRows = [];
 
   function parseTags(str) {
     return str
@@ -200,7 +204,14 @@
       const tagText = (g.tags || []).map((t) => `#${t}`).join(' ');
       const total = (g.steps || []).length;
       const done = (g.steps || []).filter((s) => s.checked).length;
-      meta.textContent = [tagText, `${done}/${total}`].filter(Boolean).join('  ');
+      const stageCount = countStages(g.steps || []);
+      meta.textContent = [
+        tagText,
+        stageCount ? window.i18n.t('knowledge.stageCount', { n: stageCount }) : '',
+        `${done}/${total}`,
+      ]
+        .filter(Boolean)
+        .join('  ');
 
       div.appendChild(title);
       div.appendChild(meta);
@@ -221,7 +232,23 @@
       (g.steps || []).some((s) => itemTitleById(s.itemId).toLowerCase().includes(query))
     )
       return true;
+    // 階段名稱（例如「階段 3：潤色與投稿」）
+    if ((g.steps || []).some((s) => (s.stage || '').toLowerCase().includes(query)))
+      return true;
     return false;
+  }
+
+  // 套餐有幾個階段：數「stage 名稱變化」的次數（不看空字串），跟編輯器裡
+  // 會顯示幾個階段標題列一致。
+  function countStages(steps) {
+    let count = 0;
+    let prev = '';
+    steps.forEach((s) => {
+      const stage = s.stage || '';
+      if (stage && stage !== prev) count += 1;
+      if (stage) prev = stage;
+    });
+    return count;
   }
 
   // 標籤/搜尋篩選後完全沒有符合的項目時顯示的提示；如果清單本身就是空的
@@ -414,111 +441,257 @@
   });
 
   // ---------------------------------------------------------------------
-  // 群組順序提示詞套餐編輯
+  // 群組順序提示詞套餐編輯（可分階段）
+  //
+  // 編輯器裡階段標題跟步驟是同一個清單、混排顯示：步驟屬於它上方最近的
+  // 階段標題，所以「把步驟移到別的階段」就是用 ↑↓ 越過標題列，不需要另外
+  // 一套指派介面。資料檔裡則是扁平的 steps，每個步驟帶一個 stage 名稱（見
+  // PROJECT_SPEC.md 第 5.3 節）；兩種形式的轉換在 stepsToRows() /
+  // rowsToSteps()。
   // ---------------------------------------------------------------------
+  const STEP_SEPARATOR = '\n\n---\n\n';
+
   function itemTitleById(itemId) {
     const it = allItems.find((i) => i.id === itemId);
     return it ? it.title : window.i18n.t('knowledge.deletedItem');
   }
 
+  // 一個提示詞項目「複製出去的完整文字」：有 content 就用 content（內建的拆分
+  // 範本 content 已經是系統＋使用者兩段合併版）；content 是空的（使用者只
+  // 填了系統／使用者兩欄）就把兩欄組起來，跟項目編輯器「複製內容」按鈕一致。
+  function promptTextOfItem(itemId) {
+    const it = allItems.find((i) => i.id === itemId);
+    if (!it) return '';
+    return it.content || [it.systemPrompt, it.userPrompt].filter(Boolean).join('\n\n');
+  }
+
+  function stepsToRows(steps) {
+    const rows = [];
+    let prev = '';
+    steps.forEach((s) => {
+      const stage = s.stage || '';
+      if (stage && stage !== prev) {
+        rows.push({ type: 'stage', id: genLocalId('stage'), title: stage });
+      }
+      // 沒有 stage 的步驟接在前一個階段底下（只會出現在手動改過的資料檔）
+      if (stage) prev = stage;
+      rows.push({
+        type: 'step',
+        id: s.id,
+        itemId: s.itemId,
+        checked: !!s.checked,
+      });
+    });
+    return rows;
+  }
+
+  function rowsToSteps() {
+    let stage = '';
+    const steps = [];
+    editingRows.forEach((row) => {
+      if (row.type === 'stage') {
+        stage = (row.title || '').trim();
+        return;
+      }
+      steps.push({ id: row.id, itemId: row.itemId, checked: !!row.checked, stage });
+    });
+    return steps;
+  }
+
+  function stepRows() {
+    return editingRows.filter((r) => r.type === 'step');
+  }
+
+  // 某個階段標題列底下的步驟（到下一個階段標題之前）
+  function stageStepRows(stageRowIdx) {
+    const out = [];
+    for (let i = stageRowIdx + 1; i < editingRows.length; i++) {
+      if (editingRows[i].type === 'stage') break;
+      out.push(editingRows[i]);
+    }
+    return out;
+  }
+
+  function defaultStageName(n) {
+    return window.i18n.t('knowledge.stageDefaultName', { n });
+  }
+
   function renderGroupProgress() {
-    const total = editingSteps.length;
-    const done = editingSteps.filter((s) => s.checked).length;
+    const steps = stepRows();
+    const total = steps.length;
+    const done = steps.filter((s) => s.checked).length;
     grpProgressEl.textContent = window.i18n.t('knowledge.groupProgress', { done, total });
   }
 
-  function renderSteps() {
-    grpStepsListEl.innerHTML = '';
-    editingSteps.forEach((step, idx) => {
-      const row = document.createElement('div');
-      row.className = 'step-row';
+  async function copyText(text) {
+    await navigator.clipboard.writeText(text);
+    alert(window.i18n.t('knowledge.copied'));
+  }
 
-      const checkbox = document.createElement('input');
-      checkbox.type = 'checkbox';
-      checkbox.checked = !!step.checked;
-      checkbox.addEventListener('change', async () => {
-        step.checked = checkbox.checked;
-        renderGroupProgress();
-        renderList();
-        // 檢核表機制：套餐的勾選狀態即時持久化，不用等按「儲存套餐」
-        if (currentGroupId) {
-          const kb = await window.workspaceAPI.toggleGroupStep(
-            currentGroupId,
-            step.id,
-            step.checked
-          );
-          allGroups = kb.groups;
-        }
-      });
+  function moveRow(idx, delta) {
+    const target = idx + delta;
+    if (target < 0 || target >= editingRows.length) return;
+    [editingRows[idx], editingRows[target]] = [editingRows[target], editingRows[idx]];
+    renderSteps();
+  }
 
-      const order = document.createElement('span');
-      order.className = 'step-order';
-      order.textContent = `${idx + 1}.`;
+  function makeIconButton(text, title, onClick, extraClass) {
+    const btn = document.createElement('button');
+    btn.className = 'step-icon-btn' + (extraClass ? ` ${extraClass}` : '');
+    btn.textContent = text;
+    if (title) btn.title = title;
+    btn.addEventListener('click', onClick);
+    return btn;
+  }
 
-      const text = document.createElement('span');
-      text.className = 'step-text' + (step.checked ? ' checked' : '');
-      text.textContent = itemTitleById(step.itemId);
+  function buildStageRow(row, idx, stageNo) {
+    const el = document.createElement('div');
+    el.className = 'stage-row';
 
-      const upBtn = document.createElement('button');
-      upBtn.className = 'step-icon-btn';
-      upBtn.textContent = '↑';
-      upBtn.disabled = idx === 0;
-      upBtn.addEventListener('click', () => {
-        [editingSteps[idx - 1], editingSteps[idx]] = [
-          editingSteps[idx],
-          editingSteps[idx - 1],
-        ];
-        renderSteps();
-      });
+    const marker = document.createElement('span');
+    marker.className = 'stage-marker';
+    marker.textContent = '◆';
 
-      const downBtn = document.createElement('button');
-      downBtn.className = 'step-icon-btn';
-      downBtn.textContent = '↓';
-      downBtn.disabled = idx === editingSteps.length - 1;
-      downBtn.addEventListener('click', () => {
-        [editingSteps[idx + 1], editingSteps[idx]] = [
-          editingSteps[idx],
-          editingSteps[idx + 1],
-        ];
-        renderSteps();
-      });
-
-      const copyBtn = document.createElement('button');
-      copyBtn.className = 'step-icon-btn';
-      copyBtn.textContent = '⧉';
-      copyBtn.title = window.i18n.t('knowledge.copyStep');
-      copyBtn.addEventListener('click', async () => {
-        const it = allItems.find((i) => i.id === step.itemId);
-        await navigator.clipboard.writeText(it ? it.content : '');
-        alert(window.i18n.t('knowledge.copied'));
-      });
-
-      const removeBtn = document.createElement('button');
-      removeBtn.className = 'step-icon-btn danger-text';
-      removeBtn.textContent = '✕';
-      removeBtn.addEventListener('click', () => {
-        editingSteps = editingSteps.filter((s) => s.id !== step.id);
-        renderSteps();
-        renderGroupProgress();
-      });
-
-      row.appendChild(checkbox);
-      row.appendChild(order);
-      row.appendChild(text);
-      row.appendChild(upBtn);
-      row.appendChild(downBtn);
-      row.appendChild(copyBtn);
-      row.appendChild(removeBtn);
-      grpStepsListEl.appendChild(row);
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.className = 'stage-title-input';
+    titleInput.value = row.title;
+    titleInput.placeholder = window.i18n.t('knowledge.stageNamePlaceholder');
+    titleInput.addEventListener('input', () => {
+      row.title = titleInput.value;
+    });
+    titleInput.addEventListener('change', () => {
+      // 名稱清空就退回預設名稱，避免存成一個看不出是階段的空標題
+      row.title = titleInput.value.trim() || defaultStageName(stageNo);
+      titleInput.value = row.title;
     });
 
-    if (editingSteps.length === 0) {
+    const stageSteps = stageStepRows(idx);
+    const progress = document.createElement('span');
+    progress.className = 'stage-progress';
+    progress.textContent = `${stageSteps.filter((s) => s.checked).length}/${stageSteps.length}`;
+
+    const upBtn = makeIconButton('↑', '', () => moveRow(idx, -1));
+    upBtn.disabled = idx === 0;
+    const downBtn = makeIconButton('↓', '', () => moveRow(idx, 1));
+    downBtn.disabled = idx === editingRows.length - 1;
+
+    el.appendChild(marker);
+    el.appendChild(titleInput);
+    el.appendChild(progress);
+    el.appendChild(
+      makeIconButton('⧉', window.i18n.t('knowledge.copyStage'), () =>
+        copyText(
+          stageSteps
+            .map((s) => promptTextOfItem(s.itemId))
+            .filter(Boolean)
+            .join(STEP_SEPARATOR)
+        )
+      )
+    );
+    el.appendChild(upBtn);
+    el.appendChild(downBtn);
+    el.appendChild(
+      makeIconButton(
+        '✕',
+        window.i18n.t('knowledge.removeStage'),
+        () => {
+          // 只移除標題列，底下的步驟保留（併入上一個階段，或變成未分階段）
+          editingRows = editingRows.filter((r) => r.id !== row.id);
+          renderSteps();
+        },
+        'danger-text'
+      )
+    );
+    return el;
+  }
+
+  function buildStepRow(step, idx, stepNo, staged) {
+    const el = document.createElement('div');
+    el.className = 'step-row' + (staged ? ' staged' : '');
+
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = !!step.checked;
+    checkbox.addEventListener('change', async () => {
+      step.checked = checkbox.checked;
+      renderSteps();
+      renderList();
+      // 檢核表機制：套餐的勾選狀態即時持久化，不用等按「儲存套餐」
+      if (currentGroupId) {
+        const kb = await window.workspaceAPI.toggleGroupStep(
+          currentGroupId,
+          step.id,
+          step.checked
+        );
+        allGroups = kb.groups;
+      }
+    });
+
+    const order = document.createElement('span');
+    order.className = 'step-order';
+    order.textContent = `${stepNo}.`;
+
+    const text = document.createElement('span');
+    text.className = 'step-text' + (step.checked ? ' checked' : '');
+    text.textContent = itemTitleById(step.itemId);
+
+    const upBtn = makeIconButton('↑', '', () => moveRow(idx, -1));
+    upBtn.disabled = idx === 0;
+    const downBtn = makeIconButton('↓', '', () => moveRow(idx, 1));
+    downBtn.disabled = idx === editingRows.length - 1;
+
+    el.appendChild(checkbox);
+    el.appendChild(order);
+    el.appendChild(text);
+    el.appendChild(upBtn);
+    el.appendChild(downBtn);
+    el.appendChild(
+      makeIconButton('⧉', window.i18n.t('knowledge.copyStep'), () =>
+        copyText(promptTextOfItem(step.itemId))
+      )
+    );
+    el.appendChild(
+      makeIconButton(
+        '✕',
+        '',
+        () => {
+          editingRows = editingRows.filter((r) => r.id !== step.id);
+          renderSteps();
+        },
+        'danger-text'
+      )
+    );
+    return el;
+  }
+
+  function renderSteps() {
+    // 重畫整份清單會讓捲動位置歸零；勾選/移動這類操作前後要停在同一個位置
+    const scrollTop = grpStepsListEl.scrollTop;
+    grpStepsListEl.innerHTML = '';
+
+    let stepNo = 0;
+    let stageNo = 0;
+    let inStage = false;
+    editingRows.forEach((row, idx) => {
+      if (row.type === 'stage') {
+        stageNo += 1;
+        inStage = true;
+        grpStepsListEl.appendChild(buildStageRow(row, idx, stageNo));
+      } else {
+        stepNo += 1;
+        grpStepsListEl.appendChild(buildStepRow(row, idx, stepNo, inStage));
+      }
+    });
+
+    if (editingRows.length === 0) {
       const empty = document.createElement('div');
-      empty.className = 'settings-hint';
+      empty.className = 'stage-hint';
       empty.textContent = window.i18n.t('knowledge.emptySteps');
       grpStepsListEl.appendChild(empty);
     }
 
+    grpStepsListEl.scrollTop = scrollTop;
     renderGroupProgress();
   }
 
@@ -543,12 +716,12 @@
       grpTitleInput.value = group.title || '';
       grpTagsInput.value = (group.tags || []).join(', ');
       grpDescInput.value = group.description || '';
-      editingSteps = (group.steps || []).map((s) => ({ ...s }));
+      editingRows = stepsToRows(group.steps || []);
     } else {
       grpTitleInput.value = '';
       grpTagsInput.value = '';
       grpDescInput.value = '';
-      editingSteps = [];
+      editingRows = [];
     }
     renderSteps();
     renderList();
@@ -566,8 +739,27 @@
   document.getElementById('btn-add-step').addEventListener('click', () => {
     const itemId = grpAddStepSelect.value;
     if (!itemId) return;
-    editingSteps.push({ id: genLocalId('step'), itemId, checked: false });
+    editingRows.push({ type: 'step', id: genLocalId('step'), itemId, checked: false });
     renderSteps();
+    grpStepsListEl.scrollTop = grpStepsListEl.scrollHeight;
+  });
+
+  // 在清單尾端加一個新的階段標題；之後用「＋」加入的步驟會歸在這個階段底下
+  document.getElementById('btn-add-stage').addEventListener('click', () => {
+    const n = editingRows.filter((r) => r.type === 'stage').length + 1;
+    editingRows.push({
+      type: 'stage',
+      id: genLocalId('stage'),
+      title: defaultStageName(n),
+    });
+    renderSteps();
+    grpStepsListEl.scrollTop = grpStepsListEl.scrollHeight;
+    const inputs = grpStepsListEl.querySelectorAll('.stage-title-input');
+    const last = inputs[inputs.length - 1];
+    if (last) {
+      last.focus();
+      last.select();
+    }
   });
 
   document.getElementById('btn-save-group').addEventListener('click', async () => {
@@ -576,12 +768,17 @@
       title: grpTitleInput.value.trim() || '未命名套餐',
       tags: parseTags(grpTagsInput.value),
       description: grpDescInput.value,
-      steps: editingSteps,
+      steps: rowsToSteps(),
     };
     const kb = await window.workspaceAPI.saveKnowledgeGroup(group);
     allItems = kb.items;
     allGroups = kb.groups;
     if (!currentGroupId) currentGroupId = allGroups[allGroups.length - 1].id;
+    // 沒有任何步驟的空階段不會被存下來，存完用實際存下的內容重畫編輯器，
+    // 畫面才會跟資料檔一致。
+    const saved = allGroups.find((g) => g.id === currentGroupId);
+    if (saved) editingRows = stepsToRows(saved.steps || []);
+    renderSteps();
     rebuildTagOptions();
     renderList();
   });
@@ -607,7 +804,9 @@
   });
 
   document.getElementById('btn-reset-progress').addEventListener('click', async () => {
-    editingSteps.forEach((s) => (s.checked = false));
+    editingRows.forEach((r) => {
+      if (r.type === 'step') r.checked = false;
+    });
     renderSteps();
     if (currentGroupId) {
       const kb = await window.workspaceAPI.resetGroupChecklist(currentGroupId);
@@ -616,16 +815,35 @@
     }
   });
 
-  document.getElementById('btn-copy-all-group').addEventListener('click', async () => {
-    const text = editingSteps
-      .map((s) => {
-        const it = allItems.find((i) => i.id === s.itemId);
-        return it ? it.content : '';
+  // 複製整份套餐：依序串接所有步驟的提示詞（用 --- 分隔）。有分階段時，每個
+  // 階段前加一行「=== 階段名稱 ===」，階段之間也用 --- 分隔；沒有分階段的
+  // 套餐輸出跟加入階段功能之前完全一樣。
+  function buildGroupCopyText() {
+    const sections = [];
+    let current = { title: '', texts: [] };
+    const flush = () => {
+      if (current.texts.length > 0) sections.push(current);
+    };
+    editingRows.forEach((row) => {
+      if (row.type === 'stage') {
+        flush();
+        current = { title: (row.title || '').trim(), texts: [] };
+        return;
+      }
+      const text = promptTextOfItem(row.itemId);
+      if (text) current.texts.push(text);
+    });
+    flush();
+    return sections
+      .map((sec) => {
+        const body = sec.texts.join(STEP_SEPARATOR);
+        return sec.title ? `=== ${sec.title} ===\n\n${body}` : body;
       })
-      .filter(Boolean)
-      .join('\n\n---\n\n');
-    await navigator.clipboard.writeText(text);
-    alert(window.i18n.t('knowledge.copied'));
+      .join(STEP_SEPARATOR);
+  }
+
+  document.getElementById('btn-copy-all-group').addEventListener('click', () => {
+    copyText(buildGroupCopyText());
   });
 
   // ---------------------------------------------------------------------
@@ -669,7 +887,7 @@
       mode === 'items' ? 'knowledge.selectPrompt' : 'knowledge.selectGroupPrompt'
     );
     renderList();
-    if (groupEditorEl.style.display !== 'none') renderGroupProgress();
+    if (groupEditorEl.style.display !== 'none') renderSteps();
   });
 
   // ---------------------------------------------------------------------

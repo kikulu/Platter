@@ -195,7 +195,7 @@ body {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  max-height: 260px;
+  max-height: 320px;
   overflow-y: auto;
 }
 .step-row {
@@ -247,4 +247,63 @@ body {
 
 #grp-add-step-select {
   flex: 1;
+}
+
+/* --- 套餐分階段（階段標題列與縮排的步驟） --- */
+.stage-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 6px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--accent);
+  border-radius: 6px;
+  background: var(--bg-active);
+}
+.stage-row:first-child {
+  margin-top: 0;
+}
+.stage-marker {
+  color: var(--accent);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+/* renderer.css 的 input[type='text'] 特異度比單純的 class 高，這裡要一併寫上
+   type 才蓋得過去 */
+input[type='text'].stage-title-input {
+  flex: 1;
+  min-width: 0;
+  width: auto;
+  font-size: 13px;
+  font-weight: 600;
+  background: transparent;
+  border: 1px solid transparent;
+  padding: 2px 6px;
+}
+input[type='text'].stage-title-input:hover {
+  border-color: var(--border);
+  background: var(--bg-main);
+}
+input[type='text'].stage-title-input:focus {
+  border-color: var(--accent);
+  background: var(--bg-main);
+}
+.stage-progress {
+  color: var(--text-secondary);
+  font-size: 12px;
+  flex-shrink: 0;
+}
+.step-row.staged {
+  margin-left: 14px;
+}
+.stage-hint {
+  margin-top: 6px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+#btn-add-stage {
+  flex-shrink: 0;
+  white-space: nowrap;
 }
