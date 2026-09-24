@@ -210,6 +210,28 @@
           </div>
         </div>
         <div id="wf-progress"></div>
+        <!-- OpenSpec 整合：匯入現有規格、匯出成 openspec/changes/<變更名稱>/（只有帶匯出步驟的流程才顯示） -->
+        <div id="wf-openspec" style="display: none">
+          <div id="wf-osp-title" data-i18n="project.ospTitle">OpenSpec 整合</div>
+          <div class="wf-osp-row">
+            <span id="wf-osp-base-status"></span>
+            <button id="btn-osp-import" data-i18n="project.ospImport">
+              匯入現有規格…
+            </button>
+            <button id="btn-osp-clear" data-i18n="project.ospClear">清除</button>
+          </div>
+          <div class="wf-osp-row">
+            <label class="label" for="wf-osp-change-id" data-i18n="project.ospChangeId"
+              >變更名稱（kebab-case）</label
+            >
+            <input type="text" id="wf-osp-change-id" />
+            <button id="btn-osp-export" class="primary" data-i18n="project.ospExport">
+              匯出到專案資料夾…
+            </button>
+          </div>
+          <div id="wf-osp-files"></div>
+          <div id="wf-osp-result"></div>
+        </div>
         <div id="wf-body">
           <div id="wf-steps"></div>
           <div id="wf-detail">
