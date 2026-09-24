@@ -294,5 +294,107 @@
       "userPrompt": "請幫我撰寫一封全員公告信，資訊如下：\n- 公告主題（例如組織調整／政策異動／重要消息）：[請填入]\n- 核心訊息（一定要讓大家知道的事）：[請填入]\n- 對員工的實際影響：[請填入]\n- 語氣期望（例如：安定人心／振奮士氣）：[請填入]\n\n請輸出正式但有溫度的公告信，並在最後附上「若有疑問可如何反饋」的說明。",
       "content": "# 全員公告信草稿\n\n## 系統提示詞（System Prompt）\n\n你是一位高階主管的溝通幕僚，擅長撰寫給全體員工的公告或信件，語氣需展現關心與透明度，同時清楚傳達必要資訊，避免模糊或引發過度揣測的用語。\n\n## 使用者提示詞（User Prompt）\n\n請幫我撰寫一封全員公告信，資訊如下：\n- 公告主題（例如組織調整／政策異動／重要消息）：[請填入]\n- 核心訊息（一定要讓大家知道的事）：[請填入]\n- 對員工的實際影響：[請填入]\n- 語氣期望（例如：安定人心／振奮士氣）：[請填入]\n\n請輸出正式但有溫度的公告信，並在最後附上「若有疑問可如何反饋」的說明。\n"
     }
+  ],
+  "groups": [
+    {
+      "defaultId": "kb-group-default-001",
+      "title": "論文寫作全流程（規劃 → 撰寫 → 投稿）",
+      "description": "把一篇論文從文獻規劃走到投稿回覆拆成三個階段。每個階段的提示詞可以在同一段 AI 對話裡依序貼上，確認該階段產出後再進入下一階段；「複製本階段」會一次複製該階段所有提示詞，步驟前的勾選框用來追蹤進度。",
+      "tags": ["分階段範本", "論文寫作"],
+      "stages": [
+        {
+          "title": "階段 1：文獻與架構規劃",
+          "itemDefaultIds": ["kb-default-011"]
+        },
+        {
+          "title": "階段 2：內文撰寫",
+          "itemDefaultIds": ["kb-default-013", "kb-default-012"]
+        },
+        {
+          "title": "階段 3：潤色與投稿",
+          "itemDefaultIds": ["kb-default-014", "kb-default-015"]
+        }
+      ]
+    },
+    {
+      "defaultId": "kb-group-default-002",
+      "title": "研究計畫申請書（問題 → 規劃 → 成果與經費）",
+      "description": "依申請書的自然順序，從研究動機一路寫到成果與經費說明。每個階段的提示詞可以在同一段 AI 對話裡依序貼上，確認該階段產出後再進入下一階段；「複製本階段」會一次複製該階段所有提示詞，步驟前的勾選框用來追蹤進度。",
+      "tags": ["分階段範本", "研究計畫"],
+      "stages": [
+        {
+          "title": "階段 1：問題定義",
+          "itemDefaultIds": ["kb-default-016", "kb-default-017"]
+        },
+        {
+          "title": "階段 2：執行規劃",
+          "itemDefaultIds": ["kb-default-018"]
+        },
+        {
+          "title": "階段 3：成果與經費",
+          "itemDefaultIds": ["kb-default-019", "kb-default-020"]
+        }
+      ]
+    },
+    {
+      "defaultId": "kb-group-default-003",
+      "title": "軟體專案開發（需求 → 評估 → 驗收）",
+      "description": "從需求訪談、技術與風險評估，到測試計畫與 Code Review 的專案開發流程。每個階段的提示詞可以在同一段 AI 對話裡依序貼上，確認該階段產出後再進入下一階段；「複製本階段」會一次複製該階段所有提示詞，步驟前的勾選框用來追蹤進度。",
+      "tags": ["分階段範本", "專案開發"],
+      "stages": [
+        {
+          "title": "階段 1：需求釐清",
+          "itemDefaultIds": ["kb-default-021"]
+        },
+        {
+          "title": "階段 2：技術與風險評估",
+          "itemDefaultIds": ["kb-default-022", "kb-default-024"]
+        },
+        {
+          "title": "階段 3：品質與驗收",
+          "itemDefaultIds": ["kb-default-025", "kb-default-023"]
+        }
+      ]
+    },
+    {
+      "defaultId": "kb-group-default-004",
+      "title": "醫療器材軟體合規流程（需求 → 風險 → 隱私）",
+      "description": "依醫療器材軟體常見的文件順序，從需求規格與資料介接，走到風險管理、臨床邏輯審查與隱私合規。每個階段的提示詞可以在同一段 AI 對話裡依序貼上，確認該階段產出後再進入下一階段；「複製本階段」會一次複製該階段所有提示詞，步驟前的勾選框用來追蹤進度。",
+      "tags": ["分階段範本", "醫療軟體研發"],
+      "stages": [
+        {
+          "title": "階段 1：需求與資料介接",
+          "itemDefaultIds": ["kb-default-006", "kb-default-007"]
+        },
+        {
+          "title": "階段 2：風險與臨床邏輯審查",
+          "itemDefaultIds": ["kb-default-008", "kb-default-009"]
+        },
+        {
+          "title": "階段 3：隱私合規",
+          "itemDefaultIds": ["kb-default-010"]
+        }
+      ]
+    },
+    {
+      "defaultId": "kb-group-default-005",
+      "title": "專案例行溝通循環（會議 → 回報 → 彙報）",
+      "description": "專案經理一個溝通週期的三個階段：會議前後的議程與紀要、定期進度回報、向上彙報。每個階段的提示詞可以在同一段 AI 對話裡依序貼上，確認該階段產出後再進入下一階段；「複製本階段」會一次複製該階段所有提示詞，步驟前的勾選框用來追蹤進度。",
+      "tags": ["分階段範本", "專案管理"],
+      "stages": [
+        {
+          "title": "階段 1：會議前後",
+          "itemDefaultIds": ["kb-default-035", "kb-default-001"]
+        },
+        {
+          "title": "階段 2：進度回報",
+          "itemDefaultIds": ["kb-default-002", "kb-default-034"]
+        },
+        {
+          "title": "階段 3：向上彙報",
+          "itemDefaultIds": ["kb-default-040"]
+        }
+      ]
+    }
   ]
 }
