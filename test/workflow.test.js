@@ -14,6 +14,7 @@ const {
   buildWorkflowFromTemplate,
   composeStepPrompt,
   nextCurrentStepId,
+  syncStepStatusFromTasks,
   templateFromWorkflow,
   summarizeTemplate,
   normalizeWorkflow,
@@ -284,4 +285,22 @@ test('normalizeWorkflow：補齊缺少的欄位、修正不合法的值；結構
   );
   assert.equal(normalizeWorkflow(null), null);
   assert.equal(normalizeWorkflow({ steps: 'x' }), null);
+});
+
+test('syncStepStatusFromTasks：只同步「狀態不同、任務還在」的步驟，回傳是否有改動', () => {
+  const wf = makeWorkflow();
+  const tasks = wf.steps.map((s) => ({ id: s.taskId, status: 'todo' }));
+  assert.equal(syncStepStatusFromTasks(wf, tasks), false);
+
+  tasks[0].status = 'done';
+  tasks[1].status = '亂填'; // 不合法的狀態不同步
+  assert.equal(syncStepStatusFromTasks(wf, tasks), true);
+  assert.deepEqual(
+    wf.steps.map((s) => s.status),
+    ['done', 'todo', 'todo']
+  );
+
+  wf.steps[2].status = 'doing'; // 對應任務已被刪掉：維持原狀
+  assert.equal(syncStepStatusFromTasks(wf, tasks.slice(0, 2)), false);
+  assert.equal(wf.steps[2].status, 'doing');
 });

@@ -392,3 +392,33 @@ test('舊資料與備份：沒有 workflow 的專案照常載入；workflow 缺�
   assert.equal(hits.length, 1);
   assert.equal(hits[0].id, 'p_wf');
 });
+
+test('任務清單改任務狀態（即時切換或儲存專案）會反向同步給對應的 workflow 步驟', async () => {
+  reset();
+  const { projectId } = await createSdd();
+  const p = getProject(projectId);
+
+  // 即時切換
+  await invoke('projects:task:setStatus', {
+    projectId,
+    taskId: p.tasks[2].id,
+    status: 'done',
+  });
+  assert.equal(getProject(projectId).workflow.steps[2].status, 'done');
+
+  // 儲存專案時任務狀態變了
+  const current = getProject(projectId);
+  current.tasks[3].status = 'doing';
+  await invoke('projects:save', {
+    id: projectId,
+    name: current.name,
+    status: current.status,
+    description: current.description,
+    tasks: current.tasks,
+    issues: [],
+  });
+  const after = getProject(projectId);
+  assert.equal(after.workflow.steps[3].status, 'doing');
+  assert.equal(after.workflow.steps[2].status, 'done', '其他步驟不受影響');
+  assert.equal(after.workflow.steps[0].status, 'todo');
+});
