@@ -183,11 +183,12 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 **內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
 開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
-`extractors/default-knowledge-base.json` 裡內建的 41 組提示詞範本當
-起始內容，涵蓋 6 個分類（標籤對應分類名稱）：企業日常作業、
+`extractors/default-knowledge-base.json` 裡內建的 48 組提示詞範本當
+起始內容，涵蓋 7 個分類（標籤對應分類名稱）：企業日常作業、
 醫療軟體研發、論文寫作、研究計畫、專案開發（各 5 組，共 25 組，沿用
-Stage 5 原始設計），以及**企業角色範本**（8 種常見企業職務各 2 組，共
-16 組，1.26.0 新增）。前 25 組都用單一 `content` 欄位、Markdown 格式
+Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增，見下方
+「內建分階段套餐範本」），以及**企業角色範本**（8 種常見企業職務各 2 組，
+共 16 組，1.26.0 新增）。前 32 組都用單一 `content` 欄位、Markdown 格式
 撰寫（標題、角色與目標、輸入資訊、輸出要求）；企業角色範本則額外帶
 `roleIds`（對應 `default-roles.json` 種子角色的固定 id，見第 4 節）跟
 `systemPrompt`／`userPrompt` 拆分欄位——`systemPrompt` 定義這組範本的
@@ -210,15 +211,30 @@ Stage 5 原始設計），以及**企業角色範本**（8 種常見企業職務
 回溯標記既有的內建提示詞，避免整批重複塞入。
 
 **內建分階段套餐範本**（1.27.0 新增）：`default-knowledge-base.json` 除了
-`items` 還有 `groups`，內含 5 組分階段套餐（論文寫作、研究計畫、軟體專案
-開發、醫療器材軟體合規、專案例行溝通，標籤都帶「分階段範本」）。範本用
+`items` 還有 `groups`，內含 6 組分階段套餐（論文寫作、研究計畫、軟體專案
+開發、醫療器材軟體合規、專案例行溝通，以及 1.28.0 新增的 **SDD 規格驅動
+開發流程**，標籤都帶「分階段範本」）。範本用
 `stages: [{ title, itemDefaultIds: [...] }]` 描述，以內建提示詞的
 `defaultId` 引用（不綁死使用者資料裡隨機產生的 item id）；種入時由
 `lib/utils.js` 的 `buildGroupFromDefault()` 對照使用者知識庫實際的 item id，
 展開成扁平 `steps`、每步帶上所屬階段名稱 `stage`。引用的提示詞已被使用者
 刪掉的步驟直接略過，整份套餐一步都對不上就不種。從 1.26.x 升級的既有安裝
 沒有 `knowledgeGroups` 紀錄，第一次升級會補進全部內建套餐一次，之後使用者
-刪除/編輯都不會被補回來。
+刪除/編輯都不會被補回來；往後新版再新增的內建套餐（例如 1.28.0 的 SDD）
+同樣以 `defaultId` 增量補進，且會先補完它引用的新提示詞再展開步驟。
+
+**SDD 規格驅動開發套餐**（1.28.0 新增）：SDD（Spec-Driven Development）
+把「做什麼／為什麼」先寫成可檢驗的規格，再由規格驅動技術規劃、任務拆解
+與實作。內含 7 組標籤為「SDD規格驅動開發」的提示詞（`kb-default-042` ~
+`048`，流程參考 GitHub Spec Kit），由 `kb-group-default-006` 分三個階段
+串起來：**階段 1 原則與規格**（專案原則 Constitution → 功能規格 Specify →
+規格釐清 Clarify）、**階段 2 規劃與任務**（技術規劃 Plan → 任務拆解
+Tasks）、**階段 3 檢查與實作**（一致性分析 Analyze → 依任務實作
+Implement）。撰寫時的幾個刻意設計：規格只談做什麼、不談技術棧；釐清
+最多問 5 題、使用者回答前不擅自修改規格；分析是唯讀、不改任何文件；
+實作遇到與規格衝突要停下來詢問，不自行改規格。建議在同一段 AI 對話裡
+依序貼上，讓前面的產出成為後面的上下文，並把每份產出存成
+`constitution.md`／`spec.md`／`plan.md`／`tasks.md`。
 
 ### 5.1 提示詞項目（items）
 
@@ -1045,7 +1061,7 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
-extractors/default-knowledge-base.json  # 內建的41組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，企業角色範本8種職務各2組）＋5組分階段套餐範本（groups）
+extractors/default-knowledge-base.json  # 內建的48組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，企業角色範本8種職務各2組）＋6組分階段套餐範本（groups）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗
