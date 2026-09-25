@@ -454,7 +454,147 @@
     resetRoleForm();
   });
 
-  // 語言切換後，「關於」區塊的版本文字要重新套用翻譯格式（不是靠
+  // --- 本地端 AI 服務（Ollama／LM Studio／SD WebUI／ComfyUI 等） ---
+  const LOCAL_SERVICE_TYPE_ICONS = { llm: '🧠', image: '🎨', custom: '🧩' };
+  const localServiceSettingsList = document.getElementById('local-service-settings-list');
+  const localServiceStatusCache = new Map(); // accountId -> 'checking' | 'online' | 'offline'
+
+  async function refreshLocalServices() {
+    const accounts = await window.workspaceAPI.listAccounts();
+    const localAccounts = accounts.filter((a) => a.platform === 'local');
+    localServiceSettingsList.innerHTML = '';
+
+    if (localAccounts.length === 0) {
+      const p = document.createElement('div');
+      p.className = 'settings-hint';
+      p.textContent = window.i18n.t('settings.localServices.empty');
+      localServiceSettingsList.appendChild(p);
+      return;
+    }
+
+    localAccounts.forEach((acc) => {
+      const row = document.createElement('div');
+      row.className = 'local-service-row';
+
+      const icon = document.createElement('div');
+      icon.className = 'ls-icon';
+      icon.textContent = LOCAL_SERVICE_TYPE_ICONS[acc.serviceType] || '🧩';
+
+      const meta = document.createElement('div');
+      meta.className = 'ls-meta';
+      const name = document.createElement('div');
+      name.className = 'ls-name';
+      name.textContent = acc.name;
+      const url = document.createElement('div');
+      url.className = 'ls-url';
+      url.textContent = acc.url || window.i18n.t('account.localUrlMissing');
+      meta.appendChild(name);
+      meta.appendChild(url);
+
+      const status = document.createElement('div');
+      status.className = 'ls-status';
+      status.textContent = statusLabel(localServiceStatusCache.get(acc.id));
+
+      const testBtn = document.createElement('button');
+      testBtn.textContent = window.i18n.t('settings.localServices.test');
+      testBtn.addEventListener('click', () => checkStatus(acc, status));
+
+      const editBtn = document.createElement('button');
+      editBtn.textContent = window.i18n.t('common.edit');
+      editBtn.addEventListener('click', () => editLocalService(acc));
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.textContent = window.i18n.t('settings.localServices.remove');
+      deleteBtn.addEventListener('click', async () => {
+        const ok = window.confirm(
+          window.i18n.t('sidebar.deleteAccountConfirm', { name: acc.name })
+        );
+        if (!ok) return;
+        localServiceStatusCache.delete(acc.id);
+        await window.workspaceAPI.removeAccount(acc.id);
+        await refreshLocalServices();
+      });
+
+      const actions = document.createElement('div');
+      actions.className = 'ls-actions';
+      actions.appendChild(testBtn);
+      actions.appendChild(editBtn);
+      actions.appendChild(deleteBtn);
+
+      row.appendChild(icon);
+      row.appendChild(meta);
+      row.appendChild(status);
+      row.appendChild(actions);
+      localServiceSettingsList.appendChild(row);
+
+      checkStatus(acc, status);
+    });
+  }
+
+  function statusLabel(status) {
+    if (status === 'online')
+      return `🟢 ${window.i18n.t('settings.localServices.online')}`;
+    if (status === 'offline')
+      return `🔴 ${window.i18n.t('settings.localServices.offline')}`;
+    if (status === 'checking')
+      return `⚪ ${window.i18n.t('settings.localServices.checking')}`;
+    return `⚪ ${window.i18n.t('settings.localServices.unknown')}`;
+  }
+
+  async function checkStatus(acc, statusEl) {
+    if (!acc.url) {
+      localServiceStatusCache.set(acc.id, 'offline');
+      statusEl.textContent = statusLabel('offline');
+      return;
+    }
+    localServiceStatusCache.set(acc.id, 'checking');
+    statusEl.textContent = statusLabel('checking');
+    const result = await window.workspaceAPI.testLocalService(acc.url);
+    const next = result && result.ok ? 'online' : 'offline';
+    localServiceStatusCache.set(acc.id, next);
+    statusEl.textContent = statusLabel(next);
+  }
+
+  // 用三個依序彈出的 prompt() 編輯名稱/類型/網址——欄位少，不值得
+  // 為了編輯另開一個表單視窗。
+  async function editLocalService(acc) {
+    const name = window.prompt(window.i18n.t('account.name'), acc.name);
+    if (name === null) return;
+    const serviceType = window.prompt(
+      window.i18n.t('settings.localServices.editServiceTypePrompt'),
+      acc.serviceType || 'custom'
+    );
+    if (serviceType === null) return;
+    const url = window.prompt(window.i18n.t('account.localUrl'), acc.url || '');
+    if (url === null) return;
+    if (url.trim() && !/^https?:\/\//i.test(url.trim())) {
+      alert(window.i18n.t('account.localUrlInvalid'));
+      return;
+    }
+    await window.workspaceAPI.updateLocalService(acc.id, {
+      name: name.trim() || acc.name,
+      url: url.trim(),
+      serviceType: ['llm', 'image', 'custom'].includes(serviceType.trim())
+        ? serviceType.trim()
+        : acc.serviceType,
+    });
+    localServiceStatusCache.delete(acc.id);
+    await refreshLocalServices();
+  }
+
+  document
+    .getElementById('btn-add-local-service-settings')
+    .addEventListener('click', () => {
+      window.workspaceAPI.openAccountWindow('local');
+    });
+
+  // 從主視窗側邊欄新增/刪除本地服務時（或這裡自己操作完），兩邊都要
+  // 同步——跟主視窗的帳號清單是同一份資料，用既有的 accounts:changed
+  // 廣播即可，不用再另開一種事件。
+  window.workspaceAPI.onAccountsChanged(() => {
+    refreshLocalServices();
+  });
+
   // data-i18n 靜態字串替換，因為裡面要內插版本號）
   document.addEventListener('i18n:updated', async () => {
     const version = await window.workspaceAPI.getAppVersion();
@@ -474,6 +614,7 @@
     await refreshSelectors();
     resetRoleForm();
     await refreshRoles();
+    await refreshLocalServices();
 
     const version = await window.workspaceAPI.getAppVersion();
     document.getElementById('about-version').textContent = window.i18n.t(

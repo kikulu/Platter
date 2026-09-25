@@ -255,6 +255,7 @@
         padding: 4px;
         border-radius: 4px;
         flex-shrink: 0;
+        font-size: 13px;
       }
       .account-item:hover .delete-btn {
         display: block;
@@ -537,6 +538,28 @@
               <span class="label-text" data-i18n="sidebar.addAccount">新增帳號</span>
             </button>
             <div id="account-list"></div>
+          </div>
+        </div>
+
+        <!-- 群組：本地端 AI 服務（Ollama／LM Studio／SD WebUI／ComfyUI 等，
+             platform === 'local' 的帳號跟上面「帳號」群組共用同一套帳號
+             系統，只是分開列，方便跟雲端帳號區分） -->
+        <div class="menu-group" data-group="localservices">
+          <button class="group-header" data-group-key="localservices">
+            <span class="icon">🖥️</span>
+            <span class="label-text" data-i18n="sidebar.groupLocalServices"
+              >本地端 AI 服務</span
+            >
+            <span class="chevron">▸</span>
+          </button>
+          <div class="group-children" id="group-localservices-children">
+            <button class="sidebar-action indent" id="btn-add-local-service">
+              <span class="icon">➕</span>
+              <span class="label-text" data-i18n="sidebar.addLocalService"
+                >新增本地服務</span
+              >
+            </button>
+            <div id="local-service-list"></div>
           </div>
         </div>
 

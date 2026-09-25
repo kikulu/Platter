@@ -100,6 +100,28 @@
       </div>
     </div>
 
+    <!-- 本地端 AI 服務（Ollama／LM Studio／Stable Diffusion WebUI／
+         ComfyUI 等）：跟側邊欄「本地端 AI 服務」群組是同一份帳號資料，
+         這裡是集中管理的地方——看清單、測連線、改網址、刪除 -->
+    <div class="section">
+      <div class="settings-section-title" data-i18n="settings.localServices.title">
+        本地端 AI 服務
+      </div>
+      <div class="settings-hint" data-i18n="settings.localServices.hint">
+        管理接到本機或內網的 AI 工具（LLM 聊天介面、文生圖 WebUI 等），例如 Ollama、LM
+        Studio、Stable Diffusion WebUI、ComfyUI。
+      </div>
+      <div id="local-service-settings-list"></div>
+      <div class="row" style="margin-top: 10px">
+        <button
+          id="btn-add-local-service-settings"
+          data-i18n="settings.localServices.add"
+        >
+          新增本地服務
+        </button>
+      </div>
+    </div>
+
     <!-- 4. 檔案預設儲存路徑 -->
     <div class="section">
       <div class="settings-section-title" data-i18n="settings.savePath.title">
