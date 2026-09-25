@@ -8,8 +8,16 @@
 
   const sidebar = document.getElementById('sidebar');
   const accountList = document.getElementById('account-list');
+  const localServiceList = document.getElementById('local-service-list');
   const placeholder = document.getElementById('placeholder');
   const collapseBtn = document.getElementById('collapse-btn');
+
+  // 本地端 AI 服務的服務類型 icon（跟 lib/constants.js 的 LOCAL_SERVICE_TYPES
+  // 對應，這裡是純顯示用，沒有共用模組給 renderer 用所以照抄一份）
+  const LOCAL_SERVICE_TYPE_ICONS = { llm: '🧠', image: '🎨', custom: '🧩' };
+  // 連線測試結果快取：accountId -> 'checking' | 'online' | 'offline'，
+  // 避免每次 refreshAccounts() 都重新閃一次「檢查中」灰點
+  const localServiceStatus = new Map();
 
   let collapsed = false;
   let rolesById = new Map();
@@ -50,6 +58,10 @@
 
   document.getElementById('btn-add-account').addEventListener('click', () => {
     window.workspaceAPI.openAccountWindow();
+  });
+
+  document.getElementById('btn-add-local-service').addEventListener('click', () => {
+    window.workspaceAPI.openAccountWindow('local');
   });
 
   document.getElementById('btn-knowledge').addEventListener('click', () => {
@@ -299,8 +311,119 @@
     ]);
     rolesById = new Map(roles.map((r) => [r.id, r]));
     lastAccounts = accounts;
-    renderAccounts(accounts);
+    // 「本地端 AI 服務」(platform === 'local') 跟一般雲端帳號共用同一套
+    // 帳號系統（新增/切換/移除/懶載入都一樣），只是側邊欄分成兩個群組顯示。
+    renderAccounts(accounts.filter((a) => a.platform !== 'local'));
+    renderLocalServices(accounts.filter((a) => a.platform === 'local'));
     await refreshPromptList();
+  }
+
+  // --- 本地端 AI 服務清單（側邊欄獨立群組） ---
+  function renderLocalServices(accounts) {
+    localServiceList.innerHTML = '';
+
+    accounts.forEach((acc) => {
+      const item = document.createElement('div');
+      item.className = 'account-item' + (acc.active ? ' active' : '');
+      item.title = acc.url || '';
+
+      const avatar = document.createElement('div');
+      avatar.className = 'avatar';
+      avatar.textContent = LOCAL_SERVICE_TYPE_ICONS[acc.serviceType] || '🧩';
+
+      const meta = document.createElement('div');
+      meta.className = 'meta';
+      const name = document.createElement('div');
+      name.className = 'name';
+      name.textContent = acc.name;
+      const urlLine = document.createElement('div');
+      urlLine.className = 'platform';
+      const status = localServiceStatus.get(acc.id);
+      const statusDot = status === 'online' ? '🟢' : status === 'offline' ? '🔴' : '⚪';
+      urlLine.textContent = `${statusDot} ${acc.url || window.i18n.t('account.localUrlMissing')}`;
+      meta.appendChild(name);
+      meta.appendChild(urlLine);
+
+      const editBtn = document.createElement('button');
+      editBtn.className = 'delete-btn';
+      editBtn.textContent = '✎';
+      editBtn.title = window.i18n.t('sidebar.editLocalService');
+      editBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        await editLocalServiceInline(acc);
+      });
+
+      const deleteBtn = document.createElement('button');
+      deleteBtn.className = 'delete-btn';
+      deleteBtn.textContent = '🗑';
+      deleteBtn.addEventListener('click', async (e) => {
+        e.stopPropagation();
+        const ok = window.confirm(
+          window.i18n.t('sidebar.deleteAccountConfirm', { name: acc.name })
+        );
+        if (ok) {
+          localServiceStatus.delete(acc.id);
+          await window.workspaceAPI.removeAccount(acc.id);
+          await refreshAccounts();
+        }
+      });
+
+      item.appendChild(avatar);
+      item.appendChild(meta);
+      item.appendChild(editBtn);
+      item.appendChild(deleteBtn);
+
+      item.addEventListener('click', async () => {
+        await window.workspaceAPI.switchAccount(acc.id);
+        await refreshAccounts();
+      });
+
+      localServiceList.appendChild(item);
+      checkLocalServiceStatus(acc);
+    });
+  }
+
+  // 用簡單的三個 prompt() 依序詢問名稱/類型/網址——本地服務欄位少，
+  // 不值得為了編輯另開一個完整表單視窗（跟「新增帳號」那個獨立視窗
+  // 不一樣，這裡是側邊欄快速編輯，圖的就是快）。
+  async function editLocalServiceInline(acc) {
+    const name = window.prompt(window.i18n.t('account.name'), acc.name);
+    if (name === null) return;
+    const url = window.prompt(window.i18n.t('account.localUrl'), acc.url || '');
+    if (url === null) return;
+    if (url.trim() && !/^https?:\/\//i.test(url.trim())) {
+      alert(window.i18n.t('account.localUrlInvalid'));
+      return;
+    }
+    await window.workspaceAPI.updateLocalService(acc.id, {
+      name: name.trim() || acc.name,
+      url: url.trim(),
+    });
+    localServiceStatus.delete(acc.id);
+    await refreshAccounts();
+  }
+
+  async function checkLocalServiceStatus(acc) {
+    if (!acc.url) {
+      localServiceStatus.set(acc.id, 'offline');
+      return;
+    }
+    localServiceStatus.set(acc.id, 'checking');
+    const result = await window.workspaceAPI.testLocalService(acc.url);
+    localServiceStatus.set(acc.id, result && result.ok ? 'online' : 'offline');
+    // 重新畫一次這個項目的狀態燈，不用整個清單重新 render 一輪
+    const item =
+      localServiceList.children[
+        Array.from(localServiceList.children).findIndex((el) => el.title === acc.url)
+      ];
+    if (item) {
+      const dot = item.querySelector('.platform');
+      if (dot) {
+        const status = localServiceStatus.get(acc.id);
+        const statusDot = status === 'online' ? '🟢' : '🔴';
+        dot.textContent = `${statusDot} ${acc.url}`;
+      }
+    }
   }
 
   // --- 預設提示詞區塊：依目前選中帳號的角色，列出知識庫裡配置給該角色的提示詞 ---
