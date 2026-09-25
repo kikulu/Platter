@@ -22,6 +22,12 @@
   預覽或失敗診斷數字，見 `PROJECT_SPEC.md` 第 10 節。
 - 更多平台支援（在 `PLATFORM_URLS` 與 `default-selectors.json` 增加項目
   即可，UI 下拉選單同步增加選項）。
+- ~~本地端 AI 服務支援（Ollama／LM Studio／Stable Diffusion WebUI／
+  ComfyUI 等接自訂網址的本地工具）~~ → 已在 `1.31.0` 完成：新增
+  `platform === 'local'` 帳號類型，網址是使用者自訂而非固定表；側邊欄
+  獨立群組＋設定視窗集中管理區塊，皆可測連線、編輯、刪除，見
+  `PROJECT_SPEC.md` 第 3.2 節與第 9.3 節第 5 項。跟上面「更多平台
+  支援」不是同一件事——那一項指的是新增更多**固定網址**的雲端平台。
 - ~~GitHub Actions CI：push / PR 時自動跑 `npm run lint` + `npm test`
   （不含實際啟動 Electron App 互動的測試，CI 環境沒有顯示器，那部分
   永遠要靠 `npm start` 手動驗證）。~~ → 已在 `1.20.0` 完成，見

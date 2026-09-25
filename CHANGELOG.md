@@ -1,5 +1,61 @@
 # Changelog
 
+## [1.31.0]
+
+### 新增：本地端 AI 服務支援（Ollama／LM Studio／Stable Diffusion WebUI／ComfyUI 等自訂網址工具）
+
+- **背景**：Claude/ChatGPT/Gemini/Grok 這四個平台的網址是固定的（`lib/constants.js` 的
+  `PLATFORM_URLS`），但接本機或內網跑的 AI 工具（LLM 聊天介面、文生圖 WebUI）沒有固定網址，
+  是使用者自己起的服務、port 也常常不一樣（例如 Ollama 預設 `11434`、Stable Diffusion
+  WebUI 預設 `7860`、ComfyUI 預設 `8188`）。這次新增第五種帳號類型 `platform === 'local'`，
+  跟現有四個平台共用同一套 Session 隔離／`WebContentsView` 懶載入機制，差異只在網址是
+  帳號自己存的 `url` 欄位、不是查固定表。
+- **資料模型**：帳號物件新增選填欄位 `url`（使用者自訂網址）、`serviceType`
+  （`'llm' | 'image' | 'custom'`，純顯示分類用），只有 `platform === 'local'` 才會有這兩個
+  欄位；一般平台不受影響。`lib/windows.js` 新增 `resolveAccountUrl(account)` 統一決定
+  `loadURL()` 目標；`addAccount()` 多接一個選填的 `extra: { url, serviceType }` 參數。
+- **編輯與連線測試**：新增 `updateLocalService(accountId, patch)`——改網址不用刪掉帳號重建
+  （session partition、Cookie、登入狀態都保留），若這個帳號的 `WebContentsView` 已經載入過，
+  直接對現有 view 呼叫 `loadURL()` 導到新網址。新增 `testLocalServiceConnection(url)`，用
+  Electron 的 `net.request`（main process 的 Chromium 網路層，不受頁面 CORS 限制），4 秒
+  逾時，只看「連得上」不管 HTTP 狀態碼（本地服務常見的根路徑回 404 也算連得上）。新增對應
+  IPC：`localServices:update`、`localServices:test`；`preload.js` 曝露
+  `updateLocalService()`、`testLocalService()`。
+- **新增帳號視窗**（`account.html`/`account.js`）：平台下拉選單多一個「本地端 AI 服務」
+  選項，選了之後多顯示「服務類型」（LLM／文生圖／自訂）跟「本地服務網址」輸入框（附
+  Ollama／SD WebUI／ComfyUI 範例網址），確認前檢查網址格式（必須 `http://` 或 `https://`
+  開頭）。`window:openAccountWindow` IPC 與 `openAccountWindow()` 多接一個選填的
+  `presetPlatform` 參數，透過 `win.loadFile(file, { query })` 帶 `?platform=local`
+  查詢字串開窗，`account.js` 讀 `URLSearchParams` 直接預選平台、focus 到網址欄，不用使用者
+  自己從下拉選單找。
+- **側邊欄**：新增獨立群組「本地端 AI 服務」（跟「帳號」群組分開，同一份
+  `appState.accounts` 資料，只是分開顯示），列出所有本地服務帳號，各自顯示服務類型 icon、
+  連線狀態燈（🟢已連線／🔴連不上／⚪尚未檢查，開啟時自動測一次）、編輯（依序彈出三個
+  `prompt()` 改名稱/類型/網址）、刪除；「＋ 新增本地服務」按鈕開新增帳號視窗並預選平台。
+  點擊項目切換帳號，跟一般帳號共用同一套 `switchAccount()`。
+- **設定視窗**：新增「本地端 AI 服務」管理區塊（集中列表，跟側邊欄是同一份資料，訂閱
+  `accounts:changed` 廣播互相同步），每列顯示名稱、網址、連線狀態，可測試連線／編輯／
+  刪除，「新增本地服務」按鈕同樣預選平台。
+- **已知限制**：帳號清單拖曳排序（`accounts:reorder`）目前只在側邊欄「帳號」群組實作，
+  「本地端 AI 服務」群組還沒有拖曳排序 UI；排序雲端帳號時，任何不在傳入順序清單裡的帳號
+  （本地服務都屬於這種）會被整批接到 `appState.accounts` 陣列最後面，彼此相對順序不受
+  影響，但不能反過來排到雲端帳號前面。不會自動偵測本機常見服務的預設 port，新增時要自己
+  填網址。對話擷取／匯出（`extractors/domCapture.js`）沒有針對本地服務的 selector，套用到
+  本地服務帳號會走一般的失敗路徑（擷取失敗訊息），不會壞掉但也抓不到內容——這些工具的介面
+  差異太大，之後如果要支援得個別加 selector。
+- 三語系（zh-TW／en／ja）各新增 24 個鍵（389 → 413，鍵集合一致）。三份 README 與
+  `PROJECT_SPEC.md`（第 3.2、3.3、9.1、9.3、15 節）、`ROADMAP.md` 同步更新。
+- 驗證方式：所有修改過的 JS 檔案通過 `node --check`；`npm test`（103 項，沿用既有測試，
+  沒有新增本地服務相關的自動化測試——`lib/windows.js` 依賴 Electron runtime，既有測試策略
+  是只測不依賴 Electron 的純函式，見 `test/utils.test.js` 開頭說明）；`npm run lint`
+  0 錯誤（1 個既有、跟這次改動無關的警告：`extractors/domCapture.js` 的
+  `capturePlatformConversation` 未使用）；`npm run format:check` 全過。**尚未在真正的
+  Electron 視窗手動操作過**，也沒有接一個真正在跑的 Ollama/SD WebUI/ComfyUI 驗證過連線
+  測試跟畫面顯示——下次有辦法跑 `npm start` 時應該優先驗證這個功能。
+- 詳見 `PROJECT_SPEC.md` 第 3.2 節「本地端 AI 服務」與第 9.3 節第 5 項。
+
+---
+
 ## [1.30.0]
 
 ### 新增：整合 OpenSpec（提示詞範本、專案範本、匯出成 openspec/changes/、匯入現有規格）
