@@ -3,8 +3,14 @@ const { contextBridge, ipcRenderer } = require('electron');
 contextBridge.exposeInMainWorld('workspaceAPI', {
   // 帳號
   listAccounts: () => ipcRenderer.invoke('accounts:list'),
-  addAccount: (platform, name, roleId) =>
-    ipcRenderer.invoke('accounts:add', { platform, name, roleId }),
+  addAccount: (platform, name, roleId, extra) =>
+    ipcRenderer.invoke('accounts:add', { platform, name, roleId, extra }),
+
+  // 本地端 AI 服務（platform === 'local'，如 Ollama／LM Studio／
+  // Stable Diffusion WebUI／ComfyUI）：編輯網址/名稱/類型、測試連線
+  updateLocalService: (id, patch) =>
+    ipcRenderer.invoke('localServices:update', { id, patch }),
+  testLocalService: (url) => ipcRenderer.invoke('localServices:test', url),
   switchAccount: (id) => ipcRenderer.invoke('accounts:switch', id),
   removeAccount: (id) => ipcRenderer.invoke('accounts:remove', id),
   setSidebarCollapsed: (collapsed) =>
@@ -105,7 +111,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   clearAppCache: () => ipcRenderer.invoke('settings:clearCache'),
 
   // 子視窗
-  openAccountWindow: () => ipcRenderer.invoke('window:openAccountWindow'),
+  openAccountWindow: (presetPlatform) =>
+    ipcRenderer.invoke('window:openAccountWindow', presetPlatform),
   openKnowledgeWindow: () => ipcRenderer.invoke('window:openKnowledgeWindow'),
   openSettingsWindow: () => ipcRenderer.invoke('window:openSettingsWindow'),
   openTeamWindow: () => ipcRenderer.invoke('window:openTeamWindow'),

@@ -28,6 +28,16 @@
         justify-content: flex-end;
         gap: 8px;
       }
+      .hint {
+        margin-top: 6px;
+        font-size: 12px;
+        color: var(--text-secondary);
+        line-height: 1.5;
+      }
+      #local-fields select,
+      #local-fields input {
+        margin-bottom: 8px;
+      }
     </style>
   </head>
   <body>
@@ -40,7 +50,26 @@
         <option value="chatgpt">ChatGPT</option>
         <option value="gemini">Gemini</option>
         <option value="grok">Grok</option>
+        <option value="local" data-i18n="account.platformLocal">本地端 AI 服務</option>
       </select>
+    </div>
+
+    <div class="field" id="local-fields" style="display: none">
+      <label class="label" data-i18n="account.serviceType">服務類型</label>
+      <select id="service-type">
+        <option value="llm" data-i18n="account.serviceTypeLlm">LLM（語言模型）</option>
+        <option value="image" data-i18n="account.serviceTypeImage">文生圖</option>
+        <option value="custom" data-i18n="account.serviceTypeCustom">自訂</option>
+      </select>
+
+      <label class="label" style="margin-top: 10px" data-i18n="account.localUrl"
+        >本地服務網址</label
+      >
+      <input type="text" id="local-url" placeholder="http://localhost:11434" />
+      <div class="hint" data-i18n="account.localUrlHint">
+        例如 Ollama：http://localhost:11434　／　Stable Diffusion
+        WebUI：http://127.0.0.1:7860　／　ComfyUI：http://127.0.0.1:8188
+      </div>
     </div>
 
     <div class="field">
