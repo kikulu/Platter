@@ -14,8 +14,9 @@ More AI, less coffee. The more AI does, the less coffee humans need to drink.
 <p align="center">
   <strong>One window for all your AI accounts.</strong><br />
   A cross-platform desktop app for aggregating AI accounts — stay signed
-  into Claude, ChatGPT, Gemini, and Grok at the same time, each fully
-  isolated from the others.
+  into Claude, ChatGPT, Gemini, and Grok at the same time, and connect
+  local AI tools (Ollama, LM Studio, Stable Diffusion WebUI, ComfyUI,
+  etc.), each fully isolated from the others.
 </p>
 
 <p align="center">
@@ -66,6 +67,7 @@ bundled into a backup file.
 | Feature                                | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | 🗂️ Multi-account aggregation           | Claude / ChatGPT / Gemini / Grok, each account fully isolated, instant switching                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| 🖥️ Local AI services                   | A dedicated sidebar group for adding local tools (Ollama / LM Studio / Stable Diffusion WebUI / ComfyUI, etc.) with a custom name and URL, tagged as LLM / image / custom; opens in-app just like a regular account. Settings has a matching management panel for testing connections, editing, and removal                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | 🔐 Persistent login                    | No need to log in again after restarting the app                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ⚡ Lazy loading                        | Only the last-active account loads on startup; others load on first click, so more accounts won't slow down startup                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
 | 📐 Collapsible sidebar                 | Collapses to an icon-only strip                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
@@ -99,7 +101,11 @@ npm start
 
 1. Open the app, click "+ Add Account" in the sidebar, pick a platform
    (Claude/ChatGPT/Gemini/Grok), give it a custom name, and log in
-   normally in the window that opens.
+   normally in the window that opens. To connect a local AI tool
+   (Ollama / LM Studio / Stable Diffusion WebUI / ComfyUI), use the
+   separate "Local AI Services" sidebar group instead — click
+   "+ Add Local Service" and fill in a service type and URL (e.g.
+   `http://localhost:11434`); the URL can be edited later from Settings.
 2. Click any account in the sidebar list to switch to it; repeat step 1
    to add more.
 3. To export a conversation: switch to that account, click "Export
@@ -162,6 +168,13 @@ any new feature has to clear this bar first:
   targets that account. The more accounts you keep, the more this matters
   for startup resource usage. A loading indicator is shown the first time
   a lazily-loaded account's page is still loading.
+- **Local AI services** (`platform === 'local'`): Claude/ChatGPT/Gemini/
+  Grok load a fixed URL (`PLATFORM_URLS` in `lib/constants.js`); a local
+  service loads the user-supplied URL stored on the account itself.
+  Changing the URL doesn't require deleting and recreating the account
+  (the session partition and login state are kept). Connection testing
+  uses Electron's `net.request` (bypassing page-level CORS) and only
+  checks reachability, not the HTTP status code.
 
 ### Separate-window architecture
 

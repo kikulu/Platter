@@ -93,6 +93,30 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   主視窗，`loadURL()` 載入對應平台網址（`https://claude.ai`、
   `https://chatgpt.com`、`https://gemini.google.com`、
   `https://grok.com`）。
+- **本地端 AI 服務**（`platform === 'local'`，例如 Ollama、LM Studio、
+  Stable Diffusion WebUI、ComfyUI）：跟上面四個雲端平台共用同一套
+  `WebContentsView` / session partition 機制，唯一差異是網址不是
+  `lib/constants.js` 的 `PLATFORM_URLS` 固定表，而是帳號物件自己的
+  `url` 欄位（新增時使用者自訂，事後可在「設定」或側邊欄改）；帳號
+  另外多存 `serviceType`（`'llm' | 'image' | 'custom'`，純顯示分類用）。
+  `resolveAccountUrl(account)`（`lib/windows.js`）統一決定「這個帳號
+  最終要 `loadURL()` 的網址是什麼」，一般平台跟本地服務都走這個函式。
+  網址是空字串時 `ensureAccountViewLoaded()` 只記一筆錯誤日誌、不
+  `loadURL()`（避免傳空字串給 Electron 導致例外）。改網址用
+  `updateLocalService()`：如果這個帳號的 `WebContentsView` 已經建立過，
+  直接對現有 view 呼叫 `loadURL()` 導到新網址，不刪除重建（session
+  partition、Cookie、既有登入狀態都保留）。連線測試
+  `testLocalServiceConnection()` 用 Electron 的 `net.request`（main
+  process 的 Chromium 網路層，不受任何頁面的 CORS 限制），4 秒逾時，
+  只要連得上（不論 HTTP 狀態碼是不是 2xx，本地服務常見的根路徑回
+  404 也算連得上）就回報 `{ ok: true }`。
+  側邊欄把本地服務跟雲端帳號分成兩個獨立群組顯示（各自的 DOM 容器、
+  各自的 render 函式），但兩者是**同一份** `appState.accounts` 陣列，
+  新增/切換/移除都共用 3.3 節的持久化與 4 節的角色機制；**已知限制**：
+  帳號清單拖曳排序（見下方「帳號清單排序」）目前只對雲端帳號群組生效，
+  本地服務群組還沒做拖曳排序 UI——排序雲端帳號時，任何不在傳入順序裡的
+  帳號（本地服務都屬於這種）會被整批接到陣列最後面，彼此之間的相對
+  順序不受影響，但排在雲端帳號後面這件事本身不能反過來調整。
 - 切換帳號：如果目標帳號還沒載入過，先 `ensureAccountViewLoaded()`
   觸發第一次載入；已經載入過的帳號不會重新建立或重新整理，單純
   `setVisible(true/false)` 切換顯示狀態，達成毫秒級無縫切換。
@@ -124,7 +148,9 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 ### 3.3 帳號清單持久化
 
 - 帳號清單的中繼資料（`id`、`platform`、`name`、`roleId`——**不含** cookie
-  等實際登入資料）寫進設定檔（`app-state.json`）。開機時讀回來，
+  等實際登入資料）寫進設定檔（`app-state.json`）。`platform === 'local'`
+  的帳號多存 `url`、`serviceType` 兩個欄位（見 3.2 節），一般平台不需要。
+  開機時讀回來，
   `rebuildAllAccountViews()` 只對每個帳號呼叫 `registerAccountMeta()`
   登記中繼資料——**不會**在開機時就把所有帳號的頁面都載入起來（見 3.2
   節的懶載入說明）。真正會在開機時載入頁面的只有一個：
@@ -822,7 +848,10 @@ function openChildWindow({
     },
   });
   win.setMenuBarVisibility(false);
-  win.loadFile(path.join(__dirname, '..', 'renderer', htmlFile));
+  win.loadFile(
+    path.join(__dirname, '..', 'renderer', htmlFile),
+    query ? { query } : undefined // 例如 { platform: 'local' }，見 9.1 節
+  );
   win.on('closed', () => setWindow(null));
   setWindow(win);
   return win;
@@ -836,10 +865,18 @@ function openChildWindow({
 
 ### 9.1 新增帳號視窗（`account.html` / `account.js`）
 
-平台下拉選單（Claude/ChatGPT/Gemini/Grok）+ 帳號名稱輸入框 + 角色（可選）
-下拉選單 + 取消/確認新增按鈕。確認後呼叫 `addAccount()`、
-`switchAccount()`，然後 `window.close()` 自己關掉，主程序透過 IPC 廣播
-（`accounts:changed`）通知主視窗刷新帳號清單。
+平台下拉選單（Claude/ChatGPT/Gemini/Grok/本地端 AI 服務）+ 帳號名稱
+輸入框 + 角色（可選）下拉選單 + 取消/確認新增按鈕。選「本地端 AI
+服務」時多顯示服務類型（LLM／文生圖／自訂）跟網址輸入框（含 Ollama／
+SD WebUI／ComfyUI 範例網址提示），確認前檢查網址格式（必須以
+`http://` 或 `https://` 開頭，否則跳警告、擋下確認）。確認後呼叫
+`addAccount()`（本地服務多帶 `{ url, serviceType }`）、`switchAccount()`，
+然後 `window.close()` 自己關掉，主程序透過 IPC 廣播（`accounts:changed`）
+通知主視窗刷新帳號清單。側邊欄「本地端 AI 服務」群組的「新增本地服務」
+按鈕呼叫 `openAccountWindow('local')`，透過 `win.loadFile(file, { query
+})` 帶 `?platform=local` 查詢字串開這個視窗，`account.js` 讀
+`URLSearchParams` 直接預選平台、focus 到網址輸入框，不用使用者自己從
+下拉選單裡找。
 
 ### 9.2 知識庫視窗
 
@@ -863,15 +900,25 @@ function openChildWindow({
    到「目前已經開著」的所有帳號 session（`session.loadExtension` /
    `removeExtension`），不用重開 App。
 4. **帳號角色管理**：見第 4 節。
-5. **檔案預設儲存路徑**：「匯出當前對話」的預設存檔資料夾；勾選框「使用
+5. **本地端 AI 服務**：`platform === 'local'` 的帳號集中管理區塊——見
+   3.2 節「本地端 AI 服務」。每列顯示 icon（依 `serviceType`：🧠 LLM／
+   🎨 文生圖／🧩 自訂）、名稱、網址、連線狀態（🟢已連線／🔴連不上／
+   ⚪尚未檢查，`testLocalServiceConnection()` 的結果，視窗開啟時對每列
+   自動測一次，也可按「測試連線」重測）、「編輯」（依序彈出三個
+   `prompt()` 改名稱/類型/網址，欄位少不值得開表單視窗）、「刪除」
+   （沿用一般帳號的刪除確認+`removeAccount()`）；「新增本地服務」按鈕
+   開啟 9.1 節的新增帳號視窗、預帶 `platform=local`。這裡跟側邊欄的
+   「本地端 AI 服務」群組是同一份 `appState.accounts` 資料，兩邊都訂閱
+   `accounts:changed` 廣播互相同步。
+6. **檔案預設儲存路徑**：「匯出當前對話」的預設存檔資料夾；勾選框「使用
    預設路徑時不再詢問，直接存檔」開啟後，匯出時跳過存檔對話框直接寫檔
    （處理檔名衝突：`name.md` 存在的話依序試 `name (2).md`、`name (3).md`...）。
-6. **備份與還原**：「匯出備份」把帳號清單（平台/名稱/角色，不含登入資料）、
+7. **備份與還原**：「匯出備份」把帳號清單（平台/名稱/角色，不含登入資料）、
    角色、知識庫（items+groups）、專案、文件庫中繼資料、擴充功能、選擇器
    設定打包成一個 JSON 檔；「匯入備份」讀回這份檔案，各類資料都是「已
    存在的 id 略過，不覆蓋使用者後續的編輯」。
-7. **選擇器設定**：見第 10 節。
-8. **疑難排解**：
+8. **選擇器設定**：見第 10 節。
+9. **疑難排解**：
    - 「開啟目前帳號 DevTools」按鈕，呼叫
      `account.view.webContents.openDevTools({ mode: 'detach' })`。
    - 「清除快取」按鈕：對 `session.defaultSession` 跟每個目前開著的帳號
@@ -880,11 +927,11 @@ function openChildWindow({
      清掉、把使用者的帳號登入狀態洗掉）。用來處理啟動時終端機印出
      `disk_cache` / `quota_database` 相關錯誤，或帳號畫面出現不明載入
      異常這類 Chromium 磁碟快取髒掉的疑難雜症（常見成因見第 9.6 節）。
-9. **關於**：顯示目前版本號（`Platter v{version}`，`version` 是即時透過
-   `app:getVersion` IPC 讀 `app.getVersion()`，不是寫死在畫面上的字串，
-   打包時 `package.json` 的 `version` 改了這裡會自動跟著變）。主視窗側邊
-   欄最下面也有同一個版本號（更小、更不顯眼的位置），這裡是比較正式、
-   使用者會特地來找版本號時的地方。
+10. **關於**：顯示目前版本號（`Platter v{version}`，`version` 是即時透過
+    `app:getVersion` IPC 讀 `app.getVersion()`，不是寫死在畫面上的字串，
+    打包時 `package.json` 的 `version` 改了這裡會自動跟著變）。主視窗側邊
+    欄最下面也有同一個版本號（更小、更不顯眼的位置），這裡是比較正式、
+    使用者會特地來找版本號時的地方。
 
 ### 9.4 虛擬團隊主控台、專案計畫管理、文件庫、對話庫
 
@@ -1186,7 +1233,7 @@ sqlite3` 那種一定要解壓縮出來才能載入的原生模組不一樣。
 main.js / preload.js / package.json
 main.js                  # 只保留 App 生命週期（單一實例鎖、whenReady、視窗全關/啟用），
                          # 其餘邏輯都拆進 lib/**（1.17.0 模組化，之前是單一檔案近 2200 行）
-lib/constants.js         # 靜態設定值：平台網址、側邊欄寬度、UI 狀態預設值
+lib/constants.js         # 靜態設定值：平台網址、本地服務類型 icon、側邊欄寬度、UI 狀態預設值
 lib/state.js             # 共用可變狀態單例：視窗參照、帳號 View、appState、console 緩衝區……
 lib/dataDir.js           # DATA_DIR 讀寫/搬移、各資料檔路徑、readJSONSafe/writeJSONSafe
 lib/broadcast.js         # broadcastToAllWindows（跨視窗即時同步）
