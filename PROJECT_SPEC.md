@@ -209,13 +209,14 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 **內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
 開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
-`extractors/default-knowledge-base.json` 裡內建的 56 組提示詞範本當
-起始內容，涵蓋 8 個分類（標籤對應分類名稱）：企業日常作業、
+`extractors/default-knowledge-base.json` 裡內建的 68 組提示詞範本當
+起始內容，涵蓋 9 個分類（標籤對應分類名稱）：企業日常作業、
 醫療軟體研發、論文寫作、研究計畫、專案開發（各 5 組，共 25 組，沿用
 Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增）、
-**OpenSpec**（8 組，1.30.0 新增；兩者見下方「內建分階段套餐範本」），
-以及**企業角色範本**（8 種常見企業職務各 2 組，共 16 組，1.26.0 新增）。
-前 40 組都用單一 `content` 欄位、Markdown 格式
+**OpenSpec**（8 組，1.30.0 新增）、**簡報製作**（12 組，1.31.0 新增；
+以上三者見下方「內建分階段套餐範本」），以及**企業角色範本**（8 種
+常見企業職務各 2 組，共 16 組，1.26.0 新增）。
+前 52 組都用單一 `content` 欄位、Markdown 格式
 撰寫（標題、角色與目標、輸入資訊、輸出要求）；企業角色範本則額外帶
 `roleIds`（對應 `default-roles.json` 種子角色的固定 id，見第 4 節）跟
 `systemPrompt`／`userPrompt` 拆分欄位——`systemPrompt` 定義這組範本的
@@ -238,9 +239,10 @@ Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增）�
 回溯標記既有的內建提示詞，避免整批重複塞入。
 
 **內建分階段套餐範本**（1.27.0 新增）：`default-knowledge-base.json` 除了
-`items` 還有 `groups`，內含 7 組分階段套餐（論文寫作、研究計畫、軟體專案
+`items` 還有 `groups`，內含 8 組分階段套餐（論文寫作、研究計畫、軟體專案
 開發、醫療器材軟體合規、專案例行溝通，以及 1.28.0 新增的 **SDD 規格驅動
-開發流程**、1.30.0 新增的 **OpenSpec 變更流程**，標籤都帶「分階段範本」）。範本用
+開發流程**、1.30.0 新增的 **OpenSpec 變更流程**、1.31.0 新增的 **簡報製作
+全流程**，標籤都帶「分階段範本」）。範本用
 `stages: [{ title, itemDefaultIds: [...] }]` 描述，以內建提示詞的
 `defaultId` 引用（不綁死使用者資料裡隨機產生的 item id）；種入時由
 `lib/utils.js` 的 `buildGroupFromDefault()` 對照使用者知識庫實際的 item id，
@@ -281,6 +283,20 @@ Archive）。提案、差異規格、設計、任務四組提示詞直接要求�
 `=== FILE: specs/<capability>/spec.md ===` 標記（供匯出成檔案，見第 7.7 節）；提案在最後補
 「建議變更名稱：xxx」；探索、驗證、封存預演都是唯讀，且封存預演明確聲明只是預演、實際封存
 要用 OpenSpec 的 `/opsx:archive`（或 CLI 的 `openspec archive`）。
+
+**簡報製作全流程套餐**（1.31.0 新增）：跟前兩者不同，這組刻意設計成
+**跟任何 AI 聊天工具、任何簡報場合都無關**——不假設會用到特定平台的
+檔案生成功能，輸出一律是可以貼進任何簡報工具的結構化文字（大綱、逐頁
+重點、講者稿），不是真的產出 `.pptx`。內含 6 組標籤為「簡報製作」的
+提示詞（`kb-default-057` ~ `062`），由 `kb-group-default-008` 分三個
+階段串起來：**階段 1 定位與大綱**（觀眾與目的定位 → 大綱與敘事結構）、
+**階段 2 內容與視覺**（逐頁內容撰寫 → 圖表視覺化建議）、**階段 3 講稿
+與預演**（講者稿撰寫 → Q&A 預演與內容審查）。另外還有 6 組**場景化簡報
+範本**（`kb-default-063` ~ `068`：商業提案／銷售、產品發表、投資人募資
+Pitch Deck、學術研究成果、專案進度報告、教學／內部訓練），標籤除了
+「簡報製作」還各自加一個既有分類標籤（例如投資人募資加「高階主管」）
+方便交叉篩選；這 6 組是獨立的 `items`、**不在任何 `groups` 套餐裡**，
+使用者已經很清楚場合時可以直接單獨使用，跳過分階段流程。
 
 ### 5.1 提示詞項目（items）
 
@@ -1263,7 +1279,7 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
-extractors/default-knowledge-base.json  # 內建的56組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，OpenSpec 8組，企業角色範本8種職務各2組）＋7組分階段套餐範本（groups）
+extractors/default-knowledge-base.json  # 內建的68組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，OpenSpec 8組，簡報製作12組，企業角色範本8種職務各2組）＋8組分階段套餐範本（groups）
 extractors/default-project-templates.json # 內建的5組軟體開發專案範本（SDD／OpenSpec／Scrum／瀑布式／MVP，第 7.6 節）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
