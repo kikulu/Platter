@@ -1,5 +1,86 @@
 # Changelog
 
+## [1.33.0]
+
+### 文件庫新增：`.docx`／`.pdf` 預覽與編輯
+
+- **背景**：文件庫原本只有 `.md`/`.markdown` 能就地預覽，其他格式一律
+  只能「開啟檔案」丟給系統預設程式。這次補上 `.docx`（Word 文件）跟
+  `.pdf` 兩種最常見格式的就地預覽，`.docx` 還能直接在畫面上編輯文字/
+  格式後存回原檔，`.pdf` 能做基本的頁面管理（旋轉、刪除、加水印、
+  合併、擷取頁面範圍）。**不支援舊版二進位 `.doc`**（97-2003 格式）——
+  純 JS 沒有可靠的 parser，`.doc` 維持現狀用系統預設程式開啟。
+- **新增三個 runtime dependency**：`pdf-lib`（PDF 頁面操作）、
+  `mammoth`（`.docx` → HTML）、`docx`（HTML → `.docx` 寫回），皆為純 JS
+  無原生模組。另外把 `pdfjs-dist`（v6，PDF 檢視畫面用）的官方 build
+  （`pdf.min.mjs`／`pdf.worker.min.mjs`）複製進
+  `renderer/vendor/pdfjs/`，用動態 `import()` 在 renderer 端載入到
+  `<canvas>` 上渲染——這個套件只放在 `devDependencies`（單純拿來複製
+  這兩個檔案，執行期不需要整包裝進 `node_modules`），升版要手動重新
+  複製檔案。
+- **新增 `lib/pdfEditor.js`**（pdf-lib）：`rotatePdfPage()`／
+  `deletePdfPage()`（擋掉刪到只剩 0 頁）／`addWatermarkToPdf()`
+  （對角半透明文字戳章）／`mergePdfInto()`（接另一份 PDF 的頁面到
+  最後）／`extractPdfPages()` + `parsePageRange()`（1-based 範圍字串
+  如「1-3,5」解析、非破壞性——存成新檔案不動原檔）。旋轉/刪除/水印/
+  合併都是**直接覆寫原檔，沒有版本歷史／復原機制**，UI 呼叫前都會跳
+  確認對話框。
+- **新增 `lib/docxEditor.js`**（mammoth + docx）：
+  - `getDocxPreviewHtml()` 用 mammoth 轉 HTML，額外帶
+    `styleMap: ['u => u']`（mammoth 預設不轉底線），回傳前用新的
+    `lib/utils.js` `sanitizeDocxHtml()` 淨化，並偵測
+    `hasComplexContent`（有沒有表格/圖片）。
+  - `saveHtmlAsDocx()` 用一個簡單的 tokenizer（不是完整 HTML
+    parser，只認得 mammoth 輸出跟 `execCommand` 會產生的標籤集合）把
+    編輯後的 HTML 轉成 docx.js 的 `Paragraph`/`TextRun`，支援標題/
+    粗體/斜體/底線/`<br>` 換行/單層項目清單跟編號清單。**已知限制**：
+    表格降級成攤平純文字（保留內容、不保留結構）；圖片直接拿掉換成
+    文字提示（要正確嵌回 `.docx` 得先解出圖片尺寸，這版刻意不做）；
+    只支援單層清單。
+- **新增 `lib/utils.js` `sanitizeDocxHtml()`**：正規表達式層級的黑名單
+  淨化（拿掉危險標籤/on\* 事件屬性/行內 style；href 限制安全 scheme，
+  src 圖片額外放行 `data:image/`，跟 `markdownToHtml()` 的
+  `safeUrl()` 全面擋掉 `data:` 不一樣）——不是完整 HTML sanitizer，
+  風險評估見 `lib/utils.js` 內的說明註解。
+- **新增 IPC**（`lib/ipc/documents.js`）：`documents:getDocxPreview`／
+  `documents:saveDocxEdit`／`documents:getPdfBytes`／
+  `documents:pdfRotatePage`／`documents:pdfDeletePage`／
+  `documents:pdfAddWatermark`／`documents:pdfMerge`／
+  `documents:pdfExtractPages`，`preload.js` 對應曝露成
+  `getDocxPreview`/`saveDocxEdit`/`getPdfBytes`/`pdfRotatePage`/
+  `pdfDeletePage`/`pdfAddWatermark`/`pdfMerge`/`pdfExtractPages`。
+- **`renderer/documents.js`／`documents.html`／`documents.css`**：原本
+  單一的「預覽 Markdown」按鈕擴充成依副檔名顯示對應文字跟功能；`.docx`
+  多一排格式化按鈕（粗體/斜體/底線/H1/H2/清單/段落，全部用
+  `document.execCommand()`）+ 儲存按鈕；`.pdf` 多一個 `<canvas>` +
+  上一頁/下一頁/縮放 + 編輯按鈕列；含表格/圖片的 `.docx` 會顯示警示
+  banner，編輯／儲存前多一次確認對話框。
+- 三語系（zh-TW／en／ja）各新增 27 個鍵（413 → 440，鍵集合一致）。
+- **新增測試**：`test/pdfEditor.test.js`（11 項）、
+  `test/docxEditor.test.js`（9 項，含完整 round-trip 驗證：docx →
+  HTML → docx → HTML 後標題/粗體/斜體/底線/清單都還在）、
+  `test/utils.test.js` 補 5 項 `sanitizeDocxHtml` 測試。這幾個模組都
+  不依賴 Electron（純 fs + npm 套件），可以直接用真正的檔案在一般
+  Node.js 環境下測試，不需要假 electron。
+- **已知限制／尚待驗證**：
+  - PDF 編輯（旋轉/刪除/水印/合併）沒有版本歷史或復原機制，操作前的
+    確認對話框是唯一的安全網。
+  - `.doc`（舊版二進位格式）不支援預覽/編輯。
+  - `.docx` 編輯不保留表格結構、不保留圖片、只支援單層清單——內容跟
+    格式複雜的文件不適合在這裡編輯，建議用 Word 之類的完整工具。
+  - `pdf-lib`／`mammoth`／`docx` 三個新 dependency 讓 `node_modules`
+    多了約 30MB（`pdf-lib` 24MB 是最大宗，主要是它同時打包了
+    esm/cjs/瀏覽器版），沒有特別優化過打包後的體積，之後如果要瘦身可以
+    考慮。
+  - **尚未在真正的 Electron 視窗打開文件庫實際點過這些按鈕**——pdf.js
+    的動態 `import()`／Web Worker 在 Electron 打包後（asar）環境下的
+    行為，跟 CSP `worker-src` fallback 到 `script-src 'self'` 是否真的
+    允許同源 worker 建立，都只做了程式碼層級的推理跟 Node.js 環境下的
+    單元測試，**沒有實機驗證**。下次有辦法跑 `npm start` 時應該優先
+    驗證這個功能，特別是 PDF 檢視畫面。
+
+---
+
 ## [1.32.0]
 
 ### 知識庫新增：簡報製作提示詞範本（支援各家 AI、多場景）

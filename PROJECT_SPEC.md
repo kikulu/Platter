@@ -732,6 +732,79 @@ MVP 範本不顯示。
   `http(s)://`、`mailto:` 或相對路徑，`javascript:`/`data:` 一律擋掉
   換成 `#`——因為渲染層是直接把回傳的 HTML 用 `innerHTML` 插入畫面
   （見 `renderer/documents.js`），這個安全邊界不能鬆動。
+- **`.docx` 預覽與編輯**（1.33.0 新增，僅支援 `.docx`，不支援舊版二進位
+  `.doc`——純 JS 沒有可靠的 legacy `.doc` parser，`.doc` 維持現狀只能
+  「開啟檔案」用系統預設程式）：見 `lib/docxEditor.js`。
+  - 預覽：`documents:getDocxPreview` 用 `mammoth` 把 `.docx` 轉成語意化
+    HTML（`p`/`h1-6`/`strong`/`em`/`u`/`ul`/`ol`/`li`/`table`/`img`，
+    圖片預設內嵌成 `data:image/` base64），額外帶
+    `styleMap: ['u => u']`（mammoth 預設不轉底線，這裡補上，否則「編輯
+    後存檔」在使用者沒動過底線文字的情況下也會把底線洗掉）。回傳前用
+    `lib/utils.js` 的 `sanitizeDocxHtml()` 淨化（拿掉
+    script/style/iframe/object/embed 標籤、on\* 事件屬性、行內
+    `style=`；`href`/`src` 限制安全 scheme，圖片額外放行
+    `data:image/`，跟 `markdownToHtml()` 的 `safeUrl()` 全面擋掉 `data:`
+    不一樣）。同時回傳 `hasComplexContent`（原始 HTML 有沒有
+    `<table`/`<img`），渲染層據此顯示警示、編輯／儲存前多一次確認
+    對話框。
+  - 編輯：「編輯」按鈕把預覽區域切成 `contenteditable`，多顯示一排
+    格式按鈕（粗體/斜體/底線/H1/H2/清單/段落），全部用瀏覽器內建的
+    `document.execCommand()`（deprecated 但 Chromium 目前仍完整支援，
+    這個功能的範疇用它就夠）。
+  - 儲存：`documents:saveDocxEdit` 把畫面上目前的 `innerHTML`
+    （先過一次 `sanitizeDocxHtml()`）丟給 `htmlToParagraphs()` 解析——
+    這不是完整的 HTML parser，是一個簡單的 tokenizer + 堆疊，只認得
+    mammoth 輸出跟 `execCommand` 會產生的標籤集合，轉成 docx.js 的
+    `Paragraph`/`TextRun` 陣列（標題對應 `HeadingLevel`、粗體/斜體/底線
+    對應 `TextRun` 的對應屬性、`<br>` 對應 `TextRun` 的 `break`
+    屬性、`<ul><li>` 用 `bullet: {level}` 捷徑、`<ol><li>` 用共用的
+    numbering 設定 `NUMBERED_LIST_REF`），再用 `docx` 套件的 `Packer`
+    包成 buffer 覆寫原檔。**已知限制、刻意的取捨**：`<table>` 會被降級
+    成攤平的純文字段落（每格文字用 `|` 接起來，前面加一句提示，見
+    `flattenTables()`）保留內容但不保留表格結構；`<img>` 直接拿掉換成
+    `[圖片，儲存後不會保留]` 這行文字（要把 data URI 圖片正確嵌回
+    `.docx` 需要先解出圖片實際尺寸，這個版本刻意不做，避免用猜的尺寸
+    把版面弄得更奇怪）；只支援單層清單（`level` 永遠算成
+    `listStack.length - 1`，巢狀清單會被拉成同一層）。存檔後
+    `refreshDocSize()` 會更新文件庫記錄的檔案大小。
+- **`.pdf` 預覽與編輯**（1.33.0 新增）：預覽跟編輯是兩條分開的路，
+  main process 完全不需要「認識」PDF 內容長什麼樣子。
+  - 預覽：`documents:getPdfBytes` 單純讀原始 bytes 回傳（`Uint8Array`，
+    Electron IPC 的 structured clone 原生支援，不用轉 base64）。渲染層
+    用動態 `import('./vendor/pdfjs/pdf.min.mjs')`（見下方「vendor 進來的
+    pdf.js」）載入 pdf.js、`getDocument({data}).promise` 解析、
+    `page.render({canvasContext, viewport})` 畫到
+    `<canvas id="doc-pdf-canvas">` 上，上一頁/下一頁/縮放都是純前端
+    操作（重新算 viewport、重新 render，不用再打 IPC）。
+  - 編輯（見 `lib/pdfEditor.js`，全部用 `pdf-lib`）：旋轉單頁
+    （`rotatePdfPage`，角度用 `(current + delta + 360) % 360` 處理累加/
+    回捲）、刪除單頁（`deletePdfPage`，擋掉「只剩最後一頁」的情況）、
+    加水印（`addWatermarkToPdf`，對角、半透明文字戳章，字級依頁面大小
+    自動縮放）、合併另一個 PDF 檔案的所有頁面到最後面
+    （`mergePdfInto`，用 `dialog.showOpenDialog` 選檔案）。這四個操作
+    都是**直接覆寫原檔、沒有版本歷史／復原機制**，`renderer/documents.js`
+    在呼叫前都會跳確認對話框（刪除頁面／合併／水印皆有），操作成功後
+    main process 廣播 `documents:changed`，渲染層重新抓一次 bytes 讓
+    `<canvas>` 反映最新結果（見 `reloadPdfAfterEdit()`）。
+  - 擷取頁面範圍（`documents:pdfExtractPages` + `extractPdfPages()`）是
+    唯一**非破壞性**的操作：`parsePageRange()` 解析「1-3,5」這種
+    1-based 範圍字串成 0-based 索引陣列，用 `pdf-lib` 的
+    `copyPages()`／`addPage()` 組成全新的 `PDFDocument`，存成
+    `documents/` 底下的新檔案，呼叫 `registerDocument()` 註冊成文件庫
+    裡獨立的一份新文件（`原檔名（擷取）.pdf`），原檔完全不受影響。
+  - **vendor 進來的 pdf.js**：`pdfjs-dist`（v6，只有 `.mjs` build、沒有
+    legacy UMD）只在 renderer 用（main process 完全不 `require`
+    它），所以不是整包放進 `node_modules` 給程式碼引用，而是把
+    `node_modules/pdfjs-dist/build/pdf.min.mjs`／`pdf.worker.min.mjs`
+    直接複製進 `renderer/vendor/pdfjs/`（連同 `LICENSE`）當成一般
+    checked-in 的靜態資源，用動態 `import()` 載入；`GlobalWorkerOptions.
+workerSrc` 指向同一個資料夾底下的 worker 檔案，讓 pdf.js 用真正的
+    Web Worker 解析（而不是退回主執行緒的 fake worker）——`documents.html`
+    的 CSP 沒有另外設 `worker-src`，會 fallback 到已經有的
+    `script-src 'self'`，同源的 worker 可以正常建立。`pdfjs-dist` 本身
+    只放在 `package.json` 的 `devDependencies`（單純拿來複製這兩個檔案，
+    執行期完全不需要），升版不會自動更新這兩個 vendor 檔案，要手動重新
+    複製。
 - 移除文件時，若是「已管理」的複本，會另外詢問是否連同實體檔案一起刪除，
   或只移除紀錄保留檔案；移除時也會清掉第 8.5 節「對話庫」裡任何引用到
   這份文件的關聯，避免懸空引用。
@@ -1265,14 +1338,16 @@ lib/ipc/knowledge.js     # knowledge:* IPC
 lib/ipc/settings.js      # settings:* IPC（資料目錄/擴充功能/儲存路徑/備份還原/選取器/疑難排解）
 lib/ipc/windows.js       # window:* / app:getVersion IPC
 lib/ipc/projects.js      # projects:* IPC（含工時紀錄、到期摘要）
-lib/ipc/documents.js     # documents:* IPC（含 Markdown 預覽）
+lib/ipc/documents.js     # documents:* IPC（Markdown/Word/PDF 預覽、Word/PDF 基本編輯）
 lib/ipc/conversations.js # conversations:* / export:current IPC
 lib/ipc/logs.js          # logs:* / console:* IPC
 lib/ipc/search.js        # 跨模組快速搜尋（命令面板）：search:* IPC
-lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導……）
+lib/utils.js             # 不依賴 Electron API 的純函式（字串處理、選擇器推導、markdownToHtml/sanitizeDocxHtml……）
 lib/workflow.js          # 專案階段流程（第 7.6 節）：範本展開、組合提示詞、步驟/任務狀態同步（純函式）
 lib/openspec.js          # OpenSpec 整合（第 7.7 節）：匯出成 openspec/changes/、匯入現有規格、路徑安全檢查
 lib/sqlite.js            # sql.js（WebAssembly 版 SQLite）的最小包裝：開檔/存檔/查詢
+lib/pdfEditor.js         # PDF 頁面操作（旋轉/刪除/加水印/合併/擷取），第 8 節，用 pdf-lib
+lib/docxEditor.js        # .docx 預覽（mammoth）＋編輯後 HTML 寫回 .docx（docx），第 8 節
 CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
 assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
@@ -1288,11 +1363,12 @@ renderer/knowledge.html, knowledge.js, knowledge.css # 知識庫（提示詞/套
 renderer/settings.html, settings.js, settings.css    # 設定視窗
 renderer/team.html, team.js, team.css                # 虛擬團隊主控台
 renderer/project.html, project.js, project.css       # 專案計畫管理
-renderer/documents.html, documents.js, documents.css # 文件庫
+renderer/documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
 renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
+renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js
-renderer/locales/zh-TW.json, en.json
+renderer/locales/zh-TW.json, en.json, ja.json
 ```
 
 `lib/**` 模組之間的共用慣例（新增功能或修 bug 時務必遵守，避免破壞這個

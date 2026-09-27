@@ -78,7 +78,7 @@ Claude、ChatGPT、Gemini、Grok を一日中行き来していると、ブラ�
 | 📋 プロジェクトテンプレートとステージフロー | 「プロジェクト計画」でテンプレートからプロジェクトを作成できます。仕様駆動開発（SDD）、OpenSpec 変更フロー、アジャイル Scrum、ウォーターフォール、MVP プロトタイプの 5 つのソフトウェア開発テンプレートを内蔵。テーマを入力したら、「ステージフロー」タブで各ステージのプロンプトを順に実行——コピー（テーマと前の手順の出力を自動反映）→ AI の出力を貼り戻す → 完了にする → 次の手順へ。各手順はプロジェクトタスクとしても同期され、調整したフローを自分のテンプレートとして保存することもできます。**OpenSpec 連携**：プロジェクトの既存の `openspec/specs` をインポートしてデルタスペックの根拠にでき、提案・デルタスペック・設計・タスクの出力をワンクリックでプロジェクト内の `openspec/changes/<変更名>/` フォルダへエクスポートできます |
 | 🧩 バーチャルチームコンソール               | アカウントをロール別にチーム図として整理し、「プロジェクト計画」でプロジェクトを作成、タスクに分割、チーム内のアカウントに割り当て、進捗管理、作業時間の記録ができる                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
 | ⏰ 期限リマインダー                         | サイドバーのバッジに期限超過／本日期限のタスク・課題の件数を表示、新たに期限が来た項目があればネイティブ通知も送信                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| 🗃️ ドキュメントライブラリ                   | 会話からエクスポートしたファイルと手動でインポートした任意のファイルを一元管理、`.md` ファイルはその場で予覧可能                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              |
+| 🗃️ ドキュメントライブラリ                   | 会話からエクスポートしたファイルと手動でインポートした任意のファイルを一元管理。`.md` はその場で予覧、`.docx` はその場で予覧しつつテキスト/書式を編集して上書き保存、`.pdf` はページ送りで予覧しつつ基本的なページ編集（回転、ページ削除、ウォーターマーク、結合、ページ範囲の抽出）が可能                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ➕ アカウント追加（独立ウィンドウ）         | プラットフォームを選び、カスタム名を付けて、追加後すぐ切り替え                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ⬇️ 会話のエクスポート                       | 画面に表示されている内容を Markdown か JSON で保存、保存先を指定したりナレッジベースにも追加したりできる、ダイアログなしの自動保存も設定可能                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ⚙️ 設定（独立ウィンドウ）                   | 言語切り替え、設定ファイルの保存場所、拡張機能、デフォルトのエクスポート先、バックアップと復元、セレクタ設定（テストキャプチャ予覧つき）、要素ピッカーツール、トラブルシューティング                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
@@ -218,7 +218,7 @@ CSS の z-index を無視するネイティブレイヤーのため、ページ�
 ## 開発
 
 ```bash
-npm test          # ユニットテスト（純粋関数、データ層のシード、IPC ハンドラ、node:test、sql.js 以外の追加パッケージ不要）
+npm test          # ユニットテスト（純粋関数、データ層のシード、IPC ハンドラ、node:test、追加パッケージは下記 sql.js/pdf-lib/mammoth/docx の説明を参照）
 npm run lint        # ESLint
 npm run format      # Prettier による自動整形
 ```
@@ -233,6 +233,20 @@ npm run format      # Prettier による自動整形
 `node --test` で直接テストできます。各モジュールの役割分担と共有状態の
 扱い方の慣例は `PROJECT_SPEC.md` の第 15 節「ファイル構成」を参照して
 ください。
+
+ドキュメントライブラリの `.docx`／`.pdf` 予覧・編集機能（1.33.0 で追加）
+は 3 つの実行時 dependency を使っています：`pdf-lib`（PDF のページ操作、
+`lib/pdfEditor.js`）、`mammoth`（`.docx` → HTML への変換、予覧用、
+`lib/docxEditor.js`）、`docx`（編集後の HTML を `.docx` に書き戻す、
+同じく `lib/docxEditor.js`）——いずれも純粋な JS でネイティブモジュール
+はありません。PDF ビューアが使う `pdf.js`（`pdfjs-dist`）は少し特殊で、
+renderer（Node 環境がない）側で `<canvas>` にページを描画するためだけに
+使うので、main process から `require()` するのではなく、公式のビルド済み
+ファイル `pdf.min.mjs`／`pdf.worker.min.mjs` を `renderer/vendor/pdfjs/`
+に複製し、`<script>` や動的 `import()` で読み込んでいます。`pdfjs-dist`
+自体は `devDependencies` にのみ置いており（このファイルを複製するためだけ
+に使うので実行時には不要）、バージョンを上げるときはこの 2 ファイルを
+手動で複製し直す必要があり、`npm install` だけでは更新されません。
 
 push / PR 時には [GitHub Actions](./.github/workflows/ci.yml) が構文
 チェック・lint・ユニットテストを自動実行します——ただし実際に Electron
@@ -279,6 +293,8 @@ ai-workspace-aggregator/
 │   ├── workflow.js                      # プロジェクトのステージフロー：テンプレート展開、プロンプト合成（純粋関数）
 │   ├── openspec.js                      # OpenSpec 連携：openspec/changes/ へのエクスポート、既存スペックのインポート
 │   ├── sqlite.js                        # sql.js の薄いラッパー：開く/保存/クエリ
+│   ├── pdfEditor.js                      # PDF ページ操作（回転/削除/ウォーターマーク/結合/抽出）、pdf-lib
+│   ├── docxEditor.js                      # .docx 予覧（mammoth）＋編集後 HTML の .docx 書き戻し（docx）
 │   └── ipc/                              # 業務領域ごとに分割された IPC ハンドラ登録（9 ファイル + index.js、search.js を含む）
 ├── test/*.test.js            # ユニットテスト（utils、sqlite、ナレッジベースのセット、プロジェクトフロー）
 ├── package.json              # npm スクリプト + electron-builder 設定
@@ -295,9 +311,11 @@ ai-workspace-aggregator/
 │   ├── index.html / renderer.js / renderer.css   # メインウィンドウ
 │   ├── account.html / account.js                 # アカウント追加（独立ウィンドウ）
 │   ├── knowledge.html / knowledge.js / knowledge.css  # ナレッジベース（独立ウィンドウ）
+│   ├── documents.html / documents.js / documents.css  # ドキュメントライブラリ（Markdown/Word/PDF 予覧、Word/PDF 基本編集）
 │   ├── settings.html / settings.js / settings.css     # 設定（独立ウィンドウ）
+│   ├── vendor/pdfjs/                              # vendor 化した pdf.js のビルド済みファイル（pdf.min.mjs、pdf.worker.min.mjs）、PDF ビューアの canvas 描画用
 │   ├── i18n.js                                   # 多言語対応
-│   └── locales/zh-TW.json, en.json
+│   └── locales/zh-TW.json, en.json, ja.json
 └── assets/                    # アプリアイコンと生成用プロンプト
 ```
 

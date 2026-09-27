@@ -78,7 +78,7 @@ bundled into a backup file.
 | 📋 Project templates & staged workflow | "Project Plans" can create a project from a template: 5 built-in software-development templates (Spec-Driven Development, OpenSpec change workflow, Agile Scrum, Waterfall, MVP prototype). Enter a project topic, then work through each stage's prompts in the "Workflow" tab — copy (topic and earlier outputs filled in automatically) → paste the AI's output back → mark done → next step. Every step is mirrored as a project task, and you can save an adjusted workflow as your own template. **OpenSpec integration**: import a project's existing `openspec/specs` as the basis for delta specs, and export the proposal, delta specs, design and tasks outputs in one click into the project's `openspec/changes/<change-name>/` folder |
 | 🧩 Virtual Team console                | Organize accounts into a team chart by role, then create projects, split them into tasks, assign tasks to team accounts, track progress, and log hours in "Project Plans"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ⏰ Due-date reminders                  | A sidebar badge shows how many tasks/issues are overdue or due today; a native notification fires when new items become due                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| 🗃️ Document Library                    | Stores files exported from conversations plus any manually imported file; `.md` files can be previewed in place                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
+| 🗃️ Document Library                    | Stores files exported from conversations plus any manually imported file. `.md` files preview in place; `.docx` files preview and can be edited (text/formatting) right in the window and saved back; `.pdf` files can be paged through and get basic page editing (rotate, delete page, watermark, merge, extract a page range)                                                                                                                                                                                                                                                                                                                                                                                                                    |
 | ➕ Add account (separate window)       | Pick a platform, give it a custom name, and switch to it immediately                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | ⬇️ Conversation export                 | Save what's currently visible on screen as Markdown or JSON; save to a custom location, optionally add it to the Knowledge Base too, or set it to auto-save without a dialog                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
 | ⚙️ Settings (separate window)          | Language switcher, config storage location, extensions, default export path, backup/restore, selector settings (with test-capture preview), an element picker tool, troubleshooting                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
@@ -220,7 +220,7 @@ JSON structure up front and surface a clear error message on mismatch.
 ## Development
 
 ```bash
-npm test          # unit tests (pure functions, data-layer seeding, IPC handlers; node:test, no extra deps besides sql.js)
+npm test          # unit tests (pure functions, data-layer seeding, IPC handlers; node:test, see the sql.js/pdf-lib/mammoth/docx note below for extra deps)
 npm run lint        # ESLint
 npm run format      # Prettier auto-formatting
 ```
@@ -234,6 +234,21 @@ functions with no Electron dependency (string processing, filesystem
 helpers), kept separate so they can be tested directly with `node --test`.
 See `PROJECT_SPEC.md` section 15 ("File Structure") for how the modules
 divide responsibilities and the shared-state convention.
+
+The document library's `.docx`/`.pdf` preview and editing (added in
+1.33.0) uses three runtime dependencies: `pdf-lib` (PDF page operations,
+`lib/pdfEditor.js`), `mammoth` (`.docx` → HTML for preview,
+`lib/docxEditor.js`), and `docx` (writing edited HTML back to `.docx`,
+also in `lib/docxEditor.js`) — all pure JS, no native modules. The PDF
+viewer's `pdf.js` (`pdfjs-dist`) is different: it only runs in the
+renderer (no Node access there) to draw pages onto a `<canvas>`, so
+instead of being `require()`d by the main process it's vendored as the
+official prebuilt `pdf.min.mjs`/`pdf.worker.min.mjs` files under
+`renderer/vendor/pdfjs/`, loaded via a plain `<script>`/dynamic
+`import()`. `pdfjs-dist` itself only lives in `devDependencies` (it's
+only used to copy those two files during development); bumping its
+version means manually re-copying them, not just running
+`npm install`.
 
 [GitHub Actions](./.github/workflows/ci.yml) runs syntax checks, lint,
 and unit tests automatically on push/PR — it does not cover actually
@@ -278,6 +293,8 @@ ai-workspace-aggregator/
 │   ├── workflow.js                      # Project staged workflow: template expansion, prompt composition (pure functions)
 │   ├── openspec.js                      # OpenSpec integration: export to openspec/changes/, import existing specs
 │   ├── sqlite.js                        # Thin wrapper around sql.js: open/save/query
+│   ├── pdfEditor.js                      # PDF page operations (rotate/delete/watermark/merge/extract), pdf-lib
+│   ├── docxEditor.js                      # .docx preview (mammoth) + edited-HTML-to-.docx write-back (docx)
 │   └── ipc/                              # IPC handler registration, split by domain (9 files + index.js, incl. search.js)
 ├── test/*.test.js            # Unit tests (utils, sqlite, knowledge bundles, project workflow)
 ├── package.json              # npm scripts + electron-builder config
@@ -294,9 +311,11 @@ ai-workspace-aggregator/
 │   ├── index.html / renderer.js / renderer.css   # Main window
 │   ├── account.html / account.js                 # Add Account (separate window)
 │   ├── knowledge.html / knowledge.js / knowledge.css  # Knowledge Base (separate window)
+│   ├── documents.html / documents.js / documents.css  # Document Library (Markdown/Word/PDF preview, Word/PDF basic editing)
 │   ├── settings.html / settings.js / settings.css     # Settings (separate window)
+│   ├── vendor/pdfjs/                              # Vendored pdf.js prebuilt files (pdf.min.mjs, pdf.worker.min.mjs), for the PDF viewer canvas
 │   ├── i18n.js                                   # Internationalization
-│   └── locales/zh-TW.json, en.json
+│   └── locales/zh-TW.json, en.json, ja.json
 └── assets/                    # App icons and generation prompts
 ```
 
