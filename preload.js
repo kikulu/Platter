@@ -193,6 +193,18 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   openDocumentFile: (id) => ipcRenderer.invoke('documents:openFile', id),
   showDocumentInFolder: (id) => ipcRenderer.invoke('documents:showInFolder', id),
   getMarkdownPreview: (id) => ipcRenderer.invoke('documents:getMarkdownPreview', id),
+  getDocxPreview: (id) => ipcRenderer.invoke('documents:getDocxPreview', id),
+  saveDocxEdit: (id, html) => ipcRenderer.invoke('documents:saveDocxEdit', { id, html }),
+  getPdfBytes: (id) => ipcRenderer.invoke('documents:getPdfBytes', id),
+  pdfRotatePage: (id, pageIndex, delta) =>
+    ipcRenderer.invoke('documents:pdfRotatePage', { id, pageIndex, delta }),
+  pdfDeletePage: (id, pageIndex) =>
+    ipcRenderer.invoke('documents:pdfDeletePage', { id, pageIndex }),
+  pdfAddWatermark: (id, text) =>
+    ipcRenderer.invoke('documents:pdfAddWatermark', { id, text }),
+  pdfMerge: (id) => ipcRenderer.invoke('documents:pdfMerge', id),
+  pdfExtractPages: (id, rangeStr) =>
+    ipcRenderer.invoke('documents:pdfExtractPages', { id, rangeStr }),
   onDocumentsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('documents:changed', handler);
