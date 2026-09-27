@@ -24,6 +24,7 @@ const {
   escapeCssIdentifier,
   deriveSelectorFromSamples,
   markdownToHtml,
+  sanitizeDocxHtml,
 } = require('../lib/utils');
 
 test('genId() 產生非空字串，且連續呼叫兩次不會撞號', () => {
@@ -177,4 +178,44 @@ test('markdownToHtml：相對路徑連結（沒有 scheme）原樣保留', () =>
 test('markdownToHtml：空字串輸入不會丟錯，回傳空字串', () => {
   assert.equal(markdownToHtml(''), '');
   assert.equal(markdownToHtml(undefined), '');
+});
+
+test('sanitizeDocxHtml：<script>/<style>/<iframe> 整段被拿掉', () => {
+  const html =
+    '<p>hello</p><script>alert(1)</script><style>body{}</style>' +
+    '<iframe src="https://evil.example"></iframe><p>world</p>';
+  const out = sanitizeDocxHtml(html);
+  assert.ok(!out.includes('<script'));
+  assert.ok(!out.includes('<style'));
+  assert.ok(!out.includes('<iframe'));
+  assert.ok(out.includes('<p>hello</p>'));
+  assert.ok(out.includes('<p>world</p>'));
+});
+
+test('sanitizeDocxHtml：on* 事件屬性跟行內 style 屬性會被拿掉', () => {
+  const html = '<p onclick="evil()" style="color:red">hi</p>';
+  const out = sanitizeDocxHtml(html);
+  assert.ok(!out.includes('onclick'));
+  assert.ok(!out.includes('style='));
+  assert.ok(out.includes('<p>hi</p>') || out.includes('<p >hi</p>'));
+});
+
+test('sanitizeDocxHtml：<img> 的 data:image/ src 會保留（mammoth 內嵌圖片的方式）', () => {
+  const html = '<img src="data:image/png;base64,AAAA==">';
+  const out = sanitizeDocxHtml(html);
+  assert.ok(out.includes('data:image/png;base64,AAAA=='));
+});
+
+test('sanitizeDocxHtml：非 data:image/ 的 data: src 會被擋掉（不是圖片、不信任）', () => {
+  const html = '<img src="data:text/html,<script>alert(1)</script>">';
+  const out = sanitizeDocxHtml(html);
+  assert.ok(!out.includes('data:text/html'));
+});
+
+test('sanitizeDocxHtml：href 的 javascript: 會被擋掉換成 #，http(s) 保留', () => {
+  const html = '<a href="javascript:alert(1)">a</a><a href="https://example.com">b</a>';
+  const out = sanitizeDocxHtml(html);
+  assert.ok(!out.includes('javascript:'));
+  assert.ok(out.includes('href="#"'));
+  assert.ok(out.includes('href="https://example.com"'));
 });
