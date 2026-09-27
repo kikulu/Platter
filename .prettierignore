@@ -1,0 +1,7 @@
+node_modules/
+dist/
+
+# 第三方 vendor 進來的檔案（見 renderer/vendor/pdfjs/，用於 .pdf 預覽/編輯
+# 功能的 pdf.js），已經是官方 minify 過的輸出，不應該被 Prettier 重新排版
+# （會讓檔案變得又大又難跟上游版本比對差異）。
+renderer/vendor/
