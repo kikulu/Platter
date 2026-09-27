@@ -45,13 +45,44 @@
   const previewBtn = document.getElementById('btn-preview-md');
   const previewBox = document.getElementById('doc-preview-box');
   const previewContent = document.getElementById('doc-preview-content');
+  const complexWarning = document.getElementById('doc-complex-warning');
+
+  const docxToolbar = document.getElementById('doc-docx-toolbar');
+  const docxEditToggleBtn = document.getElementById('btn-docx-edit-toggle');
+  const docxFormatButtons = document.getElementById('doc-docx-format-buttons');
+  const docxSaveBtn = document.getElementById('btn-docx-save');
+
+  const pdfToolbar = document.getElementById('doc-pdf-toolbar');
+  const pdfCanvas = document.getElementById('doc-pdf-canvas');
+  const pdfPageIndicator = document.getElementById('pdf-page-indicator');
+  const pdfZoomIndicator = document.getElementById('pdf-zoom-indicator');
 
   let allDocs = [];
   let allAccounts = [];
   let currentDocId = null;
-  let previewOpen = false; // 目前這個文件是否正在顯示 Markdown 預覽
+  let previewOpen = false; // 目前這個文件是否正在顯示預覽（md/docx/pdf 共用這個開關）
 
   const MARKDOWN_EXTENSIONS = new Set(['md', 'markdown']);
+  const DOCX_EXTENSIONS = new Set(['docx']);
+  const PDF_EXTENSIONS = new Set(['pdf']);
+
+  // --- PDF 檢視狀態（見 openPdfPreview()／renderPdfPage()） ---
+  let pdfjsLibPromise = null;
+  let pdfDocProxy = null; // pdfjs-dist 的 PDFDocumentProxy
+  let pdfCurrentPage = 1;
+  let pdfScale = 1.2;
+
+  // --- .docx 編輯狀態（見 openDocxPreview()／setDocxEditing()） ---
+  let docxEditing = false;
+  let docxHasComplexContent = false;
+
+  function docTypeOf(name) {
+    const ext = extOf(name);
+    if (MARKDOWN_EXTENSIONS.has(ext)) return 'md';
+    if (DOCX_EXTENSIONS.has(ext)) return 'docx';
+    if (PDF_EXTENSIONS.has(ext)) return 'pdf';
+    return null;
+  }
 
   function extOf(name) {
     const m = /\.([a-zA-Z0-9]+)$/.exec(name || '');
@@ -172,14 +203,32 @@
 
     missingBanner.style.display = doc.missing ? 'block' : 'none';
 
-    // 切換文件時一律收起舊的預覽（不同文件的內容不該沿用），只有
-    // .md/.markdown 而且檔案沒有遺失才顯示「預覽 Markdown」按鈕。
+    // 切換文件時一律收起舊的預覽（不同文件的內容不該沿用），依副檔名
+    // 決定「預覽」按鈕要不要顯示、顯示什麼文字；pdf 檢視狀態跟 docx
+    // 編輯狀態也要整個重置，不然會殘留上一份文件的頁碼/縮放/編輯模式。
     previewOpen = false;
     previewBox.style.display = 'none';
+    previewBox.classList.remove('pdf-mode');
     previewContent.innerHTML = '';
-    previewBtn.style.display =
-      !doc.missing && MARKDOWN_EXTENSIONS.has(extOf(doc.name)) ? '' : 'none';
-    previewBtn.textContent = window.i18n.t('documents.previewMarkdown');
+    previewContent.contentEditable = 'false';
+    complexWarning.style.display = 'none';
+    docxToolbar.style.display = 'none';
+    docxFormatButtons.style.display = 'none';
+    pdfToolbar.style.display = 'none';
+    pdfCanvas.style.display = 'none';
+    docxEditing = false;
+    docxHasComplexContent = false;
+    pdfDocProxy = null;
+    pdfCurrentPage = 1;
+
+    const type = docTypeOf(doc.name);
+    const previewLabelKey = {
+      md: 'documents.previewMarkdown',
+      docx: 'documents.docxPreview',
+      pdf: 'documents.pdfPreview',
+    }[type];
+    previewBtn.style.display = !doc.missing && previewLabelKey ? '' : 'none';
+    if (previewLabelKey) previewBtn.textContent = window.i18n.t(previewLabelKey);
 
     renderList();
   }
@@ -235,36 +284,316 @@
     if (!result.ok) alert(window.i18n.t('documents.missingFlag'));
   });
 
-  // Markdown 預覽：點一下展開、再點一下收起。收起時不清掉已經渲染好的
-  // 內容（下次展開不用重新讀檔+轉換），只有切換到別的文件（selectDoc）
-  // 才會清空重來，避免顯示到不是目前這份文件的舊內容。
+  // 預覽／編輯：點一下展開、再點一下收起。md 收起時不清掉已經渲染好的
+  // 內容（下次展開不用重新讀檔+轉換）；docx/pdf 也一樣保留，直到切換到
+  // 別的文件（selectDoc）才整個清空重來，避免顯示到不是目前這份文件的
+  // 舊內容。
   //
-  // previewContent.innerHTML 是這個 renderer 目前唯一用 innerHTML 插入
-  // 動態內容的地方——安全性完全建立在 lib/utils.js 的 markdownToHtml()
-  // 上（來源文字先 HTML escape、只有轉換器自己產生的標籤未跳脫、連結
-  // 網址做 scheme 白名單），main process 已經把內容轉成安全的 HTML 才
-  // 送過來，這裡不需要也不應該再自己做任何字串拼接。
+  // previewContent.innerHTML 是這個 renderer 少數用 innerHTML 插入
+  // 動態內容的地方——安全性完全建立在 main process 那端：md 的
+  // markdownToHtml()（來源文字先 HTML escape）跟 docx 的
+  // sanitizeDocxHtml()（黑名單拿掉危險標籤/屬性），這裡不需要也不應該
+  // 再自己做任何字串拼接。
   previewBtn.addEventListener('click', async () => {
     if (!currentDocId) return;
+    const doc = allDocs.find((d) => d.id === currentDocId);
+    if (!doc) return;
+    const type = docTypeOf(doc.name);
+
     previewOpen = !previewOpen;
     if (!previewOpen) {
       previewBox.style.display = 'none';
-      previewBtn.textContent = window.i18n.t('documents.previewMarkdown');
+      previewBtn.textContent = window.i18n.t(
+        {
+          md: 'documents.previewMarkdown',
+          docx: 'documents.docxPreview',
+          pdf: 'documents.pdfPreview',
+        }[type]
+      );
       return;
     }
 
     previewBtn.textContent = window.i18n.t('documents.hidePreview');
     previewBox.style.display = 'block';
-    if (!previewContent.innerHTML) {
-      previewContent.textContent = window.i18n.t('documents.previewLoading');
-      const result = await window.workspaceAPI.getMarkdownPreview(currentDocId);
-      if (!previewOpen) return; // 使用者在載入期間已經按了收起，不要再蓋回去
-      if (result.ok) {
-        previewContent.innerHTML = result.html;
-      } else {
-        previewContent.textContent = window.i18n.t('documents.previewFailed');
+
+    if (type === 'md') {
+      pdfToolbar.style.display = 'none';
+      docxToolbar.style.display = 'none';
+      pdfCanvas.style.display = 'none';
+      previewContent.style.display = 'block';
+      if (!previewContent.innerHTML) {
+        previewContent.textContent = window.i18n.t('documents.previewLoading');
+        const result = await window.workspaceAPI.getMarkdownPreview(currentDocId);
+        if (!previewOpen) return; // 使用者在載入期間已經按了收起，不要再蓋回去
+        previewContent.innerHTML = result.ok
+          ? result.html
+          : window.i18n.t('documents.previewFailed');
       }
+    } else if (type === 'docx') {
+      await openDocxPreview();
+    } else if (type === 'pdf') {
+      await openPdfPreview();
     }
+  });
+
+  // --- .docx 預覽／編輯 ---
+
+  async function openDocxPreview() {
+    pdfToolbar.style.display = 'none';
+    pdfCanvas.style.display = 'none';
+    previewContent.style.display = 'block';
+    docxToolbar.style.display = 'block';
+    docxEditToggleBtn.textContent = window.i18n.t('documents.docxEdit');
+    docxFormatButtons.style.display = 'none';
+    docxEditing = false;
+    previewContent.contentEditable = 'false';
+
+    previewContent.textContent = window.i18n.t('documents.previewLoading');
+    const result = await window.workspaceAPI.getDocxPreview(currentDocId);
+    if (!previewOpen) return; // 載入期間使用者已經按了收起
+    if (!result.ok) {
+      previewContent.textContent = window.i18n.t('documents.previewFailed');
+      return;
+    }
+    previewContent.innerHTML = result.html;
+    docxHasComplexContent = !!result.hasComplexContent;
+    complexWarning.style.display = docxHasComplexContent ? 'block' : 'none';
+  }
+
+  function setDocxEditing(on) {
+    docxEditing = on;
+    previewContent.contentEditable = on ? 'true' : 'false';
+    docxFormatButtons.style.display = on ? 'inline' : 'none';
+    docxEditToggleBtn.textContent = window.i18n.t(
+      on ? 'documents.docxEditing' : 'documents.docxEdit'
+    );
+    if (on) previewContent.focus();
+  }
+
+  docxEditToggleBtn.addEventListener('click', async () => {
+    if (docxEditing) {
+      setDocxEditing(false);
+      return;
+    }
+    if (
+      docxHasComplexContent &&
+      !window.confirm(window.i18n.t('documents.docxComplexEditConfirm'))
+    ) {
+      return;
+    }
+    setDocxEditing(true);
+  });
+
+  // Bold/italic/underline/清單/段落／標題都用瀏覽器內建的
+  // document.execCommand()——雖然是已標記為 deprecated 的 API，但
+  // Chromium／Electron 現在仍然完整支援，這個功能的範疇（輕量文字
+  // 格式編輯，不是完整排版工具）用它就足夠，換一套自己刻的 contenteditable
+  // 指令系統不會有明顯的品質提升，但會多花很多力氣。
+  docxFormatButtons.addEventListener('click', (e) => {
+    const btn = e.target.closest('button[data-cmd]');
+    if (!btn) return;
+    previewContent.focus();
+    const cmd = btn.dataset.cmd;
+    if (cmd === 'bold' || cmd === 'italic' || cmd === 'underline') {
+      document.execCommand(cmd);
+    } else if (cmd === 'ul') {
+      document.execCommand('insertUnorderedList');
+    } else if (cmd === 'ol') {
+      document.execCommand('insertOrderedList');
+    } else if (cmd === 'h1') {
+      document.execCommand('formatBlock', false, '<H1>');
+    } else if (cmd === 'h2') {
+      document.execCommand('formatBlock', false, '<H2>');
+    } else if (cmd === 'p') {
+      document.execCommand('formatBlock', false, '<P>');
+    }
+  });
+
+  docxSaveBtn.addEventListener('click', async () => {
+    if (!currentDocId) return;
+    if (
+      docxHasComplexContent &&
+      !window.confirm(window.i18n.t('documents.docxComplexSaveConfirm'))
+    ) {
+      return;
+    }
+    const result = await window.workspaceAPI.saveDocxEdit(
+      currentDocId,
+      previewContent.innerHTML
+    );
+    if (!result.ok) {
+      alert(window.i18n.t('documents.docxSaveFailed'));
+      return;
+    }
+    allDocs = result.docs;
+    setDocxEditing(false);
+    renderList();
+  });
+
+  // --- .pdf 檢視／編輯 ---
+  // pdfjs-dist 是 ES module（見 renderer/vendor/pdfjs/），用動態 import()
+  // 載入，這樣 documents.js 本身不用整份改成 <script type="module">。
+  // worker 沒有另外指定路徑就會用 fake worker（主執行緒跑），這個功能
+  // 是給使用者自己的文件用、不是要處理超大量 PDF，犧牲一點效能換來
+  // 不用處理額外的 CSP／打包路徑問題是值得的。
+  function loadPdfjs() {
+    if (!pdfjsLibPromise) {
+      pdfjsLibPromise = import('./vendor/pdfjs/pdf.min.mjs').then((mod) => {
+        mod.GlobalWorkerOptions.workerSrc = './vendor/pdfjs/pdf.worker.min.mjs';
+        return mod;
+      });
+    }
+    return pdfjsLibPromise;
+  }
+
+  async function openPdfPreview() {
+    docxToolbar.style.display = 'none';
+    docxFormatButtons.style.display = 'none';
+    previewContent.style.display = 'none';
+    pdfToolbar.style.display = 'flex';
+    pdfCanvas.style.display = 'block';
+    previewBox.classList.add('pdf-mode');
+    pdfPageIndicator.textContent = window.i18n.t('documents.previewLoading');
+
+    const result = await window.workspaceAPI.getPdfBytes(currentDocId);
+    if (!previewOpen) return;
+    if (!result.ok) {
+      pdfPageIndicator.textContent = window.i18n.t('documents.previewFailed');
+      return;
+    }
+    const pdfjsLib = await loadPdfjs();
+    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data }).promise;
+    pdfCurrentPage = 1;
+    await renderPdfPage();
+  }
+
+  async function renderPdfPage() {
+    if (!pdfDocProxy) return;
+    const page = await pdfDocProxy.getPage(pdfCurrentPage);
+    const viewport = page.getViewport({ scale: pdfScale });
+    pdfCanvas.width = viewport.width;
+    pdfCanvas.height = viewport.height;
+    const ctx = pdfCanvas.getContext('2d');
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    pdfPageIndicator.textContent = window.i18n.t('documents.pdfPageIndicator', {
+      current: pdfCurrentPage,
+      total: pdfDocProxy.numPages,
+    });
+    pdfZoomIndicator.textContent = `${Math.round(pdfScale * 100)}%`;
+  }
+
+  // PDF 編輯操作共用的收尾：main process 已經改完檔案，重新整份文件的
+  // bytes 抓回來、pdfjs 重新載入、畫面停在原來那一頁（除非那一頁已經
+  // 被刪掉，這時退回上一頁），這樣才會反映出剛剛的編輯結果。
+  async function reloadPdfAfterEdit(keepPage) {
+    const result = await window.workspaceAPI.getPdfBytes(currentDocId);
+    if (!result.ok) return;
+    const pdfjsLib = await loadPdfjs();
+    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data }).promise;
+    pdfCurrentPage = Math.min(keepPage, pdfDocProxy.numPages);
+    await renderPdfPage();
+    allDocs = await window.workspaceAPI.listDocuments();
+    renderList();
+  }
+
+  document.getElementById('pdf-prev').addEventListener('click', async () => {
+    if (!pdfDocProxy || pdfCurrentPage <= 1) return;
+    pdfCurrentPage -= 1;
+    await renderPdfPage();
+  });
+  document.getElementById('pdf-next').addEventListener('click', async () => {
+    if (!pdfDocProxy || pdfCurrentPage >= pdfDocProxy.numPages) return;
+    pdfCurrentPage += 1;
+    await renderPdfPage();
+  });
+  document.getElementById('pdf-zoom-out').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    pdfScale = Math.max(0.4, pdfScale - 0.2);
+    await renderPdfPage();
+  });
+  document.getElementById('pdf-zoom-in').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    pdfScale = Math.min(3, pdfScale + 0.2);
+    await renderPdfPage();
+  });
+
+  document.getElementById('pdf-rotate-left').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    const result = await window.workspaceAPI.pdfRotatePage(
+      currentDocId,
+      pdfCurrentPage - 1,
+      -90
+    );
+    if (!result.ok) return alert(window.i18n.t('documents.pdfEditFailed'));
+    await reloadPdfAfterEdit(pdfCurrentPage);
+  });
+  document.getElementById('pdf-rotate-right').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    const result = await window.workspaceAPI.pdfRotatePage(
+      currentDocId,
+      pdfCurrentPage - 1,
+      90
+    );
+    if (!result.ok) return alert(window.i18n.t('documents.pdfEditFailed'));
+    await reloadPdfAfterEdit(pdfCurrentPage);
+  });
+
+  document.getElementById('pdf-delete-page').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    if (pdfDocProxy.numPages <= 1) {
+      alert(window.i18n.t('documents.pdfDeleteLastPageError'));
+      return;
+    }
+    const ok = window.confirm(
+      window.i18n.t('documents.pdfDeletePageConfirm', { page: pdfCurrentPage })
+    );
+    if (!ok) return;
+    const result = await window.workspaceAPI.pdfDeletePage(
+      currentDocId,
+      pdfCurrentPage - 1
+    );
+    if (!result.ok) return alert(window.i18n.t('documents.pdfEditFailed'));
+    await reloadPdfAfterEdit(pdfCurrentPage);
+  });
+
+  document.getElementById('pdf-watermark').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    const text = window.prompt(window.i18n.t('documents.pdfWatermarkPrompt'), '');
+    if (!text || !text.trim()) return;
+    const result = await window.workspaceAPI.pdfAddWatermark(currentDocId, text.trim());
+    if (!result.ok) return alert(window.i18n.t('documents.pdfEditFailed'));
+    await reloadPdfAfterEdit(pdfCurrentPage);
+  });
+
+  document.getElementById('pdf-merge').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    const result = await window.workspaceAPI.pdfMerge(currentDocId);
+    if (!result.ok) {
+      if (result.error !== 'CANCELED') alert(window.i18n.t('documents.pdfEditFailed'));
+      return;
+    }
+    await reloadPdfAfterEdit(pdfCurrentPage);
+  });
+
+  document.getElementById('pdf-extract').addEventListener('click', async () => {
+    if (!pdfDocProxy) return;
+    const rangeStr = window.prompt(
+      window.i18n.t('documents.pdfExtractPrompt', { total: pdfDocProxy.numPages }),
+      ''
+    );
+    if (!rangeStr || !rangeStr.trim()) return;
+    const result = await window.workspaceAPI.pdfExtractPages(
+      currentDocId,
+      rangeStr.trim()
+    );
+    if (!result.ok) {
+      alert(window.i18n.t('documents.pdfExtractInvalidRange'));
+      return;
+    }
+    allDocs = result.docs;
+    rebuildTagOptions();
+    renderList();
+    alert(window.i18n.t('documents.pdfExtractDone'));
   });
 
   window.workspaceAPI.onDocumentsChanged(async () => {

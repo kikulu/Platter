@@ -75,7 +75,64 @@
       </div>
 
       <div id="doc-preview-box" style="display: none">
+        <div
+          id="doc-complex-warning"
+          style="display: none"
+          data-i18n="documents.docxComplexWarning"
+        >
+          ⚠
+          此文件含表格或圖片，在此編輯並儲存後，表格會轉成純文字、圖片會被移除，原本的排版無法保留
+        </div>
+        <div id="doc-docx-toolbar" style="display: none">
+          <button id="btn-docx-edit-toggle" data-i18n="documents.docxEdit">編輯</button>
+          <span id="doc-docx-format-buttons" style="display: none">
+            <button id="fmt-bold" data-cmd="bold"><b>B</b></button>
+            <button id="fmt-italic" data-cmd="italic"><i>I</i></button>
+            <button id="fmt-underline" data-cmd="underline"><u>U</u></button>
+            <button id="fmt-h1" data-cmd="h1">H1</button>
+            <button id="fmt-h2" data-cmd="h2">H2</button>
+            <button id="fmt-ul" data-cmd="ul" data-i18n="documents.docxBulletList">
+              • 清單
+            </button>
+            <button id="fmt-ol" data-cmd="ol" data-i18n="documents.docxNumberedList">
+              1. 清單
+            </button>
+            <button id="fmt-p" data-cmd="p" data-i18n="documents.docxParagraph">
+              段落
+            </button>
+            <button id="btn-docx-save" class="primary" data-i18n="knowledge.save">
+              儲存
+            </button>
+          </span>
+        </div>
+        <div id="doc-pdf-toolbar" style="display: none">
+          <button id="pdf-prev" data-i18n="documents.pdfPrevPage">← 上一頁</button>
+          <span id="pdf-page-indicator"></span>
+          <button id="pdf-next" data-i18n="documents.pdfNextPage">下一頁 →</button>
+          <button id="pdf-zoom-out">－</button>
+          <span id="pdf-zoom-indicator"></span>
+          <button id="pdf-zoom-in">＋</button>
+          <span id="doc-pdf-edit-buttons">
+            <button id="pdf-rotate-left" data-i18n="documents.pdfRotateLeft">
+              ↺ 旋轉
+            </button>
+            <button id="pdf-rotate-right" data-i18n="documents.pdfRotateRight">
+              ↻ 旋轉
+            </button>
+            <button
+              id="pdf-delete-page"
+              class="danger"
+              data-i18n="documents.pdfDeletePage"
+            >
+              刪除此頁
+            </button>
+            <button id="pdf-watermark" data-i18n="documents.pdfWatermark">加水印…</button>
+            <button id="pdf-merge" data-i18n="documents.pdfMerge">合併 PDF…</button>
+            <button id="pdf-extract" data-i18n="documents.pdfExtract">擷取頁面…</button>
+          </span>
+        </div>
         <div id="doc-preview-content" class="doc-preview-content"></div>
+        <canvas id="doc-pdf-canvas" style="display: none"></canvas>
       </div>
 
       <div id="doc-editor-actions">
