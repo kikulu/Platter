@@ -73,7 +73,7 @@ AI做越多，人需要喝的咖啡就越少。
 | 📋 專案範本與階段流程   | 「專案計畫管理」可從範本建立專案：內建 SDD 規格驅動開發、OpenSpec 變更流程、敏捷 Scrum、傳統瀑布式、MVP 快速原型 5 組軟體開發範本。輸入專案主題後，在「階段流程」分頁依各階段的提示詞逐步執行——複製（自動帶入主題與前面步驟的產出）→ 貼回 AI 的產出 → 標記完成 → 下一步，每個步驟同步成一個專案任務；也能把調整過的流程另存為自己的範本。**OpenSpec 整合**：可匯入專案現有的 `openspec/specs` 當作差異規格的依據，並把提案、差異規格、設計、任務的產出一鍵匯出成專案裡的 `openspec/changes/<變更名稱>/` 資料夾 |
 | 🧩 虛擬團隊主控台       | 把帳號依角色組織成團隊組織圖，並在「專案計畫管理」裡建立專案、拆分任務、指派給團隊裡的帳號、追蹤進度、記錄工時                                                                                                                                                                                                                                                                                                                                                                                                 |
 | ⏰ 到期提醒             | 側邊欄角標顯示逾期／今天到期的任務與議題數量，有新的到期項目會另外跳一次系統通知                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| 🗃️ 文件庫               | 統一保存對話匯出的檔案與手動匯入的任意檔案，.md 檔可直接預覽                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| 🗃️ 文件庫               | 統一保存對話匯出的檔案與手動匯入的任意檔案；.md 檔可直接預覽，.docx 可預覽並直接在畫面上編輯文字/格式後存回原檔，.pdf 可翻頁瀏覽並做基本頁面編輯（旋轉、刪除頁面、加水印、合併、擷取頁面範圍）                                                                                                                                                                                                                                                                                                                 |
 | ➕ 新增帳號（獨立視窗） | 選平台、取自訂名稱，新增完直接切過去                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ⬇️ 對話匯出             | 把畫面上目前看得到的對話存成 Markdown 或 JSON，可另存到指定路徑、可勾選同時加入知識庫，也可設定自動存檔不跳對話框                                                                                                                                                                                                                                                                                                                                                                                              |
 | ⚙️ 設定（獨立視窗）     | 語言切換、設定檔存放位置、擴充功能、預設匯出路徑、備份還原、選擇器設定（含測試擷取預覽）、滑鼠選取工具、疑難排解                                                                                                                                                                                                                                                                                                                                                                                               |
@@ -183,7 +183,7 @@ selector，不用手動開 DevTools 找——點「選取範例：使用者訊�
 ## 開發
 
 ```bash
-npm test              # 單元測試（純函式、資料層種子、IPC handler，node --test 內建測試框架；除 sql.js 外不需要額外套件）
+npm test              # 單元測試（純函式、資料層種子、IPC handler，node --test 內建測試框架；額外套件見下方 sql.js/pdf-lib/mammoth/docx 說明）
 npm run lint          # ESLint（main.js/preload.js/lib/test 用 Node 規則，renderer/** 用瀏覽器規則）
 npm run format        # Prettier 自動排版（會直接覆寫檔案，跑之前建議先 commit）
 npm run format:check  # 只檢查格式，不覆寫檔案
@@ -200,6 +200,18 @@ npm run format:check  # 只檢查格式，不覆寫檔案
 不需要 `electron-rebuild`）的最小存取介面，目前給「日誌主控台」的
 `logs.sqlite` 用；選型取捨見 `PROJECT_SPEC.md` 第 9.7 節。`npm install`
 時會一併裝進 `sql.js` 這個 dependency，不需要額外設定。
+
+文件庫的 `.docx`／`.pdf` 預覽與編輯（1.33.0 新增）用了三個 dependency：
+`pdf-lib`（PDF 頁面操作，見 `lib/pdfEditor.js`）、`mammoth`（`.docx` →
+HTML 預覽，見 `lib/docxEditor.js`）、`docx`（把編輯後的 HTML 寫回
+`.docx`，同樣在 `lib/docxEditor.js`），三個都是純 JS、沒有原生模組。
+PDF 檢視畫面用的 `pdf.js`（`pdfjs-dist`）比較特別：它只在 renderer
+（沒有 Node 環境）用來把頁面畫到 `<canvas>` 上，所以不是整包裝進
+`node_modules` 給 main process `require()`，而是把官方 build 好的
+`pdf.min.mjs`／`pdf.worker.min.mjs` 檔案複製進 `renderer/vendor/pdfjs/`
+直接用 `<script>`／動態 `import()` 載入；`pdfjs-dist` 本身只放在
+`devDependencies`（只是拿來複製檔案，執行期不需要），版本升級時要
+手動重新複製這兩個檔案，不會自動跟著 `npm install` 更新。
 
 > 目前 `main.js`/`preload.js`/`renderer/**` 還沒有整批套用過
 > `npm run format`，先跑 `npm run format:check` 看目前有多少檔案不符合
@@ -244,6 +256,8 @@ Platter/
 │   ├── workflow.js                      # 專案階段流程與範本展開、組合提示詞（純函式）
 │   ├── openspec.js                      # OpenSpec 整合：匯出成 openspec/changes/、匯入現有規格
 │   ├── sqlite.js                        # sql.js 的最小包裝：開檔/存檔/查詢
+│   ├── pdfEditor.js                      # PDF 頁面操作（旋轉/刪除/加水印/合併/擷取），用 pdf-lib
+│   ├── docxEditor.js                      # .docx 預覽（mammoth）＋編輯後 HTML 寫回 .docx（docx）
 │   └── ipc/                              # 依業務領域分組的 IPC handler 註冊檔（9 個 + index.js，含 search.js）
 ├── extractors/
 │   ├── domCapture.js         # 注入頁面的對話擷取腳本
@@ -259,9 +273,10 @@ Platter/
 │   ├── settings.html / settings.js / settings.css     # 設定（獨立視窗）
 │   ├── team.html, team.js, team.css              # 虛擬團隊主控台
 │   ├── project.html, project.js, project.css     # 專案計畫管理
-│   ├── documents.html, documents.js, documents.css # 文件庫（含 Markdown 預覽）
+│   ├── documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
+│   ├── vendor/pdfjs/                              # vendor 進來的 pdf.js 官方 build（pdf.min.mjs、pdf.worker.min.mjs），PDF 檢視畫面的 canvas 渲染用
 │   ├── i18n.js                                   # 多國語系
-│   └── locales/zh-TW.json, en.json
+│   └── locales/zh-TW.json, en.json, ja.json
 └── assets/                    # App 圖示與生成提示詞
 ```
 
