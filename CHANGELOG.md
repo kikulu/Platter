@@ -1,5 +1,42 @@
 # Changelog
 
+## [1.33.1]
+
+### 打包體積優化
+
+- **背景**：1.33.0 新增 `pdf-lib`／`mammoth`／`docx` 之後，打包出來的
+  `app.asar` 是 36.6MB（沒有排除規則時，這三個套件連同它們的瀏覽器版
+  bundle、ESM/UMD 重複 build、型別檔、sourcemap 全部被打包進去）。
+- **做法**：只改 `package.json` 的 `build.files`，加排除規則，**不動任何
+  程式碼**。排除的都是「Node／Electron main process 用
+  `require('套件名')` 永遠不會載入」的檔案：`pdf-lib` 的 `dist/`（UMD
+  瀏覽器版，13.8MB）／`es/`／`ts3.4/`／`src/`（`main` 指向 `cjs/`）；
+  `docx/dist/` 除了 `index.cjs` 以外的 `.mjs`／`.iife`／`.umd`／
+  型別檔，以及沒用到的 `charts`／`math`／`shapes`／`watermarks` 子路徑
+  （`require('docx')` 依 `exports` 只會解析到 `dist/index.cjs`）；
+  `mammoth` 的瀏覽器版 bundle 跟 `test/`；`jszip`／`pako`／`xml-js` 的
+  `dist/` 瀏覽器版；`underscore` 的 `modules/`／`amd/`／ESM 版；
+  `@pdf-lib/standard-fonts`、`@pdf-lib/upng` 的 `dist/`／`es/`；
+  `@types`、`undici-types`；`sql.js` 的 `*-debug.*`；以及所有
+  `node_modules` 裡的 `*.map`／`*.d.ts`／`*.md`／`yarn.lock`／
+  `CHANGES*`／`CHANGELOG*`。
+- **結果**（用 `electron-builder --dir --linux` 實際打包量測 `app.asar`）：
+  **36.6MB → 7.2MB（−80%）**。
+- **驗證方式**：實際打包後，用打包出來的 Electron 執行檔
+  （`ELECTRON_RUN_AS_NODE=1`）從 `app.asar` 內以套件名稱
+  `require('docx'|'mammoth'|'pdf-lib'|'sql.js')`，並實際跑
+  `saveHtmlAsDocx()`→`getDocxPreviewHtml()`、`addWatermarkToPdf()`→
+  `getPdfPageCount()`，全部正常；另外在一份只裝 production 依賴、
+  並手動刪掉同一批檔案的副本上跑 `pdfEditor`／`docxEditor` 測試
+  （19 項）全過。**已知注意**：不能改成用「路徑」直接 `require`
+  `node_modules/docx`（會解析 `main` → 已被排除的 `index.umd.cjs`），
+  程式碼一律用套件名稱載入（目前就是這樣）。**尚未在有畫面的環境啟動
+  整個 App 驗證**（只驗證了 main process 端模組載入）。
+- 沒動的部分：`renderer/vendor/pdfjs/` 的 1.7MB（PDF 檢視必要）、
+  `sql.js` 的 wasm、`docx` 的 `index.cjs`（1.2MB，必要）。
+
+---
+
 ## [1.33.0]
 
 ### 文件庫新增：`.docx`／`.pdf` 預覽與編輯
