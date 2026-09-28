@@ -88,6 +88,44 @@ test('SDD 專案範本：3 階段 7 步，順序與 SDD 分階段套餐一致', 
   assert.deepEqual(tplIds, bundleIds);
 });
 
+test('AI 短劇專案範本：4 階段 11 步，順序由企劃走到剪輯發佈，提示詞自成一體（不引用知識庫）', () => {
+  const tpl = TEMPLATES.find((t) => t.id === 'proj-tpl-ai-drama');
+  assert.ok(tpl);
+  assert.equal(tpl.stages.length, 4);
+  assert.deepEqual(
+    tpl.stages.map((st) => st.steps.length),
+    [4, 2, 2, 3]
+  );
+  tpl.stages.forEach((st) =>
+    st.steps.forEach((step) => {
+      assert.ok(step.prompt && !step.itemDefaultId, `${step.title} 應該內嵌提示詞`);
+      // 不確定的資訊必須要求標「待確認」，避免 AI 編造工具規格或數據
+      assert.ok(step.prompt.includes('待確認'), `${step.title} 少了「待確認」防編造提醒`);
+    })
+  );
+  const titles = tpl.stages.flatMap((st) => st.steps.map((s) => s.title));
+  assert.ok(
+    titles.indexOf('世界觀與角色設定（角色聖經）') <
+      titles.indexOf('分鏡腳本（Shot List）')
+  );
+  assert.ok(
+    titles.indexOf('分鏡腳本（Shot List）') < titles.indexOf('鏡頭影片生成提示詞')
+  );
+  assert.ok(titles.indexOf('鏡頭影片生成提示詞') < titles.indexOf('剪輯節奏與字幕'));
+});
+
+test('AI 短劇專案範本：專案主題會帶進第一步，前面步驟的產出會接力到後面步驟', () => {
+  const tpl = TEMPLATES.find((t) => t.id === 'proj-tpl-ai-drama');
+  const { workflow } = buildWorkflowFromTemplate(tpl, '霸總的替身新娘', resolveItem);
+  assert.equal(workflow.steps.length, 11);
+  const first = composeStepPrompt(workflow, workflow.steps[0].id);
+  assert.ok(first.includes('霸總的替身新娘'));
+  assert.ok(!first.includes('{{topic}}'));
+  workflow.steps[0].output = '賣點：替身新娘反殺（測試產出）';
+  const second = composeStepPrompt(workflow, workflow.steps[1].id);
+  assert.ok(second.includes('賣點：替身新娘反殺（測試產出）'));
+});
+
 // --- buildWorkflowFromTemplate -------------------------------------------------
 
 test('buildWorkflowFromTemplate：展開步驟與任務（一步一任務、狀態同步用的 taskId 互相對應）', () => {
