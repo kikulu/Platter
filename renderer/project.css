@@ -941,3 +941,106 @@ body {
 #wf-osp-result.ok {
   color: #2ecc71;
 }
+
+/* --- 關聯文件（專案 ↔ 文件庫檔案 多對多），跟 conversation.css 的
+   #conv-linked-list 是同一套樣式，只是容器 id 換成 project.html 自己的 --- */
+#proj-linked-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 4px;
+}
+.linked-doc-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+.linked-doc-icon {
+  flex-shrink: 0;
+  font-size: 14px;
+}
+.linked-doc-name {
+  flex: 1;
+  min-width: 0;
+  font-size: 13px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.linked-doc-name.missing {
+  color: var(--danger);
+}
+.linked-doc-actions {
+  display: flex;
+  gap: 4px;
+  flex-shrink: 0;
+}
+.linked-doc-actions button {
+  background: transparent;
+  border: none;
+  color: var(--text-secondary);
+  padding: 2px 6px;
+}
+.linked-doc-actions button:hover {
+  color: var(--text-primary);
+}
+.linked-doc-actions button.danger-text:hover {
+  color: var(--danger);
+}
+.linked-doc-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#proj-link-select {
+  flex: 1;
+}
+
+/* --- 簡報橋接（wf-pitch-bridge，見 project.html 階段流程分頁） --- */
+#wf-pitch-bridge {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+#wf-pitch-title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+#wf-pitch-steps {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin: 8px 0;
+  max-height: 160px;
+  overflow-y: auto;
+}
+.wf-pitch-step-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+.wf-pitch-step-row label {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+#wf-pitch-steps-empty {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-pitch-template {
+  flex: 1;
+}
+#wf-pitch-result {
+  margin-top: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-pitch-result.ok {
+  color: #2ecc71;
+}
