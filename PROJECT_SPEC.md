@@ -704,6 +704,41 @@ MVP 範本不顯示。
 **IPC**：`projects:workflow:openspecInfo`、`projects:workflow:importOpenSpecSpecs`、
 `projects:workflow:clearBaseContext`、`projects:workflow:exportOpenSpec`（見 `preload.js`）。
 
+### 7.8 關聯文件與簡報橋接（1.35.0）
+
+**關聯文件**：專案跟文件庫既有文件建立手動關聯，跟第 9.4 節「對話庫」的
+`linkedDocumentIds` 是**同一套機制**，只是操作對象換成專案——`project.linkedDocumentIds:
+string[]`（見第 7 節開頭的資料結構註解），多對多、只存 id 參照，不複製檔案。畫面上是
+獨立的「關聯文件」分頁（`panel-linked`）：清單顯示已關聯的文件（含遺失偵測，文件被刪除
+但關聯還留著時顯示「找不到這份文件」而不是直接消失或報錯）＋一個下拉選單挑文件庫裡還沒
+關聯的文件、按「關聯」加進去。IPC：`projects:linkDocument`／`projects:unlinkDocument`
+（`lib/ipc/projects.js`），對應 `preload.js` 的 `linkProjectDocument()`／
+`unlinkProjectDocument()`。跟對話庫那邊一樣，加入同一個文件不會重複、移除不存在的專案或
+關聯不會丟例外（直接回目前的 `projects` 陣列）。
+
+**把步驟產出存成文件**：階段流程分頁的每個步驟輸出框旁邊多一個「存成文件」按鈕，呼叫
+`projects:workflow:saveStepOutputAsDocument`：把該步驟目前的 `output` 文字寫成一份
+`.md`，存進 `documentsDir()`（跟 PDF「擷取頁面」一樣是文件庫「已管理」的複本，不是只記
+路徑），呼叫 `registerDocument()` 註冊，然後**自動**把新文件的 id 加進這個專案的
+`linkedDocumentIds`——不用使用者自己存完檔案再回來手動關聯一次。檔名是
+`{{專案名稱}}－{{步驟標題}}.md`（步驟標題裡的路徑不安全字元會被替換掉）。這是「AI 短劇
+製作」範本（第 7.6 節）動機之一：角色聖經、分集大綱這些步驟產出留在文件庫裡，下次開新
+一部劇的專案時可以直接在文件庫翻出來參考，不會被鎖死在只有這個專案能看到的
+`workflow.steps[].output` 裡。步驟輸出還是空的時候回 `{ ok: false, error: 'EMPTY_OUTPUT' }`，
+畫面上擋掉、不會產生空文件。
+
+**簡報橋接**（`wf-pitch-bridge`，完全是 `renderer/project.js` 端的邏輯，**沒有新增
+IPC**——需要的資料 `listDocuments()`／`listKnowledge()`／專案本身都已經是既有 API）：
+階段流程分頁最下面一塊，勾選任意數量「已經填了 `output`」的步驟，選一個知識庫裡標籤含
+「簡報製作」的項目（第 7.6 節提過的簡報製作全流程套餐＋場景化範本，見
+`extractors/default-knowledge-base.json`），按「生成並複製」把「勾選步驟的標題＋產出」
+接在一起、後面接上整個知識庫項目的 `content`，組成一份完整提示詞，用
+`navigator.clipboard.writeText()` 複製到剪貼簿——貼給任何一家 AI 聊天工具即可，不綁定
+特定平台。這個橋接刻意設計成**不綁定任何特定專案範本**：「AI 短劇製作」的題材定位、
+角色聖經、分集大綱是最初的動機（做完短劇企劃想直接去提案），但任何範本、任何專案，只要
+有步驟填了產出，都能用同一個入口生成簡報草稿。知識庫項目清單跟文件庫清單一樣，訂閱
+`knowledge:changed`／`documents:changed` 廣播即時刷新，不用重開視窗。
+
 **已知限制**：不會自動把提示詞送進 AI 帳號視窗或讀取專案的程式碼；不做 OpenSpec 語法驗證
 （請用 OpenSpec 自己的 `openspec validate`）；不處理 `openspec/config.yaml` 與 `changes/archive/`；
 匯出不寫 `.openspec.yaml` 變更中繼資料（選填檔，OpenSpec 會依預設處理）。

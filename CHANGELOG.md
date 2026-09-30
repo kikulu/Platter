@@ -1,5 +1,40 @@
 # Changelog
 
+## [1.35.0]
+
+### 專案計畫新增：關聯文件、把步驟產出存成文件、簡報橋接
+
+- **背景**：對話庫跟文件庫之間已經有手動關聯（多對多，`linkedDocumentIds`），但專案沒有
+  這條路；階段流程的步驟產出（例如「AI 短劇製作」範本的角色聖經、分集大綱）只存在專案自己
+  的 `workflow.steps[].output` 裡，離開這個專案就看不到，也沒辦法快速套進知識庫的簡報範本
+  去提案。這次補上三件事，都是延伸既有機制、不是新架構。
+- **關聯文件**（跟對話庫同一套機制）：專案新增 `linkedDocumentIds: string[]`（`lib/stores.js`
+  `loadProjects()` 正規化）。新分頁「關聯文件」（`panel-linked`）：清單顯示已關聯文件（含
+  遺失偵測）＋下拉選單挑文件庫裡還沒關聯的文件、按「關聯」。新 IPC
+  `projects:linkDocument`／`projects:unlinkDocument`（`lib/ipc/projects.js`），對應
+  `preload.js` 的 `linkProjectDocument()`／`unlinkProjectDocument()`。
+- **把步驟產出存成文件**：階段流程步驟輸出框旁邊多一個「存成文件」按鈕，呼叫新 IPC
+  `projects:workflow:saveStepOutputAsDocument`：寫成 `.md`、存進 `documentsDir()`（文件庫
+  「已管理」複本，跟 PDF「擷取頁面」同一套），`registerDocument()` 註冊，**自動**加進這個
+  專案的 `linkedDocumentIds`，不用使用者手動再關聯一次。輸出還是空的會回
+  `{ ok: false, error: 'EMPTY_OUTPUT' }`，不會產生空文件。
+- **簡報橋接**（`wf-pitch-bridge`，純 `renderer/project.js` 端邏輯，**沒有新增 IPC**）：階段
+  流程分頁勾選任意數量已填產出的步驟，選一個知識庫裡標籤含「簡報製作」的項目（1.32.0 的簡報
+  製作全流程套餐＋場景化範本），組成「勾選步驟標題＋產出」接上範本 `content` 的完整提示詞，
+  複製到剪貼簿。刻意設計成**不綁定任何特定專案範本**——「AI 短劇製作」的角色聖經、分集大綱
+  是最初動機，但任何範本、任何有產出的專案都能用。
+- 新增 5 項 IPC 測試（`test/projects-workflow-ipc.test.js`）：連結/取消連結（含重複連結不
+  重複、操作不存在的專案不丟例外）、存成文件的正常路徑與兩種錯誤路徑（空輸出、專案或步驟
+  不存在）。三份 README（zh-TW／en／ja）功能列、`PROJECT_SPEC.md` 第 7.8 節（新增）同步更新。
+- 三語系（zh-TW／en／ja）各新增 19 個鍵（440 → 459，鍵集合一致）：`project.tabLinked`、
+  `project.linkedDocuments` 系列、`project.wfSaveAsDocument` 系列、`project.pitchBridge*` 系列。
+- **已知限制**：簡報橋接目前只是「複製到剪貼簿」，不會自動開啟任何 AI 聊天視窗或貼上；
+  「存成文件」目前只支援整份步驟輸出存一份 `.md`，不支援拆成多份或選擇性存部分內容；
+  跟前幾輪一樣，**沒有在真正的 Electron 視窗裡點過這些新按鈕**，只驗證了 IPC handler 本身
+  （`node --test`）跟前端程式碼的語法/lint，畫面實際點擊流程尚待手動驗證。
+
+---
+
 ## [1.34.0]
 
 ### 專案計畫新增：AI 短劇製作範本
