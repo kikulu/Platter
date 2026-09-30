@@ -142,6 +142,16 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   removeTaskTimeEntry: (projectId, taskId, entryId) =>
     ipcRenderer.invoke('projects:task:removeTimeEntry', { projectId, taskId, entryId }),
   getDueSummary: () => ipcRenderer.invoke('projects:getDueSummary'),
+  // 專案跟文件庫文件的關聯（1.35.0，跟對話庫那組是同一套機制）
+  linkProjectDocument: (projectId, documentId) =>
+    ipcRenderer.invoke('projects:linkDocument', { projectId, documentId }),
+  unlinkProjectDocument: (projectId, documentId) =>
+    ipcRenderer.invoke('projects:unlinkDocument', { projectId, documentId }),
+  saveWorkflowStepOutputAsDocument: (projectId, stepId) =>
+    ipcRenderer.invoke('projects:workflow:saveStepOutputAsDocument', {
+      projectId,
+      stepId,
+    }),
   // 專案範本與階段流程（workflow）
   listProjectTemplates: () => ipcRenderer.invoke('projectTemplates:list'),
   deleteProjectTemplate: (id) => ipcRenderer.invoke('projectTemplates:delete', id),

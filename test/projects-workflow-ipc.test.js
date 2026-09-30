@@ -32,7 +32,7 @@ Module._load = function (request, ...rest) {
 };
 const { registerProjectsIpc } = require('../lib/ipc/projects');
 const { searchGlobal } = require('../lib/ipc/search');
-const { loadProjects } = require('../lib/stores');
+const { loadProjects, loadDocuments } = require('../lib/stores');
 Module._load = originalLoad;
 
 const handlers = new Map();
@@ -43,11 +43,14 @@ const projectsFile = path.join(tmpUserData, 'projects.json');
 const templatesFile = path.join(tmpUserData, 'project-templates.json');
 const knowledgeFile = path.join(tmpUserData, 'knowledge-base.json');
 const seededFile = path.join(tmpUserData, 'seeded-defaults.json');
+const documentsFile = path.join(tmpUserData, 'documents.json');
+const documentsFolder = path.join(tmpUserData, 'documents');
 
 function reset() {
-  [projectsFile, templatesFile, knowledgeFile, seededFile].forEach((f) => {
+  [projectsFile, templatesFile, knowledgeFile, seededFile, documentsFile].forEach((f) => {
     if (fs.existsSync(f)) fs.unlinkSync(f);
   });
+  fs.rmSync(documentsFolder, { recursive: true, force: true });
 }
 
 test.after(() => {
@@ -421,4 +424,116 @@ test('任務清單改任務狀態（即時切換或儲存專案）會反向同�
   assert.equal(after.workflow.steps[3].status, 'doing');
   assert.equal(after.workflow.steps[2].status, 'done', '其他步驟不受影響');
   assert.equal(after.workflow.steps[0].status, 'todo');
+});
+
+test('projects:linkDocument／unlinkDocument：跟文件庫既有文件建立/移除關聯，多對多、可重複呼叫不出錯', async () => {
+  reset();
+  const { projectId } = await createSdd();
+
+  let projects = await invoke('projects:linkDocument', {
+    projectId,
+    documentId: 'doc_fake_1',
+  });
+  assert.deepEqual(projects.find((p) => p.id === projectId).linkedDocumentIds, [
+    'doc_fake_1',
+  ]);
+
+  // 重複連結同一個 id 不會變成兩筆
+  projects = await invoke('projects:linkDocument', {
+    projectId,
+    documentId: 'doc_fake_1',
+  });
+  assert.deepEqual(projects.find((p) => p.id === projectId).linkedDocumentIds, [
+    'doc_fake_1',
+  ]);
+
+  projects = await invoke('projects:linkDocument', {
+    projectId,
+    documentId: 'doc_fake_2',
+  });
+  assert.deepEqual(projects.find((p) => p.id === projectId).linkedDocumentIds.sort(), [
+    'doc_fake_1',
+    'doc_fake_2',
+  ]);
+
+  projects = await invoke('projects:unlinkDocument', {
+    projectId,
+    documentId: 'doc_fake_1',
+  });
+  assert.deepEqual(projects.find((p) => p.id === projectId).linkedDocumentIds, [
+    'doc_fake_2',
+  ]);
+
+  // 移除不存在的專案／連結不應該丟錯
+  projects = await invoke('projects:unlinkDocument', {
+    projectId: 'not_a_real_id',
+    documentId: 'doc_fake_2',
+  });
+  assert.ok(Array.isArray(projects));
+});
+
+test('projects:workflow:saveStepOutputAsDocument：把步驟產出存成文件庫的新文件，並自動跟專案建立關聯', async () => {
+  reset();
+  const { projectId } = await createSdd('線上讀書會平台');
+  const p = getProject(projectId);
+  const stepId = p.workflow.steps[0].id;
+
+  await invoke('projects:workflow:updateStep', {
+    projectId,
+    stepId,
+    patch: { output: '# 專案原則\n這是測試用的步驟產出內容' },
+  });
+
+  const result = await invoke('projects:workflow:saveStepOutputAsDocument', {
+    projectId,
+    stepId,
+  });
+  assert.equal(result.ok, true);
+  assert.equal(result.docs.length, 1);
+  const newDoc = result.docs[0];
+  assert.equal(newDoc.managed, true);
+  assert.ok(fs.existsSync(newDoc.filePath));
+  assert.equal(
+    fs.readFileSync(newDoc.filePath, 'utf-8'),
+    '# 專案原則\n這是測試用的步驟產出內容'
+  );
+
+  const after = getProject(projectId);
+  assert.deepEqual(after.linkedDocumentIds, [newDoc.id]);
+  assert.equal(loadDocuments().length, 1);
+});
+
+test('projects:workflow:saveStepOutputAsDocument：步驟產出還是空的時候會回錯誤、不會產生文件', async () => {
+  reset();
+  const { projectId } = await createSdd();
+  const p = getProject(projectId);
+  const stepId = p.workflow.steps[1].id; // 還沒填過 output 的步驟
+
+  const result = await invoke('projects:workflow:saveStepOutputAsDocument', {
+    projectId,
+    stepId,
+  });
+  assert.equal(result.ok, false);
+  assert.equal(result.error, 'EMPTY_OUTPUT');
+  assert.equal(loadDocuments().length, 0);
+});
+
+test('projects:workflow:saveStepOutputAsDocument：專案或步驟不存在時回錯誤，不丟例外', async () => {
+  reset();
+  const { projectId } = await createSdd();
+  const p = getProject(projectId);
+
+  const badProject = await invoke('projects:workflow:saveStepOutputAsDocument', {
+    projectId: 'not_a_real_id',
+    stepId: p.workflow.steps[0].id,
+  });
+  assert.equal(badProject.ok, false);
+  assert.equal(badProject.error, 'NOT_FOUND');
+
+  const badStep = await invoke('projects:workflow:saveStepOutputAsDocument', {
+    projectId,
+    stepId: 'not_a_real_step',
+  });
+  assert.equal(badStep.ok, false);
+  assert.equal(badStep.error, 'STEP_NOT_FOUND');
 });
