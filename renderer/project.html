@@ -111,6 +111,9 @@
         >
           階段流程
         </button>
+        <button id="tab-linked" class="tab-btn" data-i18n="project.tabLinked">
+          關聯文件
+        </button>
       </div>
 
       <!-- 任務清單 -->
@@ -187,6 +190,20 @@
         </div>
       </div>
 
+      <!-- 關聯文件：跟文件庫既有文件手動建立關聯（多對多），跟對話庫的
+           「關聯文件」是同一套機制。階段流程步驟產出「存成文件」後也會
+           自動出現在這裡（見 panel-workflow 裡的 wf-output 區塊）。 -->
+      <div id="panel-linked" class="tab-panel">
+        <label class="label" data-i18n="project.linkedDocuments"
+          >關聯文件（文件庫）</label
+        >
+        <div id="proj-linked-list"></div>
+        <div class="row" style="margin-top: 6px">
+          <select id="proj-link-select"></select>
+          <button id="btn-link-doc" data-i18n="project.link">關聯</button>
+        </div>
+      </div>
+
       <!-- 階段流程：依序執行範本的分階段提示詞（只有從範本建立的專案才有） -->
       <div id="panel-workflow" class="tab-panel">
         <div class="wf-meta">
@@ -257,6 +274,11 @@
               id="wf-output"
               data-i18n-placeholder="project.wfOutputPlaceholder"
             ></textarea>
+            <div class="row" style="margin-top: 4px">
+              <button id="btn-wf-save-as-doc" data-i18n="project.wfSaveAsDocument">
+                存成文件（存進文件庫並關聯到這個專案）
+              </button>
+            </div>
             <div id="wf-saved-hint"></div>
             <div class="wf-actions">
               <button id="btn-wf-prev" data-i18n="project.wfPrev">上一步</button>
@@ -267,6 +289,33 @@
             </div>
           </div>
         </div>
+        <!-- 簡報橋接：把這個流程已完成步驟的產出，套進知識庫「簡報製作」
+             分類底下的範本，組成一份完整提示詞複製到剪貼簿。最初是為了
+             「AI 短劇製作」範本（題材定位、角色聖經、分集大綱都是很適合
+             直接拿去提案的素材）而做，但不綁定特定範本，任何有階段流程、
+             已經填了產出的專案都能用。 -->
+        <div id="wf-pitch-bridge">
+          <div id="wf-pitch-title" data-i18n="project.pitchBridgeTitle">
+            用專案產出生成簡報草稿
+          </div>
+          <div class="settings-hint" data-i18n="project.pitchBridgeHint">
+            勾選要帶入的已完成步驟產出，選一個知識庫裡「簡報製作」分類的範本，會組成一份完整提示詞複製到剪貼簿，貼給任何一家
+            AI 聊天工具即可。
+          </div>
+          <div id="wf-pitch-steps"></div>
+          <div class="row" style="margin-top: 6px">
+            <select id="wf-pitch-template"></select>
+            <button
+              id="btn-wf-pitch-generate"
+              class="primary"
+              data-i18n="project.pitchBridgeGenerate"
+            >
+              生成並複製
+            </button>
+          </div>
+          <div id="wf-pitch-result"></div>
+        </div>
+
         <div id="wf-template-save">
           <label class="label" data-i18n="project.wfSaveTemplateLabel"
             >把這個流程另存為專案範本（含你在這個專案改過的提示詞，不含產出）</label

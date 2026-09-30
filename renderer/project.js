@@ -32,6 +32,8 @@
 
   let allProjects = [];
   let allAccounts = [];
+  let allDocuments = []; // 文件庫清單，關聯文件分頁跟簡報橋接都要用
+  let allKnowledgeItems = []; // 知識庫項目，簡報橋接只挑標籤含「簡報製作」的
   let currentProjectId = null;
   let editingTasks = [];
   let expandedTimeTaskId = null; // 目前展開「工時紀錄」面板的任務 id，切換任務清單時重置
@@ -127,7 +129,7 @@
   // ---------------------------------------------------------------------
   // 分頁切換
   // ---------------------------------------------------------------------
-  const TAB_IDS = ['tasks', 'calendar', 'gantt', 'issues', 'workflow'];
+  const TAB_IDS = ['tasks', 'calendar', 'gantt', 'issues', 'workflow', 'linked'];
   function switchTab(tab) {
     TAB_IDS.forEach((id) => {
       document.getElementById(`tab-${id}`).classList.toggle('active', id === tab);
@@ -137,6 +139,7 @@
     if (tab === 'gantt') renderGantt();
     if (tab === 'issues') renderIssues();
     if (tab === 'workflow') renderWorkflow();
+    if (tab === 'linked') renderLinkedDocuments();
   }
   TAB_IDS.forEach((id) => {
     document.getElementById(`tab-${id}`).addEventListener('click', () => switchTab(id));
@@ -1404,6 +1407,130 @@
   });
 
   // ---------------------------------------------------------------------
+  // 關聯文件：跟文件庫既有文件手動建立關聯（多對多），完全比照
+  // conversation.js 的同一套邏輯，只是操作對象換成專案。
+  // ---------------------------------------------------------------------
+  const projLinkedListEl = document.getElementById('proj-linked-list');
+  const projLinkSelectEl = document.getElementById('proj-link-select');
+
+  function docIconFor(doc) {
+    const ext = /\.([a-zA-Z0-9]+)$/.exec((doc && doc.name) || '');
+    const map = { md: '📝', markdown: '📝', docx: '📘', pdf: '📕', json: '🗂', txt: '📄' };
+    return (ext && map[ext[1].toLowerCase()]) || '📎';
+  }
+
+  function currentProject() {
+    return allProjects.find((p) => p.id === currentProjectId) || null;
+  }
+
+  function rebuildProjLinkSelect(project) {
+    const linkedIds = new Set((project && project.linkedDocumentIds) || []);
+    const available = allDocuments.filter((d) => !linkedIds.has(d.id));
+    projLinkSelectEl.innerHTML = '';
+    if (available.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = window.i18n.t('project.noAvailableDocuments');
+      projLinkSelectEl.appendChild(opt);
+      projLinkSelectEl.disabled = true;
+      return;
+    }
+    projLinkSelectEl.disabled = false;
+    available.forEach((d) => {
+      const opt = document.createElement('option');
+      opt.value = d.id;
+      opt.textContent = d.name;
+      projLinkSelectEl.appendChild(opt);
+    });
+  }
+
+  function renderLinkedDocuments() {
+    const project = currentProject();
+    projLinkedListEl.innerHTML = '';
+    const linkedIds = (project && project.linkedDocumentIds) || [];
+    if (linkedIds.length === 0) {
+      const empty = document.createElement('div');
+      empty.className = 'linked-doc-empty';
+      empty.textContent = window.i18n.t('project.noLinkedDocuments');
+      projLinkedListEl.appendChild(empty);
+    }
+    linkedIds.forEach((docId) => {
+      const doc = allDocuments.find((d) => d.id === docId);
+      const row = document.createElement('div');
+      row.className = 'linked-doc-row';
+
+      const icon = document.createElement('span');
+      icon.className = 'linked-doc-icon';
+      icon.textContent = doc ? docIconFor(doc) : '⚠';
+
+      const name = document.createElement('span');
+      name.className = 'linked-doc-name' + (!doc || doc.missing ? ' missing' : '');
+      name.textContent = doc
+        ? doc.missing
+          ? `${doc.name} (${window.i18n.t('documents.missingFlag')})`
+          : doc.name
+        : window.i18n.t('project.linkedDocumentGone');
+      name.title = doc ? doc.filePath || '' : '';
+
+      const actions = document.createElement('div');
+      actions.className = 'linked-doc-actions';
+
+      if (doc && !doc.missing) {
+        const openBtn = document.createElement('button');
+        openBtn.textContent = '📂';
+        openBtn.title = window.i18n.t('documents.openFile');
+        openBtn.addEventListener('click', async () => {
+          await window.workspaceAPI.openDocumentFile(doc.id);
+        });
+        actions.appendChild(openBtn);
+      }
+
+      const unlinkBtn = document.createElement('button');
+      unlinkBtn.className = 'danger-text';
+      unlinkBtn.textContent = '✕';
+      unlinkBtn.title = window.i18n.t('project.unlink');
+      unlinkBtn.addEventListener('click', async () => {
+        adoptProjects(
+          await window.workspaceAPI.unlinkProjectDocument(currentProjectId, docId)
+        );
+        renderLinkedDocuments();
+      });
+      actions.appendChild(unlinkBtn);
+
+      row.appendChild(icon);
+      row.appendChild(name);
+      row.appendChild(actions);
+      projLinkedListEl.appendChild(row);
+    });
+    rebuildProjLinkSelect(project);
+  }
+
+  document.getElementById('btn-link-doc').addEventListener('click', async () => {
+    if (!currentProjectId || !projLinkSelectEl.value) return;
+    adoptProjects(
+      await window.workspaceAPI.linkProjectDocument(
+        currentProjectId,
+        projLinkSelectEl.value
+      )
+    );
+    renderLinkedDocuments();
+  });
+
+  window.workspaceAPI.onDocumentsChanged(async () => {
+    allDocuments = await window.workspaceAPI.listDocuments();
+    if (document.getElementById('tab-linked').classList.contains('active')) {
+      renderLinkedDocuments();
+    }
+  });
+
+  window.workspaceAPI.onKnowledgeChanged(async () => {
+    allKnowledgeItems = (await window.workspaceAPI.listKnowledge()).items;
+    if (document.getElementById('tab-workflow').classList.contains('active')) {
+      renderPitchBridge(currentWorkflow());
+    }
+  });
+
+  // ---------------------------------------------------------------------
   // 階段流程：依序執行範本的分階段提示詞
   //
   // 每個步驟：複製「已帶入專案主題與前面步驟產出」的完整提示詞給 AI → 把 AI 的產出貼回來
@@ -1483,6 +1610,7 @@
     renderWorkflowSteps(wf);
     renderWorkflowDetail(wf);
     refreshOpenSpecInfo();
+    renderPitchBridge(wf);
   }
 
   function renderWorkflowSteps(wf) {
@@ -1668,6 +1796,126 @@
       wfTemplateNameEl.value = '';
       wfTemplateSavedEl.textContent = window.i18n.t('project.wfTemplateSaved', { name });
     }
+  });
+
+  // 把目前步驟的產出存成文件庫的一份新文件，並自動跟這個專案建立關聯
+  // （見 lib/ipc/projects.js 的 projects:workflow:saveStepOutputAsDocument）。
+  document.getElementById('btn-wf-save-as-doc').addEventListener('click', async () => {
+    if (!currentProjectId || !wfSelectedStepId) return;
+    if (!wfOutputEl.value.trim()) {
+      wfFlash(window.i18n.t('project.wfSaveAsDocumentEmpty'));
+      return;
+    }
+    const result = await window.workspaceAPI.saveWorkflowStepOutputAsDocument(
+      currentProjectId,
+      wfSelectedStepId
+    );
+    if (!result.ok) {
+      wfFlash(window.i18n.t('project.wfSaveAsDocumentFailed'));
+      return;
+    }
+    allDocuments = result.docs;
+    adoptProjects(result.projects);
+    wfFlash(window.i18n.t('project.wfSaveAsDocumentDone'));
+    renderPitchBridge(currentWorkflow()); // 剛存的文件不影響簡報橋接內容本身，但穩妥起見刷新一次
+  });
+
+  // ---------------------------------------------------------------------
+  // 簡報橋接：把已完成步驟的產出，套進知識庫「簡報製作」分類底下的範本，
+  // 組成一份提示詞複製到剪貼簿。最初是為了「AI 短劇製作」範本而做（角色
+  // 聖經、分集大綱都是很適合直接拿去提案的素材），但不綁定特定範本。
+  // ---------------------------------------------------------------------
+  const wfPitchStepsEl = document.getElementById('wf-pitch-steps');
+  const wfPitchTemplateEl = document.getElementById('wf-pitch-template');
+  const wfPitchResultEl = document.getElementById('wf-pitch-result');
+  const wfPitchGenerateBtn = document.getElementById('btn-wf-pitch-generate');
+
+  function presentationKnowledgeItems() {
+    return allKnowledgeItems.filter((item) => (item.tags || []).includes('簡報製作'));
+  }
+
+  function renderPitchBridge(wf) {
+    if (!wf) return;
+    const stepsWithOutput = wf.steps.filter((s) => String(s.output || '').trim());
+    wfPitchStepsEl.innerHTML = '';
+    if (stepsWithOutput.length === 0) {
+      const empty = document.createElement('div');
+      empty.id = 'wf-pitch-steps-empty';
+      empty.textContent = window.i18n.t('project.pitchBridgeNoSteps');
+      wfPitchStepsEl.appendChild(empty);
+    }
+    stepsWithOutput.forEach((step) => {
+      const row = document.createElement('div');
+      row.className = 'wf-pitch-step-row';
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.checked = true;
+      checkbox.dataset.stepId = step.id;
+      checkbox.id = `wf-pitch-step-${step.id}`;
+      const label = document.createElement('label');
+      label.setAttribute('for', checkbox.id);
+      label.textContent = step.title;
+      row.appendChild(checkbox);
+      row.appendChild(label);
+      wfPitchStepsEl.appendChild(row);
+    });
+
+    const templates = presentationKnowledgeItems();
+    const prevValue = wfPitchTemplateEl.value;
+    wfPitchTemplateEl.innerHTML = '';
+    if (templates.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = window.i18n.t('project.pitchBridgeNoTemplates');
+      wfPitchTemplateEl.appendChild(opt);
+      wfPitchTemplateEl.disabled = true;
+    } else {
+      wfPitchTemplateEl.disabled = false;
+      templates.forEach((item) => {
+        const opt = document.createElement('option');
+        opt.value = item.id;
+        opt.textContent = item.title;
+        wfPitchTemplateEl.appendChild(opt);
+      });
+      if (templates.some((t) => t.id === prevValue)) wfPitchTemplateEl.value = prevValue;
+    }
+    wfPitchGenerateBtn.disabled = stepsWithOutput.length === 0 || templates.length === 0;
+    wfPitchResultEl.textContent = '';
+    wfPitchResultEl.className = '';
+  }
+
+  wfPitchGenerateBtn.addEventListener('click', async () => {
+    const wf = currentWorkflow();
+    if (!wf) return;
+    const template = presentationKnowledgeItems().find(
+      (t) => t.id === wfPitchTemplateEl.value
+    );
+    if (!template) return;
+    const checkedIds = Array.from(
+      wfPitchStepsEl.querySelectorAll('input[type="checkbox"]:checked')
+    ).map((cb) => cb.dataset.stepId);
+    const selectedSteps = wf.steps.filter((s) => checkedIds.includes(s.id));
+    if (selectedSteps.length === 0) {
+      wfPitchResultEl.textContent = window.i18n.t('project.pitchBridgeNoStepsSelected');
+      wfPitchResultEl.className = '';
+      return;
+    }
+
+    const outputsSection = selectedSteps
+      .map((s) => `## ${s.title}\n\n${s.output}`)
+      .join('\n\n');
+    const composed =
+      window.i18n.t('project.pitchBridgeComposedHeader', {
+        name: currentProject()?.name || '',
+      }) +
+      '\n\n' +
+      outputsSection +
+      '\n\n---\n\n' +
+      template.content;
+
+    await navigator.clipboard.writeText(composed);
+    wfPitchResultEl.textContent = window.i18n.t('project.pitchBridgeCopied');
+    wfPitchResultEl.className = 'ok';
   });
 
   // ---------------------------------------------------------------------
@@ -1916,9 +2164,11 @@
   // ---------------------------------------------------------------------
   (async () => {
     await window.i18n.init();
-    [allProjects, allAccounts] = await Promise.all([
+    [allProjects, allAccounts, allDocuments, allKnowledgeItems] = await Promise.all([
       window.workspaceAPI.listProjects(),
       window.workspaceAPI.listAccounts(),
+      window.workspaceAPI.listDocuments(),
+      window.workspaceAPI.listKnowledge().then((kb) => kb.items),
     ]);
     renderList();
 
