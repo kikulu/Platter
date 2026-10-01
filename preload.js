@@ -28,6 +28,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
 
   // 帳號角色機制
   listRoles: () => ipcRenderer.invoke('roles:list'),
+  listDefaultRoleIds: () => ipcRenderer.invoke('roles:defaultIds'),
   saveRole: (role) => ipcRenderer.invoke('roles:save', role),
   deleteRole: (id) => ipcRenderer.invoke('roles:delete', id),
 

@@ -363,8 +363,75 @@
     renderRolePalette();
   }
 
+  function buildRoleRow(role) {
+    const row = document.createElement('div');
+    row.className = 'role-item';
+
+    const dot = document.createElement('span');
+    dot.className = 'role-color-dot';
+    dot.style.background = role.color;
+
+    const info = document.createElement('div');
+    info.className = 'role-info';
+    const name = document.createElement('div');
+    name.className = 'role-name';
+    name.textContent = role.name;
+    const desc = document.createElement('div');
+    desc.className = 'role-desc';
+    desc.textContent = role.description || '';
+    info.appendChild(name);
+    info.appendChild(desc);
+
+    const copyBtn = document.createElement('button');
+    copyBtn.textContent = window.i18n.t('settings.roles.copyPrompt');
+    copyBtn.addEventListener('click', async () => {
+      await navigator.clipboard.writeText(role.description || '');
+      alert(window.i18n.t('knowledge.copied'));
+    });
+
+    const editBtn = document.createElement('button');
+    editBtn.textContent = window.i18n.t('settings.roles.edit');
+    editBtn.addEventListener('click', () => {
+      editingRoleId = role.id;
+      roleNameInput.value = role.name;
+      roleDescInput.value = role.description || '';
+      selectedRoleColor = role.color || ROLE_COLOR_PALETTE[0];
+      btnCancelRoleEdit.style.display = 'inline-block';
+      btnSaveRole.textContent = window.i18n.t('settings.roles.update');
+      renderRolePalette();
+      roleNameInput.focus();
+    });
+
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'danger';
+    deleteBtn.textContent = window.i18n.t('settings.roles.delete');
+    deleteBtn.addEventListener('click', async () => {
+      const ok = window.confirm(
+        window.i18n.t('settings.roles.deleteConfirm', { name: role.name })
+      );
+      if (!ok) return;
+      await window.workspaceAPI.deleteRole(role.id);
+      if (editingRoleId === role.id) resetRoleForm();
+      refreshRoles();
+    });
+
+    row.appendChild(dot);
+    row.appendChild(info);
+    row.appendChild(copyBtn);
+    row.appendChild(editBtn);
+    row.appendChild(deleteBtn);
+    return row;
+  }
+
+  // 角色清單依「基本（內建）」／「延展（使用者自訂）」分兩個小節顯示——
+  // 判斷方式是角色 id 有沒有出現在 lib/stores.js defaultRoleIds() 回傳的
+  // 內建角色 id 清單裡（見 roles:defaultIds IPC）。純粹是分類顯示，兩種
+  // 角色能不能編輯/刪除完全一樣，不是「基本角色鎖住不能改」的意思。
   async function refreshRoles() {
-    const roles = await window.workspaceAPI.listRoles();
+    const [roles, defaultIds] = await Promise.all([
+      window.workspaceAPI.listRoles(),
+      window.workspaceAPI.listDefaultRoleIds(),
+    ]);
     roleListEl.innerHTML = '';
     if (roles.length === 0) {
       const p = document.createElement('div');
@@ -373,65 +440,32 @@
       roleListEl.appendChild(p);
       return;
     }
-    roles.forEach((role) => {
-      const row = document.createElement('div');
-      row.className = 'role-item';
 
-      const dot = document.createElement('span');
-      dot.className = 'role-color-dot';
-      dot.style.background = role.color;
+    const defaultIdSet = new Set(defaultIds);
+    const basicRoles = roles.filter((r) => defaultIdSet.has(r.id));
+    const extendedRoles = roles.filter((r) => !defaultIdSet.has(r.id));
 
-      const info = document.createElement('div');
-      info.className = 'role-info';
-      const name = document.createElement('div');
-      name.className = 'role-name';
-      name.textContent = role.name;
-      const desc = document.createElement('div');
-      desc.className = 'role-desc';
-      desc.textContent = role.description || '';
-      info.appendChild(name);
-      info.appendChild(desc);
+    function appendSection(titleKey, list, emptyKey) {
+      const heading = document.createElement('div');
+      heading.className = 'role-section-heading';
+      heading.textContent = window.i18n.t(titleKey);
+      roleListEl.appendChild(heading);
+      if (list.length === 0) {
+        const p = document.createElement('div');
+        p.className = 'settings-hint';
+        p.textContent = window.i18n.t(emptyKey);
+        roleListEl.appendChild(p);
+        return;
+      }
+      list.forEach((role) => roleListEl.appendChild(buildRoleRow(role)));
+    }
 
-      const copyBtn = document.createElement('button');
-      copyBtn.textContent = window.i18n.t('settings.roles.copyPrompt');
-      copyBtn.addEventListener('click', async () => {
-        await navigator.clipboard.writeText(role.description || '');
-        alert(window.i18n.t('knowledge.copied'));
-      });
-
-      const editBtn = document.createElement('button');
-      editBtn.textContent = window.i18n.t('settings.roles.edit');
-      editBtn.addEventListener('click', () => {
-        editingRoleId = role.id;
-        roleNameInput.value = role.name;
-        roleDescInput.value = role.description || '';
-        selectedRoleColor = role.color || ROLE_COLOR_PALETTE[0];
-        btnCancelRoleEdit.style.display = 'inline-block';
-        btnSaveRole.textContent = window.i18n.t('settings.roles.update');
-        renderRolePalette();
-        roleNameInput.focus();
-      });
-
-      const deleteBtn = document.createElement('button');
-      deleteBtn.className = 'danger';
-      deleteBtn.textContent = window.i18n.t('settings.roles.delete');
-      deleteBtn.addEventListener('click', async () => {
-        const ok = window.confirm(
-          window.i18n.t('settings.roles.deleteConfirm', { name: role.name })
-        );
-        if (!ok) return;
-        await window.workspaceAPI.deleteRole(role.id);
-        if (editingRoleId === role.id) resetRoleForm();
-        refreshRoles();
-      });
-
-      row.appendChild(dot);
-      row.appendChild(info);
-      row.appendChild(copyBtn);
-      row.appendChild(editBtn);
-      row.appendChild(deleteBtn);
-      roleListEl.appendChild(row);
-    });
+    appendSection('settings.roles.basicSection', basicRoles, 'settings.roles.basicEmpty');
+    appendSection(
+      'settings.roles.extendedSection',
+      extendedRoles,
+      'settings.roles.extendedEmpty'
+    );
   }
 
   btnSaveRole.addEventListener('click', async () => {
