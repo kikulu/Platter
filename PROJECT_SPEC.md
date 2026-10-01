@@ -172,17 +172,37 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
   8 色色票之一（`#4f8cff #e5484d #f5a623 #2ecc71 #9b59b6 #1abc9c #e91e8c
 #95a5a6`）。
 - 存在 `app-state.json` 的 `roles: []`。
-- **內建預設角色**：`app-state.json` 完全不存在時（全新安裝、第一次
-  開啟），`lib/stores.js` 的 `loadAppState()` 會用
+- **內建預設角色**：`lib/stores.js` 的 `loadAppState()` 用
   `extractors/default-roles.json` 裡內建的 8 種企業角色（人力資源、
   行銷企劃、業務銷售、客服支援、專案經理、軟體工程師、財務會計、
-  高階主管）當 `roles` 起始內容，`id` 是固定字串（例如 `role_hr`），
-  跟 `default-knowledge-base.json` 裡「企業角色範本」分類的提示詞項目
-  的 `roleIds` 對得上，所以全新安裝一開機側邊欄「預設提示詞」（見
-  第 5.4 節、第 8 節）就已經依角色分好內容，不用使用者自己重新建立
-  一輪角色。跟 `seedDefaultKnowledgeBase()`／`loadSelectors()` 是同一套
-  慣例：種子邏輯只在 `app-state.json` 完全不存在時觸發一次，一旦存過檔
-  （哪怕使用者把角色刪光）就永遠讀使用者自己的版本。
+  高階主管）當 `roles` 的起始／補種內容，`id` 是固定字串（例如
+  `role_hr`），跟 `default-knowledge-base.json` 裡「企業角色範本」
+  分類的提示詞項目的 `roleIds` 對得上，所以一開機側邊欄「預設提示詞」
+  （見第 5.4 節、第 8 節）就已經依角色分好內容，不用使用者自己重新
+  建立一輪角色。
+  **（1.36.0 修正）**：舊版只在 `app-state.json` 完全不存在時套用一次，
+  覆蓋安裝／版本升級不會補進新版 `default-roles.json` 新增的角色——跟
+  `applyIncrementalDefaultSeeds()`（知識庫，見第 8 節）一樣的補種機制，
+  現在改成每次 `loadAppState()` 都呼叫 `applyIncrementalDefaultRoleSeeds()`
+  比對一次：拿 `seeded-defaults.json` 的 `roles` 清單（跟知識庫共用同一
+  個檔案，各自記自己的 key）判斷「這個內建角色 id 有沒有補過」，沒補過
+  的才新增，使用者已經刪除/改過的角色不會被補回來。角色的 `id` 本身就是
+  固定值，不像知識庫項目需要另外的 `defaultId` 欄位——直接拿 `id` 當比對
+  鍵即可，不用回溯比對標題。舊安裝（這個機制上線前）沒有這筆記錄時，
+  用「目前角色清單裡已經有的內建角色 id」回溯標記成「已種過」，避免
+  重複拿到一份。
+  **（同一輪順便修的既有 bug）**：`seeded-defaults.json` 是知識庫跟角色
+  共用的同一個檔案，兩邊各自獨立呼叫、順序不固定，舊版用
+  `writeJSONSafe(seededDefaultsPath(), {...})` 整份覆蓋寫入，先跑的
+  那次會把後跑的那次寫的 key 蓋掉（反之亦然）——`lib/stores.js` 新增
+  `readSeededDefaultsRecord()`／`writeSeededDefaultsRecord(patch)` 這組
+  合併寫入的小工具，兩邊的種子函式都改用它，見 `test/roles-seeding.test.js`
+  的「【回歸】」系列測試。
+  **（基本／延展）**：設定視窗「帳號角色管理」區塊依角色 `id` 是否出現在
+  `defaultRoleIds()`（即時讀 `default-roles.json` 算出來，不是另外存的
+  欄位）拆成「基本角色（內建）」「延展角色（自訂）」兩個小節顯示——純粹
+  是分類顯示，不是基本角色鎖住不能改，編輯/刪除操作兩種角色完全一樣。
+  IPC：`roles:defaultIds`（`preload.js` 的 `listDefaultRoleIds()`）。
 - 帳號物件新增 `roleId`（可為 `null`）。
 - **管理位置**：設定視窗「帳號角色管理」區塊——新增/編輯/刪除角色、色票
   選色、「複製提示詞」一鍵複製角色描述到剪貼簿。
@@ -573,16 +593,17 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 （`lib/ipc/projects.js`）只負責讀寫資料與廣播。
 
 **內建範本**（`extractors/default-project-templates.json`，唯讀、隨程式版本更新，
-不複製進資料目錄）共 6 組流程（5 組軟體開發＋1 組 AI 短劇製作）：
+不複製進資料目錄）共 7 組流程（5 組軟體開發＋1 組 AI 短劇製作＋1 組遊戲設計）：
 
-| 範本                     | 階段                                                                                                                                                                                                                                                                                  |
-| ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| SDD 規格驅動開發         | 原則與規格（Constitution → Specify → Clarify）→ 規劃與任務（Plan → Tasks）→ 檢查與實作（Analyze → Implement），重用知識庫 7 組 SDD 提示詞，順序與 SDD 分階段套餐一致                                                                                                                  |
-| OpenSpec 變更流程        | 探索與提案（Explore → proposal.md）→ 規格與設計（差異規格 → design.md）→ 任務與實作（tasks.md → Apply）→ 驗證與封存（Verify → Archive 預演），重用知識庫 8 組 OpenSpec 提示詞，可匯出成專案的 `openspec/changes/` 資料夾（第 7.7 節）                                                 |
-| 敏捷 Scrum 迭代開發      | 產品願景與 Backlog → Sprint 規劃 → 開發與驗收 → Sprint 回顧                                                                                                                                                                                                                           |
-| 傳統瀑布式開發           | 需求分析 → 系統設計 → 實作與測試 → 部署與維運                                                                                                                                                                                                                                         |
-| MVP 快速原型（精實驗證） | 問題與假設 → 原型實作 → 驗證與迭代                                                                                                                                                                                                                                                    |
-| AI 短劇製作              | 企劃與劇本（題材定位與集數規劃 → 角色聖經 → 分集大綱與鉤子 → 單集劇本）→ 分鏡與視覺設定（分鏡腳本 → 角色與場景生圖提示詞）→ AI 影像與聲音生成（鏡頭影片生成提示詞 → 配音旁白配樂）→ 剪輯與發佈（剪輯節奏與字幕 → 標題封面發佈規劃 → 數據回顧與優化），共 4 階段 11 步，提示詞全部內嵌 |
+| 範本                     | 階段                                                                                                                                                                                                                                                                                                            |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| SDD 規格驅動開發         | 原則與規格（Constitution → Specify → Clarify）→ 規劃與任務（Plan → Tasks）→ 檢查與實作（Analyze → Implement），重用知識庫 7 組 SDD 提示詞，順序與 SDD 分階段套餐一致                                                                                                                                            |
+| OpenSpec 變更流程        | 探索與提案（Explore → proposal.md）→ 規格與設計（差異規格 → design.md）→ 任務與實作（tasks.md → Apply）→ 驗證與封存（Verify → Archive 預演），重用知識庫 8 組 OpenSpec 提示詞，可匯出成專案的 `openspec/changes/` 資料夾（第 7.7 節）                                                                           |
+| 敏捷 Scrum 迭代開發      | 產品願景與 Backlog → Sprint 規劃 → 開發與驗收 → Sprint 回顧                                                                                                                                                                                                                                                     |
+| 傳統瀑布式開發           | 需求分析 → 系統設計 → 實作與測試 → 部署與維運                                                                                                                                                                                                                                                                   |
+| MVP 快速原型（精實驗證） | 問題與假設 → 原型實作 → 驗證與迭代                                                                                                                                                                                                                                                                              |
+| AI 短劇製作              | 企劃與劇本（題材定位與集數規劃 → 角色聖經 → 分集大綱與鉤子 → 單集劇本）→ 分鏡與視覺設定（分鏡腳本 → 角色與場景生圖提示詞）→ AI 影像與聲音生成（鏡頭影片生成提示詞 → 配音旁白配樂）→ 剪輯與發佈（剪輯節奏與字幕 → 標題封面發佈規劃 → 數據回顧與優化），共 4 階段 11 步，提示詞全部內嵌                           |
+| 遊戲設計                 | 企劃與設計文件（核心玩法與市場定位 → GDD 大綱 → 核心迴圈與進程曲線）→ 系統與數值設計（核心系統 → 數值平衡與公式 → 關卡／內容規劃）→ 美術、音效與介面（美術風格指南 → UI/UX 介面設計）→ 原型、測試與迭代（MVP 規劃 → Playtest 計畫 → 數據分析與迭代方向），共 4 階段 11 步，提示詞全部內嵌、不綁定特定引擎或工具 |
 
 **AI 短劇製作範本**（1.34.0 新增，`proj-tpl-ai-drama`，唯一一組非軟體開發的內建範本）：提示詞全部內嵌
 在範本裡（跟 Scrum／瀑布式／MVP 一樣，不引用知識庫，所以不會出現在知識庫清單）。設計上的幾個刻意選擇：
@@ -1176,6 +1197,14 @@ Enter 跳到選中的項目，Esc 或點背景關閉。比對範圍跟各自視�
 抓取對話用的 CSS selector 不寫死在程式碼裡，存成一份可編輯的設定
 （`selectors.json`，結構是 `{ claude: {turn, userHint}, chatgpt: {...}, ... }`，
 第一次啟動從 `extractors/default-selectors.json` 複製出廠預設值）。
+**（1.36.0 修正）**：跟角色一樣曾經有覆蓋安裝補種的 bug——舊版只在
+`selectors.json` 完全不存在時套用預設值，一旦存過檔，往後升級新增的
+平台或某個平台新補的 selector 欄位，既有使用者永遠拿不到。
+`loadSelectors()` 現在每次載入都呼叫 `applyIncrementalSelectorDefaults()`
+比對：缺的平台整組補上、平台裡缺的欄位個別補上，**使用者已經存在的值
+（包含空字串——代表使用者刻意清空）一律不碰**，用
+`Object.prototype.hasOwnProperty` 判斷「缺少」而不是看值是否為假值，
+避免把使用者刻意清空的欄位誤判成缺少又補回預設值。
 
 UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊息判斷關鍵字」
 輸入框、「重設此平台為預設值」/「儲存」按鈕。
@@ -1400,7 +1429,7 @@ extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
 extractors/default-knowledge-base.json  # 內建的68組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，OpenSpec 8組，簡報製作12組，企業角色範本8種職務各2組）＋8組分階段套餐範本（groups）
-extractors/default-project-templates.json # 內建的6組專案範本（軟體開發5組：SDD／OpenSpec／Scrum／瀑布式／MVP，加 AI 短劇製作，第 7.6 節）
+extractors/default-project-templates.json # 內建的7組專案範本（軟體開發5組：SDD／OpenSpec／Scrum／瀑布式／MVP，加 AI 短劇製作、遊戲設計，第 7.6 節）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
 renderer/account.html, account.js                    # 新增帳號視窗

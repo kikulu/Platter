@@ -1,5 +1,51 @@
 # Changelog
 
+## [1.36.0]
+
+### 修正：角色覆蓋安裝補種失效；審查並修正選擇器的同一類問題；角色清單拆分基本／延展；新增遊戲設計範本
+
+- **修正角色覆蓋安裝不補種的回報問題**：`loadAppState()` 舊版只在 `app-state.json` 完全
+  不存在時套用一次 `extractors/default-roles.json` 的 8 個內建角色，覆蓋安裝／版本升級
+  永遠不會補進新版新增的角色。新增 `applyIncrementalDefaultRoleSeeds()`，每次
+  `loadAppState()` 都比對一次（用 `seeded-defaults.json` 的 `roles` 清單記錄「已經種過的
+  內建角色 id」），只補缺少的、不動使用者已刪除/編輯過的角色；角色 `id` 本身是固定值，
+  不需要像知識庫項目那樣額外存一個 `defaultId`。
+- **順便修的既有 bug**：`seeded-defaults.json` 是知識庫跟角色共用的同一個檔案，兩邊各自
+  獨立呼叫、順序不固定，舊版整份覆蓋寫入，先跑的那次會把後跑的那次寫的 key 蓋掉。新增
+  `readSeededDefaultsRecord()`／`writeSeededDefaultsRecord(patch)` 合併寫入小工具，兩邊
+  種子函式都改用它——這個 bug 是在幫角色補種寫回歸測試時，用「反過來的呼叫順序」測試案例
+  抓到的。
+- **審查其他內建預設參數，找到並修正同一類問題**：`loadSelectors()`（PDF/DOCX 以外，每個
+  AI 平台的對話擷取 CSS selector）也只在 `selectors.json` 完全不存在時套用預設值，升級
+  新增的平台或欄位既有使用者拿不到。新增 `applyIncrementalSelectorDefaults()`：缺的平台
+  整組補上、平台裡缺的欄位個別補上，使用者已存在的值（包含刻意清空的空字串）一律不碰，用
+  `hasOwnProperty` 判斷缺少而不是看值是否為假值。
+- **角色清單拆分「基本」與「延展」**：設定視窗「帳號角色管理」依角色 id 是否為內建角色
+  （`defaultRoleIds()`，即時讀 `default-roles.json` 算出來，不是另存的欄位）拆成「基本
+  角色（內建）」「延展角色（自訂）」兩個小節顯示；純粹是分類顯示，兩種角色的編輯/刪除操作
+  完全一樣。新增 IPC `roles:defaultIds`（`preload.js` 的 `listDefaultRoleIds()`）。
+- **新增「遊戲設計」專案範本**（`proj-tpl-game-design`，4 階段 11 步，提示詞全部內嵌、
+  不綁定特定引擎或工具）：
+  - 階段 1 企劃與設計文件：核心玩法與市場定位 → GDD 大綱 → 核心迴圈與進程曲線設計
+  - 階段 2 系統與數值設計：核心系統設計 → 數值平衡與公式設計 → 關卡／內容規劃清單
+  - 階段 3 美術、音效與介面：美術風格指南 → UI/UX 介面設計規劃
+  - 階段 4 原型、測試與迭代：MVP 規劃 → Playtest 計畫與回饋收集框架 → 數據分析與下一輪
+    迭代方向
+  - 設計取捨跟「AI 短劇製作」範本一致：資訊不足標「待確認」不編造數據/規格、不使用真實
+    遊戲或既有 IP 的角色/美術/商標。
+- **新增測試**：`test/roles-seeding.test.js`（5 項，含兩個順序互換的回歸測試）、
+  `test/selectors-seeding.test.js`（4 項）、`test/workflow.test.js` 補 2 項（遊戲設計範本
+  結構與產出接力）。資料異動（`default-project-templates.json`）純新增（71 insertions,
+  0 deletions，保留 CRLF 與原排版）。
+- 三份 README（zh-TW／en／ja）專案範本功能列、檔案結構註記同步更新為 7 組範本；
+  `PROJECT_SPEC.md` 第 4 節（角色）、第 10 節（選擇器）更新說明，第 7.6 節新增遊戲設計
+  範本列。
+- **已知限制**：遊戲設計範本的提示詞內容只做了資料完整性與展開／接力的單元測試，沒有
+  實際拿去跑過任何一家 AI 驗證產出品質；角色/選擇器的補種修正邏輯已有完整單元測試覆蓋，
+  但跟前幾輪一樣沒有在真正的 Electron 視窗裡實機跑過一次「覆蓋安裝升級」流程驗證。
+
+---
+
 ## [1.35.0]
 
 ### 專案計畫新增：關聯文件、把步驟產出存成文件、簡報橋接
