@@ -126,6 +126,41 @@ test('AI 短劇專案範本：專案主題會帶進第一步，前面步驟的�
   assert.ok(second.includes('賣點：替身新娘反殺（測試產出）'));
 });
 
+test('遊戲設計專案範本：4 階段 11 步，順序由企劃走到原型測試，提示詞自成一體（不引用知識庫）', () => {
+  const tpl = TEMPLATES.find((t) => t.id === 'proj-tpl-game-design');
+  assert.ok(tpl);
+  assert.equal(tpl.stages.length, 4);
+  assert.deepEqual(
+    tpl.stages.map((st) => st.steps.length),
+    [3, 3, 2, 3]
+  );
+  tpl.stages.forEach((st) =>
+    st.steps.forEach((step) => {
+      assert.ok(step.prompt && !step.itemDefaultId, `${step.title} 應該內嵌提示詞`);
+      assert.ok(step.prompt.includes('待確認'), `${step.title} 少了「待確認」防編造提醒`);
+    })
+  );
+  const titles = tpl.stages.flatMap((st) => st.steps.map((s) => s.title));
+  assert.ok(titles.indexOf('核心系統設計') < titles.indexOf('數值平衡與公式設計'));
+  assert.ok(titles.indexOf('美術風格指南') < titles.indexOf('最小可玩原型（MVP）規劃'));
+  assert.ok(
+    titles.indexOf('最小可玩原型（MVP）規劃') <
+      titles.indexOf('Playtest 計畫與回饋收集框架')
+  );
+});
+
+test('遊戲設計專案範本：專案主題會帶進第一步，前面步驟的產出會接力到後面步驟', () => {
+  const tpl = TEMPLATES.find((t) => t.id === 'proj-tpl-game-design');
+  const { workflow } = buildWorkflowFromTemplate(tpl, '貓咪經營咖啡廳', resolveItem);
+  assert.equal(workflow.steps.length, 11);
+  const first = composeStepPrompt(workflow, workflow.steps[0].id);
+  assert.ok(first.includes('貓咪經營咖啡廳'));
+  assert.ok(!first.includes('{{topic}}'));
+  workflow.steps[0].output = '核心玩法：經營+收集貓咪（測試產出）';
+  const second = composeStepPrompt(workflow, workflow.steps[1].id);
+  assert.ok(second.includes('核心玩法：經營+收集貓咪（測試產出）'));
+});
+
 // --- buildWorkflowFromTemplate -------------------------------------------------
 
 test('buildWorkflowFromTemplate：展開步驟與任務（一步一任務、狀態同步用的 taskId 互相對應）', () => {
