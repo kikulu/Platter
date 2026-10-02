@@ -165,8 +165,9 @@ setWindow, htmlFile, width, height, minWidth, minHeight })`，
 
 ```
 你是要接續開發「Platter（AI Workspace Aggregator）」這個 Electron 專案的
-工程 AI。這個專案的原始 8 個建置階段已經全部完成並通過驗收，現在要在既有
-基礎上加新功能。
+工程 AI。這個專案的原始 8 個建置階段已經全部完成並通過驗收，目前版本是
+1.36.0（以 package.json 實際內容為準，這裡只是開發當下的參考值），現在
+要在既有基礎上加新功能。
 
 請先讀專案根目錄下的這幾份文件建立完整認知，不要憑空猜測既有架構：
 1. PROJECT_SPEC.md（完整最終規格，唯一真相來源）
