@@ -2,8 +2,9 @@
 
 > 跟 `NEW_FEATURE_BUILD_PROMPT.md` 是一組的兩份文件，差別在於：
 >
-> - `NEW_FEATURE_BUILD_PROMPT.md`：**加東西**——會在 `BUILD_PLAN.md` 新增
->   一個 Stage，是「規格擴張」。
+> - `NEW_FEATURE_BUILD_PROMPT.md`：**加東西**——更新 `PROJECT_SPEC.md`／
+>   `CHANGELOG.md`，是「規格擴張」（`1.17.0` 之後已經不會再往
+>   `BUILD_PLAN.md` 加新 Stage，見該文件「專案現況」段落的說明）。
 > - 本文件：**修東西**——目標是讓「已經寫在 `PROJECT_SPEC.md` / 已經被
 >   `BUILD_PLAN.md` 某階段檢核表打勾」的功能，恢復成原本規格描述的行為，
 >   是「修正回既有規格」，**原則上不應該新增 Stage、不應該改變
@@ -53,10 +54,14 @@
 ```
 你是要幫「Platter（AI Workspace Aggregator）」這個 Electron 專案修正一個
 既有功能的問題，不是要加新功能。這個專案的規格記載在 PROJECT_SPEC.md，
-建置歷程記載在 BUILD_PLAN.md（目前 16 個階段都已完成並勾選驗收，其中
-Stage 9～16 還沒經過真正的 Electron 環境手動驗證，只做過語法檢查跟邏輯
-層面的單元測試——如果你要修正的問題剛好落在這幾個階段的功能，這點特別
-相關），實際版本變更記在 CHANGELOG.md。
+目前版本是 1.36.0。原始建置歷程記載在 BUILD_PLAN.md（Stage 1～16，約
+對應到 1.16.0，之後的功能都只記在 CHANGELOG.md／PROJECT_SPEC.md，沒有
+再往 BUILD_PLAN.md 加新 Stage，細節見 NEW_FEATURE_BUILD_PROMPT.md 的
+「專案現況」段落）。**1.17.0 之後新增的多數功能都只做過語法檢查、
+單元測試跟 lint/format 檢查，幾乎沒有在真正的 Electron 環境手動驗證過
+畫面行為**（CHANGELOG.md 各版本的「已知限制」小節通常會註明）——如果你
+要修正的問題剛好落在這段期間新增的功能，這點特別相關，程式碼邏輯可能
+是對的，但實際畫面行為還沒人真正點過一次。
 
 請先讀這幾份文件，確認「規格上這個功能應該長什麼樣子」：
 1. PROJECT_SPEC.md 裡跟這個功能相關的章節（自己判斷是第幾節，不確定就
