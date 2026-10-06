@@ -113,6 +113,11 @@
   }
 
   async function openExportDialog() {
+    // 目前帳號的畫面是用 WebContentsView 蓋在 index.html 自己的 DOM
+    // 上面，CSS z-index 對它沒有用，這個全螢幕遮罩開啟前一定要先把
+    // 它暫時隱藏，不然會被蓋住、看起來就像「點了沒反應」。見
+    // lib/windows.js 的 setActiveAccountViewVisible() 說明。
+    await window.workspaceAPI.setActiveAccountViewVisible(false);
     exportForceChoosePath = false;
     document.querySelector('input[name="export-format"][value="md"]').checked = true;
     const [savePathConfig, ui] = await Promise.all([
@@ -126,6 +131,7 @@
 
   function closeExportDialog() {
     exportOverlay.classList.remove('open');
+    window.workspaceAPI.setActiveAccountViewVisible(true);
   }
 
   document
@@ -564,6 +570,10 @@
   let paletteActiveIndex = -1;
 
   function openPalette() {
+    // 跟匯出對話框一樣的原因：目前帳號的 WebContentsView 會蓋住這個
+    // 全螢幕遮罩，開啟前要先暫時隱藏（見 lib/windows.js 的
+    // setActiveAccountViewVisible() 說明）。
+    window.workspaceAPI.setActiveAccountViewVisible(false);
     paletteOverlay.classList.add('open');
     paletteInput.value = '';
     paletteResults = [];
@@ -574,6 +584,7 @@
 
   function closePalette() {
     paletteOverlay.classList.remove('open');
+    window.workspaceAPI.setActiveAccountViewVisible(true);
   }
 
   function renderPaletteResults() {
