@@ -1,5 +1,86 @@
 # Changelog
 
+## [1.37.0]
+
+這次依序處理了四件事：擴充知識庫範例、新增一組分階段工作流、右下角浮動
+小托盤、修正「匯出當前對話沒有反應」的回報問題。
+
+### 1＋2. 擴充知識庫範例／新增工作流架構：求職與職涯
+
+- 「擴充範例庫」「新增工作流架構」兩項需求沒有指定具體方向，這次選定
+  **求職與職涯**作為新領域（原因：通用性高、前面幾輪還沒碰過，且剛好
+  能同時滿足「擴充範例」跟「工作流」兩個面向），新增 6 組提示詞
+  （`kb-default-069` ~ `074`：自我優勢與職涯定位盤點、履歷健檢與優化、
+  求職信／自我推薦信撰寫、LinkedIn／個人品牌檔案優化、面試問題模擬與
+  準備、薪資談判準備）＋ 1 組分階段套餐 `kb-group-default-009`「求職
+  準備全流程」（階段 1 自我盤點與履歷、階段 2 求職文件與個人品牌、
+  階段 3 面試與談判，各 2 步）。
+- 跟先前幾個套餐一致的原則：需要具體數字或成果佐證的地方（市場薪資
+  行情、過往績效數據）一律要求使用者提供真實資料，明確禁止 AI 編造。
+- 內建提示詞總數 68 → 74（一般範本 52 → 58），分階段套餐總數 8 → 9，
+  知識庫分類 9 → 10。資料異動純新增（56 insertions, 0 deletions，保留
+  CRLF 與原排版）。
+
+### 3. 新增右下角浮動小托盤
+
+- 主視窗啟動即常駐、不用使用者自己開：一個釘在主視窗右下角的小圓鈕，
+  點一下展開成搜尋框＋提示詞清單（只列知識庫的**單一提示詞項目**，不含
+  分階段套餐——套餐是多步驟操作，留給完整知識庫視窗），點項目直接複製
+  到剪貼簿，滿足「不用在使用過程中還要開知識庫視窗」的需求。
+- **架構上不是一般子視窗**：另外 8 個子視窗都是用 `openChildWindow()`
+  開的「使用者按按鈕才開、置中」對話框；這個是跟著主視窗常駐、固定釘在
+  右下角、永遠蓋在最上面的獨立 `BrowserWindow`——無邊框、透明背景（收起
+  狀態是圓形不是方形）、`alwaysOnTop`、`parent: mainWindow`（主視窗關閉
+  會自動一併關閉）。收起（56×56 圓鈕）／展開（340×440 面板）是整個 OS
+  視窗本身變大變小，不是 CSS 切換；主視窗 `move`/`resize`/`minimize`/
+  `restore` 都會連動（見 `lib/windows.js` 的 `openTrayWindow()`／
+  `trayBoundsFor()`／`repositionTrayWindow()`）。
+- 新增 `renderer/tray.html`／`tray.js`／`tray.css`，新增 IPC
+  `tray:setExpanded`（`preload.js` 的 `trayToggleExpanded()`）。
+- **已知限制**：收起狀態的圓形視窗本身是方形，四個直角落雖然視覺透明
+  但仍會吃掉那幾個像素的滑鼠事件（影響範圍極小，沒有實作
+  `setIgnoreMouseEvents` 去摳掉）；`transparent: true` 視窗在不同作業
+  系統的合成器行為沒有完全一致過，**這個功能完全沒有在真正的 Electron
+  視窗環境實機驗證過**；目前沒有讓使用者關閉/停用托盤的設定。
+
+### 4. 修正「匯出當前對話沒有反應」
+
+- **找到真正的原因**：`index.html` 自己的 `#export-options-overlay`
+  是 `position: fixed; inset: 0` 的 DOM 全螢幕遮罩，但目前帳號的
+  `WebContentsView` 是原生畫面層、不受 CSS z-index 影響，一直都蓋在
+  `index.html` 自己的 DOM 上面——使用者點「匯出當前對話」時 IPC 其實有
+  正常執行、遮罩的 `open` class 也真的加上去了，只是整個對話框畫面被
+  帳號視窗蓋住、完全看不見，看起來就像「點了沒反應」。
+- **審查後發現第二個一模一樣的案例**：命令面板（跨模組快速搜尋，
+  `#command-palette-overlay`）是完全相同的架構，同樣的問題，只是使用者
+  沒有特別回報。
+- **修法**：沒有把這兩個改成獨立視窗（那樣會犧牲「瞬間彈出/收起」的
+  輕量體驗），而是新增 `lib/windows.js` 的
+  `setActiveAccountViewVisible(visible)`，開啟遮罩前呼叫 `false` 把
+  目前帳號的 `WebContentsView` 暫時隱藏（跟切換帳號時彼此顯示/隱藏用
+  同一個 `setVisible()` API），遮罩關閉時呼叫 `true` 恢復。
+  `openExportDialog()`／`closeExportDialog()`、`openPalette()`／
+  `closePalette()`（`renderer/renderer.js`）都已經接上。新增 IPC
+  `window:setActiveAccountViewVisible`（`preload.js` 的
+  `setActiveAccountViewVisible()`）。
+- 新增 `test/account-view-visibility.test.js`（3 項）驗證
+  `setActiveAccountViewVisible()` 本身的邏輯（只動作用中帳號的 view、
+  沒有帳號時安全地什麼都不做）。**畫面行為本身（遮罩開啟後真的看得到）
+  沒有在真正的 Electron 視窗環境實機驗證過**，只驗證了會呼叫正確的
+  API——如果問題還在，代表根因可能不只這一個。
+
+### 其他
+
+- 新增測試共 3 項（`test/account-view-visibility.test.js`，見上方第 4
+  項；求職套餐沒有獨立測試，沿用既有知識庫套餐資料完整性測試自動涵蓋；
+  托盤 UI 本身是純前端 DOM 邏輯，比照其他 renderer 檔案不另外寫單元
+  測試）；`npm test` 147 項全過、lint/format 全過。
+- 三份 README（zh-TW／en／ja）、`PROJECT_SPEC.md`（第 5 節知識庫計數、
+  第 9 節新增浮動小托盤小節＋z-index 坑的說明、第 12 節匯出對話框加
+  cross-reference）同步更新。
+
+---
+
 ## [1.36.0]
 
 ### 修正：角色覆蓋安裝補種失效；審查並修正選擇器的同一類問題；角色清單拆分基本／延展；新增遊戲設計範本
