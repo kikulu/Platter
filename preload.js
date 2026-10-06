@@ -123,6 +123,9 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   openLogWindow: () => ipcRenderer.invoke('window:openLogWindow'),
   getAppVersion: () => ipcRenderer.invoke('app:getVersion'),
   closeSelf: () => ipcRenderer.invoke('window:closeSelf'),
+  setActiveAccountViewVisible: (visible) =>
+    ipcRenderer.invoke('window:setActiveAccountViewVisible', visible),
+  trayToggleExpanded: (expanded) => ipcRenderer.invoke('tray:setExpanded', expanded),
 
   // 專案計畫管理
   listProjects: () => ipcRenderer.invoke('projects:list'),

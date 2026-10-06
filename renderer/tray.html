@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline';"
+    />
+    <title>快速提示詞</title>
+    <link rel="stylesheet" href="tray.css" />
+  </head>
+  <body>
+    <!-- 收起狀態：單純一個圓鈕。展開狀態：搜尋框 + 可捲動的提示詞清單。
+         兩種狀態靠 body 的 class 切換 CSS，但視窗本身的實際大小是由
+         main process 的 setTrayExpanded() 控制（見 lib/windows.js），
+         這裡的 CSS 永遠假設自己剛好填滿目前的視窗大小。 -->
+    <div id="collapsed-view">
+      <button id="btn-tray-open" title="快速提示詞" data-i18n-title="tray.open">
+        💡
+      </button>
+    </div>
+
+    <div id="expanded-view">
+      <div id="tray-header">
+        <span id="tray-title" data-i18n="tray.title">快速提示詞</span>
+        <button id="btn-tray-close" title="收起" data-i18n-title="tray.collapse">
+          ✕
+        </button>
+      </div>
+      <input
+        id="tray-search"
+        type="text"
+        data-i18n-placeholder="tray.searchPlaceholder"
+        placeholder="搜尋標題或標籤…"
+      />
+      <div id="tray-list"></div>
+      <div id="tray-toast"></div>
+      <div id="tray-footer">
+        <button id="btn-tray-open-knowledge" data-i18n="tray.openKnowledgeBase">
+          在知識庫視窗管理…
+        </button>
+      </div>
+    </div>
+
+    <script src="i18n.js"></script>
+    <script src="tray.js"></script>
+  </body>
+</html>
