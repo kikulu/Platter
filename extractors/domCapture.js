@@ -60,7 +60,16 @@ function capturePlatformConversation(platform, selectorConfig) {
       return false;
     };
 
-    const messages = nodes
+    // 去除「巢狀重複」：selector 是聯集（例如 claude 的 user-message +
+    // conversation-turn）或外層容器也剛好符合時，querySelectorAll 會同時
+    // 回傳外層與內層節點，外層的 innerText 又包含內層全部文字，結果同一段
+    // 內容被重複擷取、越疊越多。這裡只保留「最內層」符合的節點（內含其他
+    // 符合節點的外層容器一律略過）。
+    const leafNodes = nodes.filter(
+      (el) => !nodes.some((other) => other !== el && el.contains(other))
+    );
+
+    const rawMessages = leafNodes
       .map((el) => {
         const text = (el.innerText || '').trim();
         if (!text) return null;
@@ -70,6 +79,13 @@ function capturePlatformConversation(platform, selectorConfig) {
         };
       })
       .filter(Boolean);
+
+    // 去除「相鄰完全相同」的訊息（同一則訊息被多個節點包住時的保險）
+    const messages = rawMessages.filter(
+      (m, i) =>
+        i === 0 ||
+        !(m.role === rawMessages[i - 1].role && m.text === rawMessages[i - 1].text)
+    );
 
     return {
       ok: messages.length > 0,

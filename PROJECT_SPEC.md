@@ -1058,7 +1058,8 @@ function openChildWindow({
 - **視窗設定**：`frame: false`（無邊框）、`transparent: true` ＋
   `backgroundColor: '#00000000'`（收起狀態要是圓形而不是方形色塊）、
   `resizable: false`／`movable: false`（位置完全由程式控制，使用者
-  不能拖動或縮放）、`alwaysOnTop: true`、`skipTaskbar: true`、
+  不能拖動或縮放）、`alwaysOnTop: false`（**1.39.0** 起；原為 true，會蓋過其他應用，改由
+  `syncTrayVisibility()` 只在 Platter 有焦點視窗時顯示）、`skipTaskbar: true`、
   `parent: mainWindow`（主視窗關閉時會自動一併關閉，不用手動處理）。
 - **定位**：`trayBoundsFor(expanded)` 根據主視窗目前的 `getBounds()`
   算出托盤該放的 `{x, y, width, height}`，錨點永遠是主視窗的右下角
@@ -1347,6 +1348,10 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   調整。成功的話，Markdown 輸出格式是每則訊息一個 `###` 標題（🧑 使用者 /
   🤖 AI）+ 內容；JSON 輸出就是原始擷取結果。
 - 每次匯出成功都會自動登記進文件庫（見第 8 節）。
+- **（1.39.0 修正）去除巢狀重複**：selector 為聯集或外層容器也符合時，會同時
+  取到外層與內層節點，外層 `innerText` 含內層全文，導致內容重複疊加。現在
+  先過濾掉「內含其他符合節點的外層」，只保留最內層節點，並合併相鄰且角色、
+  文字完全相同的訊息（見 `test/domCapture.test.js`）。
 
 **匯出選項對話框**（主視窗側邊欄「匯出當前對話」按鈕）：點下去先跳一個
 選項對話框，不是直接匯出。**（1.37.0 修正「點了沒反應」）**：這個對話框

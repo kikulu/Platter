@@ -1,5 +1,34 @@
 # Changelog
 
+## [1.39.0]
+
+### 修正 1：儲存/匯出對話時 md 內容重複疊加
+
+- **原因**：`extractors/domCapture.js` 用 `querySelectorAll(selector.turn)`
+  取得訊息節點，但 selector 是聯集（例如 claude 的
+  `[data-testid="user-message"], [data-testid="conversation-turn"]`），
+  外層容器與內層訊息會同時符合；外層的 `innerText` 又包含內層全部
+  文字，同一段內容就被重複擷取、越疊越多。
+- **修正**：擷取時先過濾掉「內含其他符合節點的外層容器」，只保留最內層
+  節點；另外合併相鄰、角色與文字完全相同的訊息。
+- 新增 `test/domCapture.test.js`（用最小假 DOM + `vm` 驗證去重邏輯）。
+
+### 修正 2：應用在背景時，浮動小托盤跑到其他前景應用前面
+
+- **原因**：托盤視窗設了 `alwaysOnTop: true`，這個旗標會蓋過**所有**
+  應用程式，Platter 退到背景時圓鈕仍浮在別人前面。
+- **修正**：`lib/windows.js` 移除 `alwaysOnTop`，改由新的
+  `syncTrayVisibility()` 控制：只有 Platter 任一視窗是焦點視窗、且主視窗
+  可見未最小化時才 `showInactive()` 顯示，否則 `hide()`。掛在主視窗
+  `show`／`hide`／`restore`、`app` 的 `browser-window-focus`／
+  `browser-window-blur`（延遲 80ms 避免切換視窗時閃爍）上。
+- **已知限制**：兩項修正都只做了程式碼推理與 Node 單元測試，**沒有在
+  真正的 Electron／真實平台頁面實機驗證**；Claude 實際 DOM 結構是否就是
+  上述巢狀情況，需要使用者實測確認。若仍重複，請用「設定 → 選擇器
+  設定 → 測試擷取」回報數字。
+
+---
+
 ## [1.38.0]
 
 ### 浮動小托盤：提示詞清單拆成「角色提示詞」與「其他」兩區
