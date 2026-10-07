@@ -377,3 +377,85 @@ test('syncStepStatusFromTasks：只同步「狀態不同、任務還在」的步
   assert.equal(syncStepStatusFromTasks(wf, tasks.slice(0, 2)), false);
   assert.equal(wf.steps[2].status, 'doing');
 });
+
+// ---------------------------------------------------------------------------
+// 1.40.0：各階段相關提示詞（relatedPrompts / stagePrompts）與托盤專案區塊
+// ---------------------------------------------------------------------------
+
+test('內建範本：每個階段都有至少 1 個相關提示詞，且解析得到、不與同階段步驟重複', () => {
+  TEMPLATES.forEach((t) => {
+    t.stages.forEach((st) => {
+      assert.ok(
+        Array.isArray(st.relatedPrompts) && st.relatedPrompts.length > 0,
+        `${t.name}/${st.title} 沒有相關提示詞`
+      );
+      const stepIds = new Set(st.steps.map((s) => s.itemDefaultId).filter(Boolean));
+      st.relatedPrompts.forEach((rp) => {
+        const r = resolveItem(rp.itemDefaultId);
+        assert.ok(
+          r && r.prompt.trim(),
+          `${t.name}/${st.title} 的 ${rp.itemDefaultId} 找不到`
+        );
+        assert.ok(
+          !stepIds.has(rp.itemDefaultId),
+          `${t.name}/${st.title} 相關提示詞與步驟重複`
+        );
+      });
+    });
+  });
+});
+
+test('buildWorkflowFromTemplate：階段相關提示詞快照進 workflow.stagePrompts，且不多建任務', () => {
+  TEMPLATES.forEach((t) => {
+    const built = buildWorkflowFromTemplate(t, '主題', resolveItem);
+    const expected = t.stages.reduce((n, st) => n + st.relatedPrompts.length, 0);
+    assert.equal(built.workflow.stagePrompts.length, expected, t.name);
+    assert.equal(
+      built.tasks.length,
+      built.workflow.steps.length,
+      '相關提示詞不該產生任務'
+    );
+    built.workflow.stagePrompts.forEach((p) => {
+      assert.ok(p.id && p.stage && p.title && p.prompt.trim());
+    });
+  });
+});
+
+test('templateFromWorkflow 會保留 stagePrompts；normalizeWorkflow 補齊缺欄位', () => {
+  const t = TEMPLATES.find((x) => x.id === 'proj-tpl-sdd');
+  const { workflow } = buildWorkflowFromTemplate(t, '主題', resolveItem);
+  const saved = templateFromWorkflow(workflow, { name: 'x' });
+  const total = saved.stages.reduce((n, st) => n + st.relatedPrompts.length, 0);
+  assert.equal(total, workflow.stagePrompts.length);
+  const rebuilt = buildWorkflowFromTemplate(saved, '主題', () => null);
+  assert.equal(rebuilt.workflow.stagePrompts.length, workflow.stagePrompts.length);
+
+  const old = { steps: [], currentStepId: null }; // 舊專案沒有 stagePrompts
+  assert.deepEqual(normalizeWorkflow(old).stagePrompts, []);
+});
+
+test('buildTrayProjectGroups：只收已指派、未完成的流程任務，並附該階段提示詞', () => {
+  const { buildTrayProjectGroups } = require('../lib/workflow');
+  const t = TEMPLATES.find((x) => x.id === 'proj-tpl-sdd');
+  const { workflow, tasks } = buildWorkflowFromTemplate(t, '主題', resolveItem);
+  const project = { id: 'p1', name: '專案A', status: 'active', workflow, tasks };
+  const accounts = [{ id: 'acc1', name: '小明' }];
+
+  assert.deepEqual(buildTrayProjectGroups([project], accounts), [], '沒指派不顯示');
+
+  tasks[0].assigneeId = 'acc1';
+  tasks[1].assigneeId = 'acc1';
+  tasks[1].status = 'done';
+  tasks[3].assigneeId = 'acc1'; // 第二階段
+  const groups = buildTrayProjectGroups([project], accounts);
+  assert.equal(groups.length, 1);
+  const stages = groups[0].stages;
+  assert.equal(stages.length, 2);
+  assert.equal(stages[0].tasks.length, 1, '已完成的任務不顯示');
+  assert.equal(stages[0].tasks[0].assigneeName, '小明');
+  assert.ok(stages[0].prompts.length > 0);
+  assert.equal(stages[1].tasks[0].stepId, workflow.steps[3].id);
+
+  project.status = 'done';
+  assert.deepEqual(buildTrayProjectGroups([project], accounts), [], '已完成專案不顯示');
+});

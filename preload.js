@@ -58,6 +58,12 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   importKnowledgeMarkdown: () => ipcRenderer.invoke('knowledge:importMarkdown'),
   toggleChecklistEntry: (itemId, entryId, checked) =>
     ipcRenderer.invoke('knowledge:toggleChecklistEntry', { itemId, entryId, checked }),
+  trayProjectPrompts: () => ipcRenderer.invoke('tray:projectPrompts'),
+  onProjectsChanged: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.on('projects:changed', handler);
+    return () => ipcRenderer.removeListener('projects:changed', handler);
+  },
   onKnowledgeChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('knowledge:changed', handler);

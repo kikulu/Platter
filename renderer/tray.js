@@ -8,6 +8,7 @@
 
   let allItems = []; // 知識庫的「項目」清單（不含分階段套餐——套餐是多步驟的操作，
   // 這個小托盤只做「單一提示詞，點了就複製」這件事，套餐留給完整的知識庫視窗）
+  let projectGroups = []; // 專案計畫「已指派、未完成」的流程任務 + 各階段相關提示詞（見 lib/workflow.js buildTrayProjectGroups）
   let toastTimer = null;
 
   function matchesQuery(item, query) {
@@ -49,12 +50,119 @@
     items.forEach((item) => listEl.appendChild(buildItemRow(item)));
   }
 
+  function showToast(text) {
+    toastEl.textContent = text;
+    toastEl.classList.add('show');
+    if (toastTimer) clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+  }
+
+  function buildSimpleRow(title, sub, tooltip, onClick) {
+    const row = document.createElement('div');
+    row.className = 'tray-item';
+    const t = document.createElement('div');
+    t.className = 'tray-item-title';
+    t.textContent = title;
+    row.appendChild(t);
+    if (sub) {
+      const s = document.createElement('div');
+      s.className = 'tray-item-tags';
+      s.textContent = sub;
+      row.appendChild(s);
+    }
+    if (tooltip) row.title = tooltip;
+    row.addEventListener('click', onClick);
+    return row;
+  }
+
+  // 點專案任務：複製「該步驟完整提示詞」（已帶入主題與前面產出），
+  // 並把還沒開始的步驟標成進行中——跟專案視窗按「複製提示詞」的行為一致。
+  async function copyProjectTask(group, task) {
+    const text = await window.workspaceAPI.composeWorkflowPrompt(
+      group.projectId,
+      task.stepId
+    );
+    await navigator.clipboard.writeText(text || '');
+    showToast(window.i18n.t('tray.copied', { title: task.title }));
+    if (task.status === 'todo') {
+      await window.workspaceAPI.setWorkflowStepStatus(
+        group.projectId,
+        task.stepId,
+        'doing'
+      );
+    }
+  }
+
+  // 「專案任務與階段提示詞」區塊：每個專案 → 每個階段 → 已指派的任務
+  // （點了複製完整步驟提示詞）+ 該階段的相關提示詞（點了複製）。
+  function appendProjectSection(query) {
+    const q = query.toLowerCase();
+    const matches = (...texts) => !q || texts.join(' ').toLowerCase().includes(q);
+    const blocks = [];
+    projectGroups.forEach((group) => {
+      group.stages.forEach((st) => {
+        const tasks = st.tasks.filter((t) =>
+          matches(t.title, group.projectName, st.stage, t.assigneeName)
+        );
+        const prompts = st.prompts.filter((p) =>
+          matches(p.title, group.projectName, st.stage)
+        );
+        if (tasks.length || prompts.length) blocks.push({ group, st, tasks, prompts });
+      });
+    });
+    if (blocks.length === 0) return false;
+
+    const heading = document.createElement('div');
+    heading.className = 'tray-section-heading';
+    heading.textContent = window.i18n.t('tray.projectSection');
+    listEl.appendChild(heading);
+
+    blocks.forEach(({ group, st, tasks, prompts }) => {
+      const label = document.createElement('div');
+      label.className = 'tray-project-label';
+      label.textContent = [group.projectName, st.stage].filter(Boolean).join(' · ');
+      listEl.appendChild(label);
+      tasks.forEach((task) => {
+        const sub = [
+          task.assigneeName
+            ? window.i18n.t('tray.assignedTo', { name: task.assigneeName })
+            : '',
+          window.i18n.t(`tray.taskStatus.${task.status}`),
+        ]
+          .filter(Boolean)
+          .join(' · ');
+        listEl.appendChild(
+          buildSimpleRow(task.title, sub, window.i18n.t('tray.taskHint'), () =>
+            copyProjectTask(group, task)
+          )
+        );
+      });
+      prompts.forEach((p) => {
+        listEl.appendChild(
+          buildSimpleRow(
+            `📎 ${p.title}`,
+            window.i18n.t('tray.stagePrompt'),
+            p.prompt,
+            async () => {
+              await navigator.clipboard.writeText(p.prompt || '');
+              showToast(window.i18n.t('tray.copied', { title: p.title }));
+            }
+          )
+        );
+      });
+    });
+    return true;
+  }
+
   function renderList() {
     const query = searchInput.value.trim();
     const filtered = allItems.filter((item) => matchesQuery(item, query));
     listEl.innerHTML = '';
 
+    const hasProjectBlock = appendProjectSection(query);
+
     if (filtered.length === 0) {
+      if (hasProjectBlock) return;
       const empty = document.createElement('div');
       empty.id = 'tray-empty';
       empty.textContent = window.i18n.t(
@@ -74,10 +182,7 @@
 
   async function copyItem(item) {
     await navigator.clipboard.writeText(item.content || '');
-    toastEl.textContent = window.i18n.t('tray.copied', { title: item.title });
-    toastEl.classList.add('show');
-    if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+    showToast(window.i18n.t('tray.copied', { title: item.title }));
   }
 
   async function expand() {
@@ -108,10 +213,18 @@
   async function refreshItems() {
     const kb = await window.workspaceAPI.listKnowledge();
     allItems = kb.items || [];
+    projectGroups = await window.workspaceAPI.trayProjectPrompts();
+    renderList();
+  }
+
+  async function refreshProjects() {
+    projectGroups = await window.workspaceAPI.trayProjectPrompts();
     renderList();
   }
 
   window.workspaceAPI.onKnowledgeChanged(refreshItems);
+  window.workspaceAPI.onProjectsChanged(refreshProjects);
+  window.workspaceAPI.onAccountsChanged(refreshProjects);
 
   (async () => {
     await window.i18n.init();

@@ -471,5 +471,12 @@
   "search.kindConversation": "会話",
   "search.kindProject": "プロジェクト",
   "search.kindTask": "タスク",
-  "search.kindIssue": "課題"
+  "search.kindIssue": "課題",
+  "tray.projectSection": "プロジェクトタスクとフェーズ別プロンプト",
+  "tray.assignedTo": "担当: {name}",
+  "tray.taskStatus.todo": "未着手",
+  "tray.taskStatus.doing": "進行中",
+  "tray.taskHint": "クリックでこのステップの完全なプロンプトをコピー（テーマと前のステップの成果を含む）",
+  "tray.stagePrompt": "このフェーズ向けプロンプト",
+  "project.wfStagePrompts": "このフェーズ向けプロンプト（{n}）"
 }
