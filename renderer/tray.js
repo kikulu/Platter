@@ -16,6 +16,39 @@
     return haystack.includes(query.toLowerCase());
   }
 
+  function buildItemRow(item) {
+    const row = document.createElement('div');
+    row.className = 'tray-item';
+
+    const title = document.createElement('div');
+    title.className = 'tray-item-title';
+    title.textContent = item.title;
+
+    const tags = document.createElement('div');
+    tags.className = 'tray-item-tags';
+    tags.textContent = (item.tags || []).join(' · ');
+
+    row.appendChild(title);
+    row.appendChild(tags);
+    row.title = item.content; // 滑鼠停留可以看到完整提示詞內容
+    row.addEventListener('click', () => copyItem(item));
+    return row;
+  }
+
+  // 分成「角色提示詞」（item.roleIds 非空——企業角色範本那批，見
+  // lib/stores.js 知識庫的資料結構說明）跟「其他」兩區顯示，跟設定視窗
+  // 角色清單拆「基本/延展」是類似的分類邏輯，方便在角色跟一般任務型
+  // 提示詞之間快速定位，不用整串從頭找。沒有符合搜尋字串的區塊整個
+  // 不顯示（不留一個空標題在那裡）。
+  function appendSection(titleKey, items) {
+    if (items.length === 0) return;
+    const heading = document.createElement('div');
+    heading.className = 'tray-section-heading';
+    heading.textContent = window.i18n.t(titleKey);
+    listEl.appendChild(heading);
+    items.forEach((item) => listEl.appendChild(buildItemRow(item)));
+  }
+
   function renderList() {
     const query = searchInput.value.trim();
     const filtered = allItems.filter((item) => matchesQuery(item, query));
@@ -31,24 +64,12 @@
       return;
     }
 
-    filtered.forEach((item) => {
-      const row = document.createElement('div');
-      row.className = 'tray-item';
-
-      const title = document.createElement('div');
-      title.className = 'tray-item-title';
-      title.textContent = item.title;
-
-      const tags = document.createElement('div');
-      tags.className = 'tray-item-tags';
-      tags.textContent = (item.tags || []).join(' · ');
-
-      row.appendChild(title);
-      row.appendChild(tags);
-      row.title = item.content; // 滑鼠停留可以看到完整提示詞內容
-      row.addEventListener('click', () => copyItem(item));
-      listEl.appendChild(row);
-    });
+    const roleItems = filtered.filter((item) => item.roleIds && item.roleIds.length > 0);
+    const otherItems = filtered.filter(
+      (item) => !item.roleIds || item.roleIds.length === 0
+    );
+    appendSection('tray.roleSection', roleItems);
+    appendSection('tray.otherSection', otherItems);
   }
 
   async function copyItem(item) {
