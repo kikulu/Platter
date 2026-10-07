@@ -21,6 +21,8 @@
   "tray.collapse": "折りたたむ",
   "tray.searchPlaceholder": "タイトルまたはタグで検索…",
   "tray.openKnowledgeBase": "ナレッジベースで管理…",
+  "tray.roleSection": "ロールプロンプト",
+  "tray.otherSection": "その他",
   "tray.empty": "ナレッジベースにまだプロンプトがありません",
   "tray.noMatch": "一致するプロンプトが見つかりません",
   "tray.copied": "「{title}」をコピーしました",

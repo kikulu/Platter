@@ -21,6 +21,8 @@
   "tray.collapse": "Collapse",
   "tray.searchPlaceholder": "Search title or tags…",
   "tray.openKnowledgeBase": "Manage in Knowledge Base…",
+  "tray.roleSection": "Role Prompts",
+  "tray.otherSection": "Other",
   "tray.empty": "No prompts in the knowledge base yet",
   "tray.noMatch": "No matching prompts found",
   "tray.copied": "Copied \"{title}\"",

@@ -21,6 +21,8 @@
   "tray.collapse": "收起",
   "tray.searchPlaceholder": "搜尋標題或標籤…",
   "tray.openKnowledgeBase": "在知識庫視窗管理…",
+  "tray.roleSection": "角色提示詞",
+  "tray.otherSection": "其他",
   "tray.empty": "知識庫裡還沒有任何提示詞",
   "tray.noMatch": "找不到符合的提示詞",
   "tray.copied": "已複製「{title}」",
