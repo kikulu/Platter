@@ -471,5 +471,12 @@
   "search.kindConversation": "對話",
   "search.kindProject": "專案",
   "search.kindTask": "任務",
-  "search.kindIssue": "議題"
+  "search.kindIssue": "議題",
+  "tray.projectSection": "專案任務與階段提示詞",
+  "tray.assignedTo": "指派給 {name}",
+  "tray.taskStatus.todo": "待辦",
+  "tray.taskStatus.doing": "進行中",
+  "tray.taskHint": "點一下複製本步驟完整提示詞（已帶入主題與前面產出）",
+  "tray.stagePrompt": "本階段相關提示詞",
+  "project.wfStagePrompts": "本階段相關提示詞（{n}）"
 }

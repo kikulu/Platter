@@ -229,14 +229,17 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
 
 **內建預設範本**：`knowledge-base.json` 完全不存在時（全新安裝、第一次
 開啟知識庫），`lib/stores.js` 的 `loadKnowledgeBase()` 會用
-`extractors/default-knowledge-base.json` 裡內建的 74 組提示詞範本當
+`extractors/default-knowledge-base.json` 裡內建的 85 組提示詞範本當
 起始內容，涵蓋 10 個分類（標籤對應分類名稱）：企業日常作業、
 醫療軟體研發、論文寫作、研究計畫、專案開發（各 5 組，共 25 組，沿用
 Stage 5 原始設計）、**SDD規格驅動開發**（7 組，1.28.0 新增）、
 **OpenSpec**（8 組，1.30.0 新增）、**簡報製作**（12 組，1.31.0 新增）、
 **求職與職涯**（6 組，1.37.0 新增；以上四者見下方「內建分階段套餐
 範本」），以及**企業角色範本**（8 種常見企業職務各 2 組，共 16 組，
-1.26.0 新增）。前 58 組都用單一 `content` 欄位、Markdown 格式
+1.26.0 新增）。另有 **1.40.0 新增的 11 組階段輔助提示詞**（`kb-default-075`～`085`：
+AI 短劇 4、遊戲設計 4、Scrum Sprint Review、MVP 使用者訪談、變更請求影響評估；
+標籤分別為 AI短劇製作／遊戲設計／敏捷開發／MVP 驗證／專案開發，供專案範本的
+「階段相關提示詞」引用）。前 69 組都用單一 `content` 欄位、Markdown 格式
 撰寫（標題、角色與目標、輸入資訊、輸出要求）；企業角色範本則額外帶
 `roleIds`（對應 `default-roles.json` 種子角色的固定 id，見第 4 節）跟
 `systemPrompt`／`userPrompt` 拆分欄位——`systemPrompt` 定義這組範本的
@@ -669,6 +672,16 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
   展開合併保留它（跟 `timeEntries` 同一類要小心的欄位，有測試守著）。`loadProjects()` 載入
   時補齊缺少的欄位，結構壞掉（`steps` 不是陣列）的 workflow 直接丟掉。
 
+- **階段相關提示詞（1.40.0）**：範本的每個階段可帶 `relatedPrompts`（格式同步驟：
+  `{ itemDefaultId }` 或內嵌 `{ title, prompt }`），內建 7 個範本每個階段都至少有 1 個
+  （有測試守著：必須解析得到、且不與同階段步驟重複）。建立專案時 `buildWorkflowFromTemplate()`
+  把它們**快照**成 `workflow.stagePrompts: [{ id, stage, title, prompt }]`——**不是步驟、
+  不產生任務、不影響進度**，只是該階段做事時可隨時複製的輔助提示詞。`templateFromWorkflow()`
+  另存範本時一併保留；`normalizeWorkflow()` 對舊專案補成空陣列。專案視窗流程頁在步驟詳細區
+  上方以可摺疊的「本階段相關提示詞（n）」列出，每個提示詞一顆複製鈕。
+- **托盤的專案區塊資料**：`buildTrayProjectGroups(projects, accounts)`（純函式，
+  IPC `tray:projectPrompts`）——見第 11 節浮動托盤說明。
+
 **IPC**（見 `preload.js`）：`projectTemplates:list`（內建在前、自訂在後，只回傳階段與
 步驟標題預覽、不含提示詞全文）、`projectTemplates:delete`、`projects:createFromTemplate`
 （`{ templateId, topic, name? }`，主題必填）、`projects:workflow:setMeta`（主題／帶入方式／
@@ -1083,6 +1096,16 @@ function openChildWindow({
   一般提示詞），兩區各自依搜尋字串過濾，篩完整區沒有結果就整個標題
   一起不顯示（不留一個空標題卡在那裡）；排序沿用 `kb.items` 原始順序，
   沒有額外排序規則。
+- **專案任務與階段提示詞區塊（1.40.0）**：清單最上方多一區「專案任務與階段提示詞」。
+  資料來自 `tray:projectPrompts`（`buildTrayProjectGroups()`）：只收「專案狀態非完成、
+  有 workflow、對應的任務**已指派（`assigneeId` 非空）且未完成**」的流程任務，依專案 →
+  階段分組；每個階段先列這些任務，再列該階段的相關提示詞（`workflow.stagePrompts`，前綴 📎）。
+  點任務 = 複製 `projects:workflow:compose` 組好的完整步驟提示詞（已帶入主題與前面產出），
+  並把 `todo` 的步驟標成 `doing`（跟專案視窗按「複製提示詞」一致）；點 📎 = 複製該提示詞。
+  搜尋框同時過濾這一區（比對任務／提示詞標題、專案名、階段名、指派帳號名）。訂閱
+  `projects:changed`、`accounts:changed`、`knowledge:changed` 即時刷新；沒有符合的任務時
+  整區不顯示。**沒有指派帳號的任務不會出現**——從範本建專案時任務預設未指派，要到專案計畫
+  把任務指派給帳號後才會出現在托盤。
 - **已知限制**：圓形收起狀態的視窗本身是方形（56×56），圓形之外的
   四個角是透明但仍然在視窗範圍內、仍然會吃掉那幾個像素的滑鼠事件
   （不影響任何功能，只是極小範圍視覺以外的點擊判定，沒有實作

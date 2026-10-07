@@ -137,6 +137,12 @@ body.expanded #expanded-view {
   padding-top: 4px;
 }
 
+.tray-project-label {
+  font-size: 11px;
+  color: var(--text-secondary);
+  padding: 6px 8px 2px;
+}
+
 .tray-item {
   padding: 7px 8px;
   border-radius: 6px;

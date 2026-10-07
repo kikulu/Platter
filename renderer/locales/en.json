@@ -471,5 +471,12 @@
   "search.kindConversation": "Conversation",
   "search.kindProject": "Project",
   "search.kindTask": "Task",
-  "search.kindIssue": "Issue"
+  "search.kindIssue": "Issue",
+  "tray.projectSection": "Project Tasks & Stage Prompts",
+  "tray.assignedTo": "Assigned to {name}",
+  "tray.taskStatus.todo": "To do",
+  "tray.taskStatus.doing": "In progress",
+  "tray.taskHint": "Click to copy this step's full prompt (topic and earlier outputs included)",
+  "tray.stagePrompt": "Stage-related prompt",
+  "project.wfStagePrompts": "Stage-related prompts ({n})"
 }

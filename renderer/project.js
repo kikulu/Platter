@@ -1670,6 +1670,43 @@
     return text;
   }
 
+  // 本階段相關提示詞（workflow.stagePrompts）：不是步驟、不產生任務，
+  // 純粹是這個階段做事時可以隨時複製來用的輔助提示詞。
+  function renderStagePrompts(wf, step) {
+    const box = document.getElementById('wf-stage-prompts-box');
+    const listEl = document.getElementById('wf-stage-prompts');
+    const prompts = (wf.stagePrompts || []).filter(
+      (p) => (p.stage || '') === (step.stage || '')
+    );
+    box.style.display = prompts.length ? '' : 'none';
+    if (!prompts.length) return;
+    document.getElementById('wf-stage-prompts-summary').textContent = window.i18n.t(
+      'project.wfStagePrompts',
+      { n: prompts.length }
+    );
+    listEl.innerHTML = '';
+    prompts.forEach((p) => {
+      const row = document.createElement('div');
+      row.className = 'wf-stage-prompt-row';
+      const title = document.createElement('span');
+      title.className = 'wf-stage-prompt-title';
+      title.textContent = p.title;
+      title.title = p.prompt;
+      const btn = document.createElement('button');
+      btn.textContent = window.i18n.t('project.wfCopy');
+      btn.addEventListener('click', async () => {
+        await navigator.clipboard.writeText(p.prompt);
+        btn.textContent = window.i18n.t('project.wfCopied');
+        setTimeout(() => {
+          btn.textContent = window.i18n.t('project.wfCopy');
+        }, 1500);
+      });
+      row.appendChild(title);
+      row.appendChild(btn);
+      listEl.appendChild(row);
+    });
+  }
+
   function renderWorkflowDetail(wf) {
     const idx = wf.steps.findIndex((s) => s.id === wfSelectedStepId);
     const step = wf.steps[idx];
@@ -1684,6 +1721,7 @@
     ]
       .filter(Boolean)
       .join(' · ');
+    renderStagePrompts(wf, step);
     wfPromptEditEl.value = step.prompt || '';
     wfOutputEl.value = step.output || '';
     wfPrevBtn.disabled = idx === 0;
