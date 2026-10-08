@@ -308,6 +308,7 @@ extensions.json         # 已安裝的擴充功能清單
 | [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 分階段（目前 16 階段）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既有階段都做完之後，要加新功能時用的提示詞模板                                                        |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板                                                                      |
+| [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 多個新對話平行開發不同功能、再合併的提示詞（通用範本＋各功能版本）                                    |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | 開新對話只附文件、不附原始碼時用的提示詞模板                                                          |
 | [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | 開新對話只附規格文件＋指定的部分檔案（不是整包原始碼）時用的提示詞模板                                |
 
