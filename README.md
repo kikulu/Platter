@@ -20,10 +20,10 @@ AI做越多，人需要喝的咖啡就越少。
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" />
-  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E31-47848F?logo=electron&logoColor=white" />
+  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E30-47848F?logo=electron&logoColor=white" />
   <img alt="node" src="https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white" />
   <a href="./.github/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white" /></a>
-  <img alt="license" src="https://img.shields.io/badge/license-Unlicensed-lightgrey" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-green" />
 </p>
 
 ---
@@ -214,10 +214,9 @@ PDF 檢視畫面用的 `pdf.js`（`pdfjs-dist`）比較特別：它只在 render
 `devDependencies`（只是拿來複製檔案，執行期不需要），版本升級時要
 手動重新複製這兩個檔案，不會自動跟著 `npm install` 更新。
 
-> 目前 `main.js`/`preload.js`/`renderer/**` 還沒有整批套用過
-> `npm run format`，先跑 `npm run format:check` 看目前有多少檔案不符合
-> 排版規則；要一次套用到整個專案，直接跑 `npm run format` 即可，但這會
-> 產生大量非功能性的排版 diff，建議跟其他改動分開提交。
+> 專案已在 `1.20.0` 整批套用過 Prettier；之後新增的程式碼請在提交前跑
+> `npm run format:check`，若要自動排版請用 `npm run format`，並且跟功能改動
+> 分開成不同 commit（格式化 diff 很大，混在一起不好 review）。
 
 ## 打包發布
 
@@ -273,12 +272,16 @@ Platter/
 │   ├── knowledge.html / knowledge.js / knowledge.css  # 知識庫（獨立視窗）
 │   ├── settings.html / settings.js / settings.css     # 設定（獨立視窗）
 │   ├── team.html, team.js, team.css              # 虛擬團隊主控台
+│   ├── conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫關聯）
+│   ├── log.html, log.js, log.css                 # 日誌主控台（錯誤日誌／稽核日誌／即時主控台）
 │   ├── project.html, project.js, project.css     # 專案計畫管理
 │   ├── documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
 │   ├── tray.html, tray.js, tray.css              # 右下角浮動小托盤（快速取用知識庫提示詞）
 │   ├── vendor/pdfjs/                              # vendor 進來的 pdf.js 官方 build（pdf.min.mjs、pdf.worker.min.mjs），PDF 檢視畫面的 canvas 渲染用
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json, ja.json
+├── test/*.test.js            # 單元測試（node --test，共 14 個檔案）
+├── docs/parallel-dev/        # 多對話平行開發提示詞（通用範本＋功能 A～D）
 └── assets/                    # App 圖示與生成提示詞
 ```
 
@@ -305,17 +308,17 @@ extensions.json         # 已安裝的擴充功能清單
 | [CHANGELOG.md](./CHANGELOG.md)                                     | 版本歷程，每次加了什麼功能                                                                            |
 | [ROADMAP.md](./ROADMAP.md)                                         | 還沒做、之後可能會做的方向                                                                            |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | 完整規格提示詞，適合給有檔案系統工具的 agent（Claude Code / Cursor）重現整個專案                      |
-| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 分階段（目前 16 階段）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
+| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 分階段（Stage 1～16，約到 1.16.0；之後的功能只記在 CHANGELOG／PROJECT_SPEC）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既有階段都做完之後，要加新功能時用的提示詞模板                                                        |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板                                                                      |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 多個新對話平行開發不同功能、再合併的提示詞（通用範本＋各功能版本）                                    |
+| [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 優化與改版建議（可靠性／安全、文件維護、產品方向、建議版本節奏） |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | 開新對話只附文件、不附原始碼時用的提示詞模板                                                          |
-| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | 開新對話只附規格文件＋指定的部分檔案（不是整包原始碼）時用的提示詞模板                                |
 
 ## 貢獻
 
-歡迎 fork 之後開 PR。目前還沒有接 CI，以下檢查都要自己在本機跑過一次，
-送 PR 前請確認：
+歡迎 fork 之後開 PR。CI（`.github/workflows/ci.yml`，推送或 PR 到 `main`／`master` 時自動跑 lint + 單元測試）
+只涵蓋純函式與 IPC，以下檢查仍建議送 PR 前自己在本機跑過一次：
 
 1. `npm test` 全部通過（`node --test`）
 2. `npm run lint` 沒有新增的 error（既有的 1 個 warning 是預期中的，見
@@ -330,4 +333,4 @@ extensions.json         # 已安裝的擴充功能清單
 
 ## License
 
-[MIT](<a href="./LICENSE.txt">LICENSE</a>)
+[MIT](./LICENSE.txt)

@@ -1,5 +1,43 @@
 # Changelog
 
+## [1.40.1]
+
+### 文件與工程一致性整理（無功能變更，程式碼行為與 1.40.0 相同）
+
+- **ROADMAP.md 重寫**：加上更新日期；整理成「明確排除／下一步（P0～P2）／已完成索引（1.16.0～1.40.1）」；
+  把四項已有提示詞的候選功能（`docs/parallel-dev/` 的 A～D）與實機驗證債務、資料檔寫入保護列入待辦。
+- **新增 `docs/OPTIMIZATION_PROPOSAL.md`**：優化與改版建議（可靠性與安全、文件維護成本、產品方向、
+  不建議整個改寫成前端框架的理由、建議版本節奏）。三份 README 的文件索引已加入。
+- **修正 CI 觸發分支**：`.github/workflows/ci.yml` 原本只監聽 `main`，但倉庫預設分支是 `master`，
+  CI 實際上不會觸發；現在 `push`／`pull_request` 都監聽 `main` 與 `master`。**尚未在 GitHub 上實際
+  確認 Actions 有跑起來。**
+- **README（繁中／英／日）**：Electron 徽章 `^31` → `^30`（對齊 `package.json`）；授權徽章
+  `Unlicensed` → `MIT`（對齊 `LICENSE.txt`）；License 連結的壞掉語法修正；移除指向不存在檔案
+  `PARTIAL_FILES_BUILD_PROMPT.md` 的索引列；「目前還沒有接 CI」改為實際狀況；刪掉過時的「尚未
+  套用 Prettier」說明（`1.20.0` 已套用）；專案結構補上 `conversation.*`、`log.*`、`team.*`、
+  `project.*`、`tray.*`、`test/`、`docs/parallel-dev/`（英文版原本把 tray 檔案誤放在
+  `extractors/` 底下）；`BUILD_PLAN.md` 的描述改成 Stage 1～16。
+- **PROJECT_SPEC.md**：第 15 節內建提示詞數量 68 → 85（一般 69＋角色 16），套餐 8 → 9；檔案結構補上
+  `tray.*`、`test/`、`docs/parallel-dev/`。
+- **NEW_FEATURE_BUILD_PROMPT.md／FIX_EXISTING_FEATURE_PROMPT.md**：目前版本 `1.36.0` → `1.40.1`；
+  補上 `1.37.0`～`1.40.0` 的功能方向；`openChildWindow` 位置改為 `lib/windows.js`（原寫 `main.js`，
+  `1.17.0` 模組化後已搬走）；廣播頻道清單補 `projects:changed`、`reminders:changed`。
+- **`docs/parallel-dev/` 的基準維持 `v1.40.0`**：`1.40.1` 沒有程式碼變動，各分支的 patch 可直接套用在
+  `1.40.1`；合併時再統一把版本號升到 `1.41.0`。
+
+### 驗證與限制
+
+- 已驗證：全部 `.js` 通過 `node --check`；三語系鍵集合一致（各 480）；內建資料數量
+  （提示詞 85、套餐 9、角色 8、專案範本 7）與文件一致；`node --test` 為 146 個測試、140 通過、
+  6 失敗，與 `1.40.0` 的紀錄相同（失敗原因是這次整理的環境無法安裝 `sql.js`／`mammoth`，
+  不是程式問題）。
+- **未驗證**：這次環境連不上 npm 套件庫，沒有跑 `npm run lint` 與 `npm run format:check`。
+  README 表格新增／修改了幾列，Prettier 可能要求重新對齊欄寬，請在有完整依賴的環境跑一次
+  `npm run format` 並單獨提交。
+- 尚未在真實 Electron 環境驗證的項目，沿用 `1.40.0`／`1.39.0` 的「已知限制」。
+
+---
+
 ## [1.40.0]
 
 ### 新增 1：專案範本各階段補上「相關提示詞」
