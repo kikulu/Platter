@@ -18,7 +18,7 @@
   自訂網址工具），各帳號 session 完全隔離；並附帶知識庫、虛擬團隊、專案
   管理、文件庫（含 Markdown／Word／PDF 預覽與 Word／PDF 基本編輯）、對話庫、
   日誌主控台等生產力工具。
-- **目前版本**：`package.json` 與 `CHANGELOG.md` 都已同步在 `1.36.0`
+- **目前版本**：`package.json` 與 `CHANGELOG.md` 都已同步在 `1.40.1`
   （每次新增功能記得繼續保持同步——版本號規則見本文件後段）。
 - **原始 8 階段建置計畫全部完成並驗收，之後疊加到 Stage 16**（見
   `BUILD_PLAN.md`）：
@@ -41,7 +41,7 @@
   16. 帳號清單拖曳排序
 
   > ⚠️ **`BUILD_PLAN.md` 的 Stage 編號從 Stage 16（約對應 `1.16.0`）之後
-  > 就沒有再繼續加新 Stage**，不代表開發停在那裡——`1.17.0` 到 `1.36.0`
+  > 就沒有再繼續加新 Stage**，不代表開發停在那裡——`1.17.0` 到 `1.40.1`
   > 之間疊加的所有功能，實際紀錄都只落在 `CHANGELOG.md`（逐版本）跟
   > `PROJECT_SPEC.md`（對應章節），**沒有回頭補成 `BUILD_PLAN.md` 的新
   > Stage**。這是既成事實、不是建議的做法：`BUILD_PLAN.md` 原本的設計
@@ -55,13 +55,15 @@
   > session 隔離機制這種級別）才考慮要不要另開一份專屬的階段文件，一般
   > 功能增量不需要。
   >
-  > `1.17.0` 到 `1.36.0` 之間的重點功能方向（細節一律以 `CHANGELOG.md`
+  > `1.17.0` 到 `1.40.1` 之間的重點功能方向（細節一律以 `CHANGELOG.md`
   > 各版本條目與 `PROJECT_SPEC.md` 對應章節為準，這裡只列方向幫助快速
   > 定位）：OpenSpec 整合（§7.7）、本地端 AI 服務帳號類型（§3.2）、知識庫
   > 簡報製作範本＋專案「簡報橋接」（§7.8）、文件庫 `.docx`/`.pdf` 預覽與
   > 編輯（§8）、AI 短劇製作／遊戲設計專案範本（§7.6）、專案「關聯文件」
   > 與步驟產出存成文件（§7.8）、角色與選擇器的覆蓋安裝補種修正＋角色
-  > 清單基本/延展分類（§4、§10）、打包體積優化（`build.files` 排除規則，
+  > 清單基本/延展分類（§4、§10）、浮動快速提示詞托盤與分區（§9.0）、專案範本
+  各階段「相關提示詞」與托盤專案任務區塊（§7.6、§9.0）、對話擷取巢狀去重
+  （§12）、打包體積優化（`build.files` 排除規則，
   > 不影響規格、沒有獨立章節）。
   >
   > **另一個持續存在、還沒清掉的技術債**：`1.17.0` 之後新增的多數功能
@@ -99,14 +101,14 @@
      不剝除 `X-Frame-Options` 之類安全性標頭）。
    - 不把 cookie / localStorage / session token 打包進任何備份／匯出／
      文件庫檔案；可攜資料只放中繼資料與使用者自產內容。
-2. **子視窗一律用共用 helper**：`main.js` 的 `openChildWindow({ getWindow,
+2. **子視窗一律用共用 helper**：`lib/windows.js` 的 `openChildWindow({ getWindow,
 setWindow, htmlFile, width, height, minWidth, minHeight })`，
    `parent: mainWindow`、**`modal: false`**（modal 會鎖死主視窗，跟
    selector 選取工具這類需要切回主視窗互動的功能衝突）。
 3. **跨視窗即時同步一律用廣播 IPC**，不要用輪詢：新增/修改任何會影響
    其他視窗顯示的資料後，呼叫 `broadcastToAllWindows(channel, ...)`。
    現有頻道：`accounts:changed`、`knowledge:changed`、`documents:changed`、
-   `conversations:changed`、`logs:changed`、`console:entry`（單筆即時
+   `projects:changed`、`reminders:changed`、`conversations:changed`、`logs:changed`、`console:entry`（單筆即時
    推送，不是「資料變了重新整批拉取」的語意，跟其他頻道用法不同）、
    `language:changed`。新功能如果需要新的同步場景，比照這個模式新增頻道，
    並更新 `PROJECT_SPEC.md` 第 13 節的事件總覽表。
@@ -166,7 +168,7 @@ setWindow, htmlFile, width, height, minWidth, minHeight })`，
 ```
 你是要接續開發「Platter（AI Workspace Aggregator）」這個 Electron 專案的
 工程 AI。這個專案的原始 8 個建置階段已經全部完成並通過驗收，目前版本是
-1.36.0（以 package.json 實際內容為準，這裡只是開發當下的參考值），現在
+1.40.1（以 package.json 實際內容為準，這裡只是開發當下的參考值），現在
 要在既有基礎上加新功能。
 
 請先讀專案根目錄下的這幾份文件建立完整認知，不要憑空猜測既有架構：

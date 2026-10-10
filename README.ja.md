@@ -21,10 +21,10 @@ AIが多くの作業を担うほど、人が飲むべきコーヒーの量は少
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" />
-  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E31-47848F?logo=electron&logoColor=white" />
+  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E30-47848F?logo=electron&logoColor=white" />
   <img alt="node" src="https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white" />
   <a href="./.github/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white" /></a>
-  <img alt="license" src="https://img.shields.io/badge/license-Unlicensed-lightgrey" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-green" />
 </p>
 
 ---
@@ -313,11 +313,16 @@ ai-workspace-aggregator/
 │   ├── account.html / account.js                 # アカウント追加（独立ウィンドウ）
 │   ├── knowledge.html / knowledge.js / knowledge.css  # ナレッジベース（独立ウィンドウ）
 │   ├── documents.html / documents.js / documents.css  # ドキュメントライブラリ（Markdown/Word/PDF 予覧、Word/PDF 基本編集）
+│   ├── team.html, team.js, team.css              # 仮想チームコンソール
+│   ├── project.html, project.js, project.css     # プロジェクト計画管理
+│   ├── conversation.html, conversation.js, conversation.css # 会話ライブラリ
+│   ├── log.html, log.js, log.css                 # ログコンソール（エラーログ／監査ログ／ライブコンソール）
 │   ├── tray.html / tray.js / tray.css            # 右下隅のフローティングトレイ（ナレッジベースのプロンプトをすぐ使える）
 │   ├── settings.html / settings.js / settings.css     # 設定（独立ウィンドウ）
 │   ├── vendor/pdfjs/                              # vendor 化した pdf.js のビルド済みファイル（pdf.min.mjs、pdf.worker.min.mjs）、PDF ビューアの canvas 描画用
 │   ├── i18n.js                                   # 多言語対応
 │   └── locales/zh-TW.json, en.json, ja.json
+├── docs/parallel-dev/        # 複数の新規チャットで機能を並行開発し、あとで統合するためのプロンプト
 └── assets/                    # アプリアイコンと生成用プロンプト
 ```
 
@@ -345,11 +350,12 @@ Cookie・localStorage は**含まれません**。
 | [CHANGELOG.md](./CHANGELOG.md)                                     | 更新履歴——各回で追加された機能                                                                                                      |
 | [ROADMAP.md](./ROADMAP.md)                                         | まだ未着手の、今後検討する価値のある方向性                                                                                          |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | プロジェクト全体を再現するための完全な仕様プロンプト。ファイルシステム操作ツールを持つエージェント（Claude Code / Cursor）向け      |
-| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 8 段階に分けたビルド用プロンプト集。ファイルシステム操作ツールを持たないモデル（Gemini / Grok / ChatGPT）でゼロから構築する場合向け |
+| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 段階分けしたビルド用プロンプト集（Stage 1～16、約 1.16.0 まで。以降の機能は CHANGELOG／PROJECT_SPEC にのみ記録）。ファイルシステム操作ツールを持たないモデル（Gemini / Grok / ChatGPT）でゼロから構築する場合向け |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既存の全段階が完了した後、新機能を追加する際に使うプロンプトテンプレート                                                            |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 既存機能の不具合を修正する際に使うプロンプトテンプレート                                                                            |
+| [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 複数の新規チャットで別々の機能を並行開発し、あとで統合するためのプロンプト（汎用テンプレート＋機能別） |
+| [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 最適化・改修の提案（信頼性／セキュリティ、ドキュメント保守、製品方向、リリース計画案） |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | ソースコードを添付せず、ドキュメントのみで新しい会話を始める際に使うプロンプトテンプレート                                          |
-| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | 仕様書に加えて、プロジェクト全体ではなく該当する一部のファイルのみを添付して新しい会話を始める際に使うプロンプトテンプレート        |
 
 ## コントリビューション
 
@@ -359,11 +365,11 @@ Cookie・localStorage は**含まれません**。
 1. `npm test` がすべて通ること
 2. `npm run lint` で新たなエラーが出ていないこと
 3. 動作に関わる変更については、実際に `npm start` で一通り動作確認して
-   から提出すること（CI には Electron の操作テストは含まれません）
+   から提出すること（CI＝`.github/workflows/ci.yml`、`main`／`master` への push/PR で実行＝は lint とユニットテストのみで、Electron の操作テストは含まれません）
 4. 上記の[設計原則](#設計原則)の 3 つ（非公開 API の呼び出し、サイトの
    保護機構の回避、ログイン情報をバックアップに含めること）に反する
    新機能は受け付けられません
 
 ## ライセンス
 
-[MIT](<a href="./LICENSE.txt">LICENSE</a>)
+[MIT](./LICENSE.txt)

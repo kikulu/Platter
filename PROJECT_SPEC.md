@@ -1533,7 +1533,7 @@ assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
 extractors/selectorPicker.js
 extractors/default-selectors.json
-extractors/default-knowledge-base.json  # 內建的68組提示詞範本（企業日常作業/醫療軟體研發/論文寫作/研究計畫/專案開發各5組，SDD規格驅動開發7組，OpenSpec 8組，簡報製作12組，企業角色範本8種職務各2組）＋8組分階段套餐範本（groups）
+extractors/default-knowledge-base.json  # 內建的85組提示詞範本（一般69組＋企業角色範本16組，含 1.40.0 新增的 11 組階段輔助提示詞 kb-default-075～085）＋9組分階段套餐範本（groups）
 extractors/default-project-templates.json # 內建的7組專案範本（軟體開發5組：SDD／OpenSpec／Scrum／瀑布式／MVP，加 AI 短劇製作、遊戲設計，第 7.6 節）
 extractors/default-roles.json           # 內建的8種企業角色（人力資源/行銷企劃/業務銷售/客服支援/專案經理/軟體工程師/財務會計/高階主管），app-state.json 不存在時當 roles 起始內容
 renderer/index.html, renderer.js, renderer.css       # 主視窗（多層側邊欄）
@@ -1545,6 +1545,9 @@ renderer/project.html, project.js, project.css       # 專案計畫管理
 renderer/documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
 renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
+renderer/tray.html, tray.js, tray.css                # 右下角浮動小托盤（第 9.0 節）
+test/*.test.js                                       # 單元測試（node --test，14 個檔案）
+docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js
 renderer/locales/zh-TW.json, en.json, ja.json

@@ -21,10 +21,10 @@ More AI, less coffee. The more AI does, the less coffee humans need to drink.
 
 <p align="center">
   <img alt="platform" src="https://img.shields.io/badge/platform-Windows%20%7C%20macOS%20%7C%20Linux-informational" />
-  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E31-47848F?logo=electron&logoColor=white" />
+  <img alt="electron" src="https://img.shields.io/badge/Electron-%5E30-47848F?logo=electron&logoColor=white" />
   <img alt="node" src="https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white" />
   <a href="./.github/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&logoColor=white" /></a>
-  <img alt="license" src="https://img.shields.io/badge/license-Unlicensed-lightgrey" />
+  <img alt="license" src="https://img.shields.io/badge/license-MIT-green" />
 </p>
 
 ---
@@ -307,17 +307,22 @@ ai-workspace-aggregator/
 │   ├── default-selectors.json # Factory-default selectors
 │   ├── default-project-templates.json # 7 built-in project templates (5 software-development: SDD / OpenSpec / Scrum / Waterfall / MVP, plus AI short drama production and game design)
 │   ├── default-knowledge-base.json # 85 built-in prompt templates (69 general + 16 role-based) + 9 staged bundle templates
-│   ├── tray.html, tray.js, tray.css              # Floating quick-prompt tray (bottom-right corner)
 │   └── default-roles.json     # 8 built-in enterprise roles (seeds the role list on first launch)
 ├── renderer/
 │   ├── index.html / renderer.js / renderer.css   # Main window
 │   ├── account.html / account.js                 # Add Account (separate window)
 │   ├── knowledge.html / knowledge.js / knowledge.css  # Knowledge Base (separate window)
 │   ├── documents.html / documents.js / documents.css  # Document Library (Markdown/Word/PDF preview, Word/PDF basic editing)
+│   ├── team.html, team.js, team.css              # Virtual Team console
+│   ├── project.html, project.js, project.css     # Project planning
+│   ├── conversation.html, conversation.js, conversation.css # Conversation library
+│   ├── log.html, log.js, log.css                 # Log console (error log / audit log / live console)
+│   ├── tray.html, tray.js, tray.css              # Floating quick-prompt tray (bottom-right corner)
 │   ├── settings.html / settings.js / settings.css     # Settings (separate window)
 │   ├── vendor/pdfjs/                              # Vendored pdf.js prebuilt files (pdf.min.mjs, pdf.worker.min.mjs), for the PDF viewer canvas
 │   ├── i18n.js                                   # Internationalization
 │   └── locales/zh-TW.json, en.json, ja.json
+├── docs/parallel-dev/        # Prompts for developing features in parallel chats, then merging
 └── assets/                    # App icons and generation prompts
 ```
 
@@ -345,11 +350,12 @@ actual login cookies/localStorage.
 | [CHANGELOG.md](./CHANGELOG.md)                                     | Version history — what was added each round                                                                                       |
 | [ROADMAP.md](./ROADMAP.md)                                         | Not-yet-done directions worth considering                                                                                         |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | A full spec prompt, best suited for agents with filesystem tools (Claude Code / Cursor) to reproduce the whole project            |
-| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | An 8-phase build prompt sequence, best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
+| [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | A staged build prompt sequence (Stage 1–16, up to ~1.16.0; later features are recorded only in CHANGELOG / PROJECT_SPEC), best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | Prompt template for adding a new feature once all existing phases are done                                                        |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature                                                                       |
+| [docs/parallel-dev/](./docs/parallel-dev/README.md)                | Prompts for developing different features in parallel new chats, then merging (generic template + per-feature versions) |
+| [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | Optimization and redesign proposals (reliability/security, docs upkeep, product direction, suggested release cadence) |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | Prompt template for starting a new chat with only the docs attached, no source code                                               |
-| [PARTIAL_FILES_BUILD_PROMPT.md](./PARTIAL_FILES_BUILD_PROMPT.md)   | Prompt template for starting a new chat with the spec plus only a specific subset of files, not the whole codebase                |
 
 ## Contributing
 
@@ -358,11 +364,11 @@ Forks and PRs are welcome. Before submitting a PR, please make sure:
 1. `npm test` passes completely
 2. `npm run lint` doesn't introduce new errors
 3. For any change touching behavior, you've actually run through it with
-   `npm start` (CI doesn't cover Electron interaction tests)
+   `npm start` (CI — `.github/workflows/ci.yml`, run on push/PR to `main`/`master` — only covers lint and unit tests, not Electron interaction)
 4. New features that violate any of the three [Design Principles](#design-principles)
    above (calling undocumented APIs, circumventing site protections,
    bundling login credentials into backups) won't be accepted
 
 ## License
 
-[MIT](<a href="./LICENSE.txt">LICENSE</a>)
+[MIT](./LICENSE.txt)
