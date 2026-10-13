@@ -236,6 +236,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   saveConversation: (conv) => ipcRenderer.invoke('conversations:save', conv),
   deleteConversation: (id) => ipcRenderer.invoke('conversations:delete', id),
   importConversationMarkdown: () => ipcRenderer.invoke('conversations:importMarkdown'),
+  checkConversationDuplicate: (content, excludeId) =>
+    ipcRenderer.invoke('conversations:checkDuplicate', { content, excludeId }),
   captureCurrentConversationDraft: () =>
     ipcRenderer.invoke('conversations:captureCurrent'),
   exportConversation: (id, format) =>
