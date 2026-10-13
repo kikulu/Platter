@@ -10,6 +10,8 @@ const { loadAppState } = require('./lib/stores');
 const { createMainWindow } = require('./lib/windows');
 const { registerIpcHandlers } = require('./lib/ipc');
 const { startDueTaskReminders } = require('./lib/reminders');
+const { applyTrayHotkey, unregisterTrayHotkey } = require('./lib/trayHotkey');
+const { getTrayPrefs } = require('./lib/stores');
 
 // ---------------------------------------------------------------------------
 // main.js（App 入口）
@@ -56,6 +58,8 @@ if (!gotSingleInstanceLock) {
     loadAppState();
     registerIpcHandlers(ipcMain);
     createMainWindow();
+    // 浮動托盤的全域快捷鍵（預設關閉；使用者在「設定 → 浮動托盤」開啟後才會註冊）
+    applyTrayHotkey(getTrayPrefs());
     // 開機先立刻檢查一次到期任務/issue，之後每小時再檢查一次（見
     // lib/reminders.js），不用等使用者去開專案視窗才知道有東西過期了。
     startDueTaskReminders();
@@ -68,6 +72,7 @@ if (!gotSingleInstanceLock) {
   // sql.js 的資料庫整個活在記憶體裡，退出前多存一次檔當保險（appendLogEntry
   // 每次寫入其實已經立刻存檔了，這裡只是防呆，理論上不會真的補到東西）。
   app.on('before-quit', () => {
+    unregisterTrayHotkey();
     saveLogsDatabase();
   });
 

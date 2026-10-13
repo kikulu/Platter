@@ -10,6 +10,8 @@
   // 這個小托盤只做「單一提示詞，點了就複製」這件事，套餐留給完整的知識庫視窗）
   let projectEmptyReason = null; // 專案區塊為空時的原因（'unassigned' | 'allDone' | null），見 lib/workflow.js
   let projectGroups = []; // 專案計畫「已指派、未完成」的流程任務 + 各階段相關提示詞（見 lib/workflow.js buildTrayProjectGroups）
+  let recentIds = []; // 最近使用的知識庫項目 id（新的在前；存在 appState.ui.tray.recent）
+  let recentLimit = 5;
   let toastTimer = null;
 
   function matchesQuery(item, query) {
@@ -155,11 +157,26 @@
     return true;
   }
 
+  // 「最近使用」：清單最上方。id 對不到項目（已從知識庫刪除）就略過，不顯示也不報錯。
+  function appendRecentSection(query) {
+    if (recentLimit <= 0) return false;
+    const byId = new Map(allItems.map((it) => [it.id, it]));
+    const items = [];
+    recentIds.forEach((id) => {
+      const it = byId.get(id);
+      if (it && items.length < recentLimit && matchesQuery(it, query)) items.push(it);
+    });
+    if (items.length === 0) return false;
+    appendSection('tray.recentSection', items);
+    return true;
+  }
+
   function renderList() {
     const query = searchInput.value.trim();
     const filtered = allItems.filter((item) => matchesQuery(item, query));
     listEl.innerHTML = '';
 
+    const hasRecent = appendRecentSection(query);
     const hasProjectBlock = appendProjectSection(query);
     // 專案區塊是空的、而且不是因為搜尋字串過濾掉的：說明原因與怎麼改
     if (!hasProjectBlock && !query && projectEmptyReason) {
@@ -170,7 +187,7 @@
     }
 
     if (filtered.length === 0) {
-      if (hasProjectBlock) return;
+      if (hasProjectBlock || hasRecent) return;
       const empty = document.createElement('div');
       empty.id = 'tray-empty';
       empty.textContent = window.i18n.t(
@@ -191,6 +208,12 @@
   async function copyItem(item) {
     await navigator.clipboard.writeText(item.content || '');
     showToast(window.i18n.t('tray.copied', { title: item.title }));
+    // 記進「最近使用」。不立刻重畫清單（避免使用者眼前的項目突然換位置），下次展開才會更新。
+    try {
+      recentIds = await window.workspaceAPI.trayRecordRecent(item.id);
+    } catch (err) {
+      // 記錄失敗不影響複製
+    }
   }
 
   async function expand() {
@@ -229,6 +252,9 @@
     const data = await window.workspaceAPI.trayProjectPrompts();
     projectGroups = (data && data.groups) || [];
     projectEmptyReason = (data && data.emptyReason) || null;
+    const prefs = await window.workspaceAPI.getTrayPrefs();
+    recentIds = Array.isArray(prefs.recent) ? prefs.recent : [];
+    recentLimit = Number.isFinite(prefs.recentLimit) ? prefs.recentLimit : 5;
   }
 
   async function refreshProjects() {
@@ -240,6 +266,16 @@
   window.workspaceAPI.onProjectsChanged(refreshProjects);
   window.workspaceAPI.onAccountsChanged(refreshProjects);
   window.workspaceAPI.onTrayPrefsChanged(refreshProjects);
+
+  // 全域快捷鍵（lib/trayHotkey.js → lib/windows.js toggleTrayFromHotkey）：
+  // 'toggle' 展開／收合切換；'expand' 只展開（Platter 剛從背景被帶到前景時）
+  window.workspaceAPI.onTrayHotkey((action) => {
+    const isExpanded = document.body.classList.contains('expanded');
+    if (action === 'expand') {
+      if (!isExpanded) expand();
+    } else if (isExpanded) collapse();
+    else expand();
+  });
 
   (async () => {
     await window.i18n.init();

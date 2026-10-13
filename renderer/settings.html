@@ -153,6 +153,32 @@
           顯示每個進行中專案的目前步驟（不論有沒有指派）
         </option>
       </select>
+
+      <div class="row" style="margin-top: 12px">
+        <label>
+          <input type="checkbox" id="tray-hotkey-enabled" />
+          <span data-i18n="settings.tray.hotkeyEnable">啟用全域快捷鍵（切換托盤展開／收合）</span>
+        </label>
+      </div>
+      <div class="row">
+        <span data-i18n="settings.tray.hotkeyLabel">快捷鍵</span>
+        <input type="text" id="tray-hotkey" readonly style="width: 220px" />
+        <button id="btn-tray-hotkey-reset" data-i18n="settings.tray.hotkeyReset">
+          還原預設
+        </button>
+      </div>
+      <div class="settings-hint" id="tray-hotkey-status"></div>
+      <div class="settings-hint" data-i18n="settings.tray.hotkeyHint">
+        點一下輸入框，再按下想用的組合鍵。
+      </div>
+
+      <div class="row" style="margin-top: 12px">
+        <span data-i18n="settings.tray.recentLimit">「最近使用」保留筆數（0 = 關閉）</span>
+        <input type="number" id="tray-recent-limit" min="0" max="20" style="width: 70px" />
+        <button id="btn-tray-recent-clear" data-i18n="settings.tray.recentClear">
+          清除最近使用
+        </button>
+      </div>
     </div>
 
     <!-- 5. 備份與還原 -->

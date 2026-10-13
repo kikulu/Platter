@@ -512,6 +512,17 @@
   "settings.tray.projectModeHint": "トレイ一覧の先頭にある「プロジェクトタスクとステージのプロンプト」ブロックに表示するタスク。",
   "settings.tray.modeAssigned": "アカウントに割り当て済みの未完了タスクのみ",
   "settings.tray.modeCurrent": "進行中の各プロジェクトの現在のステップを表示（割り当ての有無を問わない）",
+  "settings.tray.hotkeyEnable": "グローバルショートカットを有効にする（トレイの展開／折りたたみを切り替え）",
+  "settings.tray.hotkeyLabel": "ショートカット",
+  "settings.tray.hotkeyPress": "キーの組み合わせを押してください…",
+  "settings.tray.hotkeyHint": "入力欄をクリックして、使いたい組み合わせを押してください（Ctrl／⌘／Alt のいずれかを含める必要があります）。Platter がバックグラウンドのときは、まず Platter を前面に出してからトレイを開きます。Linux／Wayland でのショートカットとフォーカスの動作は未検証です。",
+  "settings.tray.hotkeyReset": "既定に戻す",
+  "settings.tray.hotkeyStatus.ok": "登録済み：{key}",
+  "settings.tray.hotkeyStatus.conflict": "登録に失敗：「{key}」は他のプログラムが使用中か、システムが許可していない可能性があります（例：Wayland）。別の組み合わせをお試しください。他の機能には影響しません。",
+  "settings.tray.hotkeyStatus.invalid": "ショートカットの形式が無効です。入力し直してください。",
+  "settings.tray.recentLimit": "「最近使用」の保持件数（0 = オフ）",
+  "settings.tray.recentClear": "最近使用をクリア",
+  "tray.recentSection": "最近使用",
   "tray.projectEmpty.unassigned": "進行中のプロジェクトはありますが、タスクがアカウントに割り当てられていないためここには表示されません。プロジェクト計画で割り当てるか、「設定 → フローティングトレイ」で「現在のステップ」表示に切り替えてください。",
   "tray.projectEmpty.allDone": "進行中のプロジェクトにはすべて完了したステップしかないため、ここには表示されません。"
 }

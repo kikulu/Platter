@@ -61,6 +61,13 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   trayProjectPrompts: () => ipcRenderer.invoke('tray:projectPrompts'),
   getTrayPrefs: () => ipcRenderer.invoke('settings:getTrayPrefs'),
   setTrayPrefs: (patch) => ipcRenderer.invoke('settings:setTrayPrefs', patch),
+  trayRecordRecent: (itemId) => ipcRenderer.invoke('tray:recordRecent', itemId),
+  trayClearRecent: () => ipcRenderer.invoke('tray:clearRecent'),
+  onTrayHotkey: (cb) => {
+    const handler = (e, action) => cb(action);
+    ipcRenderer.on('tray:hotkey', handler);
+    return () => ipcRenderer.removeListener('tray:hotkey', handler);
+  },
   onTrayPrefsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('tray:prefsChanged', handler);
