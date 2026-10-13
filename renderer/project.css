@@ -878,6 +878,43 @@ body {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+#wf-stage-prompts-tools {
+  margin-top: 8px;
+}
+.wf-sp-actions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.wf-sp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 6px 0;
+}
+.wf-sp-form textarea,
+.wf-sp-change textarea {
+  min-height: 90px;
+  font-size: 12px;
+}
+.wf-sp-caption {
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+.wf-sp-tag {
+  font-size: 10px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 0 6px;
+}
+.wf-sp-change {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 10px;
+}
 #wf-prompt-preview {
   min-height: 190px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
