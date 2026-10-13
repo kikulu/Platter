@@ -173,6 +173,16 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('projects:workflow:updateStep', { projectId, stepId, patch }),
   setWorkflowStepStatus: (projectId, stepId, status) =>
     ipcRenderer.invoke('projects:workflow:setStepStatus', { projectId, stepId, status }),
+  addWorkflowStagePrompt: (projectId, payload) =>
+    ipcRenderer.invoke('projects:workflow:stagePrompt:add', { projectId, ...payload }),
+  updateWorkflowStagePrompt: (projectId, id, patch) =>
+    ipcRenderer.invoke('projects:workflow:stagePrompt:update', { projectId, id, patch }),
+  removeWorkflowStagePrompt: (projectId, id) =>
+    ipcRenderer.invoke('projects:workflow:stagePrompt:remove', { projectId, id }),
+  checkWorkflowStagePromptUpdates: (projectId) =>
+    ipcRenderer.invoke('projects:workflow:stagePrompt:checkUpdates', { projectId }),
+  applyWorkflowStagePromptUpdates: (projectId, ids) =>
+    ipcRenderer.invoke('projects:workflow:stagePrompt:applyUpdates', { projectId, ids }),
   composeWorkflowPrompt: (projectId, stepId) =>
     ipcRenderer.invoke('projects:workflow:compose', { projectId, stepId }),
   saveWorkflowAsTemplate: (projectId, payload) =>
