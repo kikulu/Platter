@@ -478,5 +478,12 @@
   "tray.taskStatus.doing": "進行中",
   "tray.taskHint": "點一下複製本步驟完整提示詞（已帶入主題與前面產出）",
   "tray.stagePrompt": "本階段相關提示詞",
-  "project.wfStagePrompts": "本階段相關提示詞（{n}）"
+  "project.wfStagePrompts": "本階段相關提示詞（{n}）",
+  "conversations.preview.title": "擷取預覽（存檔前請確認）",
+  "conversations.preview.summary": "共 {total} 則訊息（使用者 {user}、AI {ai}）",
+  "conversations.preview.repeated": "⚠ 有 {count} 則訊息的文字與同角色的其他訊息完全相同，內容可能重複，儲存前請確認。",
+  "conversations.preview.duplicateOf": "⚠ 這段對話內容與已存的「{title}」（{date}）相同。",
+  "conversations.preview.roleUser": "使用者",
+  "conversations.preview.roleAi": "AI",
+  "conversations.duplicateConfirm": "這段對話已存過：「{title}」（{date}）。\n\n仍要儲存嗎？（按「取消」就不儲存）"
 }

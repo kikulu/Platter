@@ -478,5 +478,12 @@
   "tray.taskStatus.doing": "進行中",
   "tray.taskHint": "クリックでこのステップの完全なプロンプトをコピー（テーマと前のステップの成果を含む）",
   "tray.stagePrompt": "このフェーズ向けプロンプト",
-  "project.wfStagePrompts": "このフェーズ向けプロンプト（{n}）"
+  "project.wfStagePrompts": "このフェーズ向けプロンプト（{n}）",
+  "conversations.preview.title": "キャプチャのプレビュー（保存前に確認）",
+  "conversations.preview.summary": "メッセージ {total} 件（ユーザー {user}、AI {ai}）",
+  "conversations.preview.repeated": "⚠ 同じ側の他のメッセージと全く同じ文面が {count} 件あります。内容が重複している可能性があるため、保存前に確認してください。",
+  "conversations.preview.duplicateOf": "⚠ この会話は保存済みの「{title}」（{date}）と同じ内容です。",
+  "conversations.preview.roleUser": "ユーザー",
+  "conversations.preview.roleAi": "AI",
+  "conversations.duplicateConfirm": "この会話は既に保存されています：「{title}」（{date}）。\n\nそれでも保存しますか？（キャンセルで保存しません）"
 }

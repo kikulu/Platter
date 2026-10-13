@@ -23,6 +23,29 @@ body {
   flex: 1;
 }
 
+#conv-preview {
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 8px 10px;
+  margin-bottom: 8px;
+  font-size: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+#conv-preview .conv-preview-title {
+  font-weight: 600;
+}
+#conv-preview .conv-preview-warn {
+  color: #e0a030;
+}
+#conv-preview .conv-preview-snippet {
+  opacity: 0.85;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
 #conv-list {
   flex: 1;
   overflow-y: auto;

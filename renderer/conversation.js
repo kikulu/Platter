@@ -16,6 +16,7 @@
   const contentInput = document.getElementById('conv-content');
   const sourceInfoEl = document.getElementById('conv-source-info');
 
+  const previewEl = document.getElementById('conv-preview');
   const linkedListEl = document.getElementById('conv-linked-list');
   const linkSelectEl = document.getElementById('conv-link-select');
 
@@ -182,6 +183,7 @@
 
   function selectConversation(id) {
     currentConvId = id;
+    renderPreview(null);
     const conv = allConversations.find((c) => c.id === id);
     if (!conv) {
       editorEl.style.display = 'none';
@@ -202,6 +204,58 @@
     renderList();
   }
 
+  function formatDate(iso) {
+    return iso ? String(iso).slice(0, 10) : '';
+  }
+
+  // 擷取後、存檔前的預覽：訊息則數、前幾則的前 80 字、疑似重複的警告
+  function renderPreview(preview, duplicate) {
+    previewEl.innerHTML = '';
+    if (!preview) {
+      previewEl.style.display = 'none';
+      return;
+    }
+    const t = window.i18n.t;
+    const add = (cls, text) => {
+      const el = document.createElement('div');
+      el.className = cls;
+      el.textContent = text;
+      previewEl.appendChild(el);
+    };
+    add('conv-preview-title', t('conversations.preview.title'));
+    add(
+      'conv-preview-summary',
+      t('conversations.preview.summary', {
+        total: preview.total,
+        user: preview.userCount,
+        ai: preview.assistantCount,
+      })
+    );
+    (preview.snippets || []).forEach((s) => {
+      const who =
+        s.role === 'user'
+          ? t('conversations.preview.roleUser')
+          : t('conversations.preview.roleAi');
+      add('conv-preview-snippet', `${who}：${s.text}`);
+    });
+    if (preview.repeatedCount > 0) {
+      add(
+        'conv-preview-warn',
+        t('conversations.preview.repeated', { count: preview.repeatedCount })
+      );
+    }
+    if (duplicate) {
+      add(
+        'conv-preview-warn',
+        t('conversations.preview.duplicateOf', {
+          title: duplicate.title || t('conversations.untitled'),
+          date: formatDate(duplicate.createdAt),
+        })
+      );
+    }
+    previewEl.style.display = 'flex';
+  }
+
   function currentDraft() {
     return {
       id: currentConvId,
@@ -219,6 +273,7 @@
     tagsInput.value = '';
     contentInput.value = '';
     sourceInfoEl.textContent = '';
+    renderPreview(null);
     renderLinkedDocuments(null);
     rebuildLinkSelect(null);
     renderList();
@@ -254,6 +309,8 @@
       : '';
     sourceInfoEl.dataset.sourceAccountId = result.sourceAccountId || '';
     sourceInfoEl.dataset.sourcePlatform = result.sourcePlatform || '';
+    const dup = await window.workspaceAPI.checkConversationDuplicate(result.content, null);
+    renderPreview(result.preview, dup && dup.duplicate);
     renderLinkedDocuments(null);
     rebuildLinkSelect(null);
     renderList();
@@ -275,6 +332,20 @@
   document.getElementById('btn-save-conv').addEventListener('click', async () => {
     const draft = currentDraft();
     const isNew = !draft.id;
+    // 內容與另一則已存的對話相同時，先讓使用者確認（只提示，不強制阻擋）
+    const dupResult = await window.workspaceAPI.checkConversationDuplicate(
+      draft.content,
+      draft.id
+    );
+    if (dupResult && dupResult.duplicate) {
+      const proceed = window.confirm(
+        window.i18n.t('conversations.duplicateConfirm', {
+          title: dupResult.duplicate.title || window.i18n.t('conversations.untitled'),
+          date: formatDate(dupResult.duplicate.createdAt),
+        })
+      );
+      if (!proceed) return;
+    }
     if (isNew) {
       draft.sourceAccountId = sourceInfoEl.dataset.sourceAccountId || null;
       draft.sourcePlatform = sourceInfoEl.dataset.sourcePlatform || null;

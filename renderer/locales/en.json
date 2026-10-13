@@ -478,5 +478,12 @@
   "tray.taskStatus.doing": "In progress",
   "tray.taskHint": "Click to copy this step's full prompt (topic and earlier outputs included)",
   "tray.stagePrompt": "Stage-related prompt",
-  "project.wfStagePrompts": "Stage-related prompts ({n})"
+  "project.wfStagePrompts": "Stage-related prompts ({n})",
+  "conversations.preview.title": "Capture preview (check before saving)",
+  "conversations.preview.summary": "{total} messages ({user} from you, {ai} from AI)",
+  "conversations.preview.repeated": "⚠ {count} message(s) have text identical to another message from the same side. The content may be duplicated — please check before saving.",
+  "conversations.preview.duplicateOf": "⚠ This conversation is identical to the saved one \"{title}\" ({date}).",
+  "conversations.preview.roleUser": "You",
+  "conversations.preview.roleAi": "AI",
+  "conversations.duplicateConfirm": "This conversation is already saved: \"{title}\" ({date}).\n\nSave anyway? (Cancel to skip saving)"
 }
