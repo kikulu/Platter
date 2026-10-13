@@ -36,5 +36,8 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
+      - name: Format check
+        run: npm run format:check
+
+      - name: Unit tests (含文件一致性檢查)
         run: npm test

@@ -15,6 +15,15 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+// 沒有安裝 mammoth／docx 時整份略過（CI 與正式開發環境會先 npm install，不受影響）
+try {
+  require.resolve('mammoth');
+  require.resolve('docx');
+} catch (err) {
+  test('mammoth／docx 未安裝，略過 .docx 測試', { skip: '需要先 npm install' }, () => {});
+  return;
+}
+
 const mammoth = require('mammoth');
 const { Document, Packer, Paragraph, TextRun, HeadingLevel } = require('docx');
 
