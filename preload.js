@@ -59,6 +59,13 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   toggleChecklistEntry: (itemId, entryId, checked) =>
     ipcRenderer.invoke('knowledge:toggleChecklistEntry', { itemId, entryId, checked }),
   trayProjectPrompts: () => ipcRenderer.invoke('tray:projectPrompts'),
+  getTrayPrefs: () => ipcRenderer.invoke('settings:getTrayPrefs'),
+  setTrayPrefs: (patch) => ipcRenderer.invoke('settings:setTrayPrefs', patch),
+  onTrayPrefsChanged: (cb) => {
+    const handler = () => cb();
+    ipcRenderer.on('tray:prefsChanged', handler);
+    return () => ipcRenderer.removeListener('tray:prefsChanged', handler);
+  },
   onProjectsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('projects:changed', handler);

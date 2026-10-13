@@ -507,5 +507,11 @@
   "project.spRefreshApply": "Apply selected updates",
   "project.spRefreshCurrent": "Current (this project)",
   "project.spRefreshSource": "Latest in Knowledge Base",
-  "project.spRefreshApplied": "Updated {n} prompt(s)"
+  "project.spRefreshApplied": "Updated {n} prompt(s)",
+  "settings.tray.title": "Floating tray",
+  "settings.tray.projectModeHint": "Which tasks to show in the \"Project tasks & stage prompts\" block at the top of the tray list.",
+  "settings.tray.modeAssigned": "Only unfinished tasks assigned to an account",
+  "settings.tray.modeCurrent": "Show the current step of every active project (assigned or not)",
+  "tray.projectEmpty.unassigned": "You have active projects, but their tasks are not assigned to an account yet, so nothing is shown here. Assign accounts in Project Planning, or switch to \"current step\" in Settings → Floating tray.",
+  "tray.projectEmpty.allDone": "The active projects have no unfinished workflow steps, so nothing is shown here."
 }
