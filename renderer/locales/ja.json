@@ -507,5 +507,11 @@
   "project.spRefreshApply": "選択した更新を適用",
   "project.spRefreshCurrent": "現在（このプロジェクト）",
   "project.spRefreshSource": "ナレッジの最新",
-  "project.spRefreshApplied": "{n} 件のプロンプトを更新しました"
+  "project.spRefreshApplied": "{n} 件のプロンプトを更新しました",
+  "settings.tray.title": "フローティングトレイ",
+  "settings.tray.projectModeHint": "トレイ一覧の先頭にある「プロジェクトタスクとステージのプロンプト」ブロックに表示するタスク。",
+  "settings.tray.modeAssigned": "アカウントに割り当て済みの未完了タスクのみ",
+  "settings.tray.modeCurrent": "進行中の各プロジェクトの現在のステップを表示（割り当ての有無を問わない）",
+  "tray.projectEmpty.unassigned": "進行中のプロジェクトはありますが、タスクがアカウントに割り当てられていないためここには表示されません。プロジェクト計画で割り当てるか、「設定 → フローティングトレイ」で「現在のステップ」表示に切り替えてください。",
+  "tray.projectEmpty.allDone": "進行中のプロジェクトにはすべて完了したステップしかないため、ここには表示されません。"
 }

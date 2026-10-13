@@ -99,6 +99,18 @@
     await window.workspaceAPI.setSkipSaveDialog(skipDialogCheckbox.checked);
   });
 
+  // --- 浮動托盤 ---
+  const trayProjectModeSelect = document.getElementById('tray-project-mode');
+
+  async function refreshTrayPrefs() {
+    const prefs = await window.workspaceAPI.getTrayPrefs();
+    trayProjectModeSelect.value = prefs.projectMode;
+  }
+
+  trayProjectModeSelect.addEventListener('change', async () => {
+    await window.workspaceAPI.setTrayPrefs({ projectMode: trayProjectModeSelect.value });
+  });
+
   // --- 備份與還原 ---
   document.getElementById('btn-export-backup').addEventListener('click', async () => {
     const result = await window.workspaceAPI.exportBackup();
@@ -645,6 +657,7 @@
     await refreshDataDir();
     await refreshExtensions();
     await refreshSavePath();
+    await refreshTrayPrefs();
     await refreshSelectors();
     resetRoleForm();
     await refreshRoles();

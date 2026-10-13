@@ -507,5 +507,11 @@
   "project.spRefreshApply": "套用選取的更新",
   "project.spRefreshCurrent": "目前（本專案）",
   "project.spRefreshSource": "知識庫最新",
-  "project.spRefreshApplied": "已更新 {n} 個提示詞"
+  "project.spRefreshApplied": "已更新 {n} 個提示詞",
+  "settings.tray.title": "浮動托盤",
+  "settings.tray.projectModeHint": "托盤清單最上方「專案任務與階段提示詞」區塊要顯示哪些任務。",
+  "settings.tray.modeAssigned": "只顯示已指派帳號的未完成任務",
+  "settings.tray.modeCurrent": "顯示每個進行中專案的目前步驟（不論有沒有指派）",
+  "tray.projectEmpty.unassigned": "有進行中的專案，但它們的任務還沒指派帳號，所以這裡沒有內容。到「專案計畫管理」指派帳號，或到「設定 → 浮動托盤」改成顯示「目前步驟」。",
+  "tray.projectEmpty.allDone": "進行中的專案，流程步驟都已完成，所以這裡沒有內容。"
 }

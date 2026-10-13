@@ -8,6 +8,7 @@
 
   let allItems = []; // 知識庫的「項目」清單（不含分階段套餐——套餐是多步驟的操作，
   // 這個小托盤只做「單一提示詞，點了就複製」這件事，套餐留給完整的知識庫視窗）
+  let projectEmptyReason = null; // 專案區塊為空時的原因（'unassigned' | 'allDone' | null），見 lib/workflow.js
   let projectGroups = []; // 專案計畫「已指派、未完成」的流程任務 + 各階段相關提示詞（見 lib/workflow.js buildTrayProjectGroups）
   let toastTimer = null;
 
@@ -160,6 +161,13 @@
     listEl.innerHTML = '';
 
     const hasProjectBlock = appendProjectSection(query);
+    // 專案區塊是空的、而且不是因為搜尋字串過濾掉的：說明原因與怎麼改
+    if (!hasProjectBlock && !query && projectEmptyReason) {
+      const hint = document.createElement('div');
+      hint.className = 'tray-hint';
+      hint.textContent = window.i18n.t(`tray.projectEmpty.${projectEmptyReason}`);
+      listEl.appendChild(hint);
+    }
 
     if (filtered.length === 0) {
       if (hasProjectBlock) return;
@@ -213,18 +221,25 @@
   async function refreshItems() {
     const kb = await window.workspaceAPI.listKnowledge();
     allItems = kb.items || [];
-    projectGroups = await window.workspaceAPI.trayProjectPrompts();
+    await loadProjectData();
     renderList();
   }
 
+  async function loadProjectData() {
+    const data = await window.workspaceAPI.trayProjectPrompts();
+    projectGroups = (data && data.groups) || [];
+    projectEmptyReason = (data && data.emptyReason) || null;
+  }
+
   async function refreshProjects() {
-    projectGroups = await window.workspaceAPI.trayProjectPrompts();
+    await loadProjectData();
     renderList();
   }
 
   window.workspaceAPI.onKnowledgeChanged(refreshItems);
   window.workspaceAPI.onProjectsChanged(refreshProjects);
   window.workspaceAPI.onAccountsChanged(refreshProjects);
+  window.workspaceAPI.onTrayPrefsChanged(refreshProjects);
 
   (async () => {
     await window.i18n.init();

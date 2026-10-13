@@ -137,6 +137,16 @@ body.expanded #expanded-view {
   padding-top: 4px;
 }
 
+.tray-hint {
+  font-size: 11px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+  padding: 6px 8px;
+  border: 1px dashed var(--border);
+  border-radius: 6px;
+  margin: 4px 8px 8px;
+}
+
 .tray-project-label {
   font-size: 11px;
   color: var(--text-secondary);
