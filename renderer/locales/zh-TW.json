@@ -512,6 +512,17 @@
   "settings.tray.projectModeHint": "托盤清單最上方「專案任務與階段提示詞」區塊要顯示哪些任務。",
   "settings.tray.modeAssigned": "只顯示已指派帳號的未完成任務",
   "settings.tray.modeCurrent": "顯示每個進行中專案的目前步驟（不論有沒有指派）",
+  "settings.tray.hotkeyEnable": "啟用全域快捷鍵（切換托盤展開／收合）",
+  "settings.tray.hotkeyLabel": "快捷鍵",
+  "settings.tray.hotkeyPress": "請按下組合鍵…",
+  "settings.tray.hotkeyHint": "點一下輸入框，再按下想用的組合鍵（至少要包含 Ctrl／⌘／Alt 其中一個）。Platter 在背景時，快捷鍵會先把 Platter 帶到前景再展開托盤。Linux／Wayland 上的快捷鍵與焦點行為尚未驗證。",
+  "settings.tray.hotkeyReset": "還原預設",
+  "settings.tray.hotkeyStatus.ok": "已註冊：{key}",
+  "settings.tray.hotkeyStatus.conflict": "註冊失敗：「{key}」可能被其他程式佔用，或系統不允許（例如 Wayland）。請換一組，其他功能不受影響。",
+  "settings.tray.hotkeyStatus.invalid": "快捷鍵格式無效，請重新輸入。",
+  "settings.tray.recentLimit": "「最近使用」保留筆數（0 = 關閉）",
+  "settings.tray.recentClear": "清除最近使用",
+  "tray.recentSection": "最近使用",
   "tray.projectEmpty.unassigned": "有進行中的專案，但它們的任務還沒指派帳號，所以這裡沒有內容。到「專案計畫管理」指派帳號，或到「設定 → 浮動托盤」改成顯示「目前步驟」。",
   "tray.projectEmpty.allDone": "進行中的專案，流程步驟都已完成，所以這裡沒有內容。"
 }

@@ -512,6 +512,17 @@
   "settings.tray.projectModeHint": "Which tasks to show in the \"Project tasks & stage prompts\" block at the top of the tray list.",
   "settings.tray.modeAssigned": "Only unfinished tasks assigned to an account",
   "settings.tray.modeCurrent": "Show the current step of every active project (assigned or not)",
+  "settings.tray.hotkeyEnable": "Enable global hotkey (toggle the tray open/closed)",
+  "settings.tray.hotkeyLabel": "Hotkey",
+  "settings.tray.hotkeyPress": "Press a key combination…",
+  "settings.tray.hotkeyHint": "Click the box, then press the combination you want (it must include Ctrl, ⌘ or Alt). When Platter is in the background, the hotkey first brings Platter to the front and then opens the tray. Hotkey and focus behavior on Linux/Wayland has not been verified.",
+  "settings.tray.hotkeyReset": "Restore default",
+  "settings.tray.hotkeyStatus.ok": "Registered: {key}",
+  "settings.tray.hotkeyStatus.conflict": "Registration failed: \"{key}\" may be used by another program, or the system does not allow it (e.g. Wayland). Try a different one; nothing else is affected.",
+  "settings.tray.hotkeyStatus.invalid": "Invalid hotkey format. Please enter it again.",
+  "settings.tray.recentLimit": "Number of \"Recently used\" prompts to keep (0 = off)",
+  "settings.tray.recentClear": "Clear recently used",
+  "tray.recentSection": "Recently used",
   "tray.projectEmpty.unassigned": "You have active projects, but their tasks are not assigned to an account yet, so nothing is shown here. Assign accounts in Project Planning, or switch to \"current step\" in Settings → Floating tray.",
   "tray.projectEmpty.allDone": "The active projects have no unfinished workflow steps, so nothing is shown here."
 }

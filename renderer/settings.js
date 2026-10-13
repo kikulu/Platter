@@ -102,10 +102,79 @@
   // --- 浮動托盤 ---
   const trayProjectModeSelect = document.getElementById('tray-project-mode');
 
-  async function refreshTrayPrefs() {
-    const prefs = await window.workspaceAPI.getTrayPrefs();
-    trayProjectModeSelect.value = prefs.projectMode;
+  const trayHotkeyEnabled = document.getElementById('tray-hotkey-enabled');
+  const trayHotkeyInput = document.getElementById('tray-hotkey');
+  const trayHotkeyStatus = document.getElementById('tray-hotkey-status');
+  const trayRecentLimit = document.getElementById('tray-recent-limit');
+  const TRAY_DEFAULT_HOTKEY = 'CommandOrControl+Shift+P';
+
+  function renderHotkeyStatus(status) {
+    trayHotkeyStatus.textContent = '';
+    if (!status || !trayHotkeyEnabled.checked) return;
+    if (status.state === 'ok' || status.state === 'conflict' || status.state === 'invalid') {
+      trayHotkeyStatus.textContent = window.i18n.t(
+        `settings.tray.hotkeyStatus.${status.state}`,
+        { key: status.accelerator || '' }
+      );
+      trayHotkeyStatus.style.color = status.state === 'ok' ? '' : '#e5484d';
+    }
   }
+
+  function applyTrayPrefsToUI(prefs) {
+    trayProjectModeSelect.value = prefs.projectMode;
+    trayHotkeyEnabled.checked = !!prefs.hotkeyEnabled;
+    trayHotkeyInput.value = prefs.hotkey || TRAY_DEFAULT_HOTKEY;
+    trayRecentLimit.value = String(prefs.recentLimit);
+    renderHotkeyStatus(prefs.hotkeyStatus);
+  }
+
+  async function refreshTrayPrefs() {
+    applyTrayPrefsToUI(await window.workspaceAPI.getTrayPrefs());
+  }
+
+  async function saveTrayPrefs(patch) {
+    applyTrayPrefsToUI(await window.workspaceAPI.setTrayPrefs(patch));
+  }
+
+  // 把 keydown 事件轉成 Electron accelerator 字串；沒有修飾鍵或只按了修飾鍵就回傳 null
+  function eventToAccelerator(e) {
+    const mods = [];
+    if (e.ctrlKey || e.metaKey) mods.push('CommandOrControl');
+    if (e.altKey) mods.push('Alt');
+    if (e.shiftKey) mods.push('Shift');
+    if (!(e.ctrlKey || e.metaKey || e.altKey)) return null;
+    const k = e.key;
+    if (['Control', 'Meta', 'Alt', 'Shift'].includes(k)) return null;
+    let key = null;
+    if (/^[a-zA-Z0-9]$/.test(k)) key = k.toUpperCase();
+    else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) key = k;
+    else {
+      const map = { ' ': 'Space', ArrowUp: 'Up', ArrowDown: 'Down', ArrowLeft: 'Left', ArrowRight: 'Right', Enter: 'Return', Escape: null };
+      key = Object.prototype.hasOwnProperty.call(map, k) ? map[k] : null;
+    }
+    return key ? [...mods, key].join('+') : null;
+  }
+
+  trayHotkeyEnabled.addEventListener('change', () =>
+    saveTrayPrefs({ hotkeyEnabled: trayHotkeyEnabled.checked })
+  );
+  trayHotkeyInput.addEventListener('focus', () => {
+    trayHotkeyInput.placeholder = window.i18n.t('settings.tray.hotkeyPress');
+  });
+  trayHotkeyInput.addEventListener('keydown', (e) => {
+    e.preventDefault();
+    const acc = eventToAccelerator(e);
+    if (acc) saveTrayPrefs({ hotkey: acc });
+  });
+  document.getElementById('btn-tray-hotkey-reset').addEventListener('click', () =>
+    saveTrayPrefs({ hotkey: TRAY_DEFAULT_HOTKEY })
+  );
+  trayRecentLimit.addEventListener('change', () =>
+    saveTrayPrefs({ recentLimit: Number(trayRecentLimit.value) || 0 })
+  );
+  document
+    .getElementById('btn-tray-recent-clear')
+    .addEventListener('click', () => window.workspaceAPI.trayClearRecent());
 
   trayProjectModeSelect.addEventListener('change', async () => {
     await window.workspaceAPI.setTrayPrefs({ projectMode: trayProjectModeSelect.value });
