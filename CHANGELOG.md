@@ -1,5 +1,71 @@
 # Changelog
 
+## [1.41.0]
+
+合併 `docs/parallel-dev/` 的四項功能（A～D），加上資料保護與文件一致性修補。
+
+### 修補：資料檔原子寫入、文件一致性檢查、CI
+
+- **原子寫入**：`writeJSONSafe` 改為「寫暫存檔 → rename」並保留上一份 `.bak`
+  （`lib/utils.js` 的 `writeFileAtomicSync`）；讀取時主檔損毀會改讀 `.bak` 並寫入錯誤日誌
+  （`readJsonFileWithBackup`）。寫到一半當機或斷電不再留下被截斷的 JSON。
+- **`scripts/check-docs.js`（`npm run check:docs`）**：檢查 `package.json` 版本＝CHANGELOG 最新版本、
+  接續開發提示詞的「目前版本」、三語系鍵集合一致、README／規格寫的內建資料數量、README 索引連結
+  指向的檔案存在；`test/docs-consistency.test.js` 讓 `npm test` 一併檢查。
+- **CI**：新增 `npm run format:check` 步驟；測試步驟改稱含文件一致性檢查。
+- 缺少 `sql.js`／`mammoth` 套件時，`sqlite`／`docxEditor` 測試明確 `skip`（附原因），不再以失敗呈現。
+- 移除過時的 `yarn.lock`（缺 `docx`／`mammoth`／`pdf-lib`，文件與 CI 都用 npm）。**注意**：專案目前沒有
+  `package-lock.json`，CI 的 `npm install` 仍會每次解析最新符合範圍的版本；要鎖版本請在有網路的環境跑
+  `npm install` 產生並提交 `package-lock.json`。
+
+### 功能 A：對話擷取預覽與重複儲存提示
+
+- 擷取後、存檔前，對話庫視窗顯示預覽：訊息總數、使用者／AI 各幾則、前幾則的前 80 字，以及「文字與
+  同角色其他訊息完全相同」的則數（內容異常重複的徵兆）。
+- 對話內容（先正規化空白）算 sha256 存進 `contentHash`；儲存時若對話庫已有內容相同的另一則，跳確認
+  （只提示，可選擇仍要儲存）。舊資料沒有 `contentHash` 時由內容現算，所以舊對話也能被偵測。
+- 新增 IPC `conversations:checkDuplicate`、preload `checkConversationDuplicate()`；純函式
+  `buildConversationPreview()`／`hashConversationContent()`／`findDuplicateConversation()`（`lib/utils.js`）。
+
+### 功能 C：階段提示詞可編輯與從知識庫更新
+
+- 專案流程頁「本階段相關提示詞」可**新增**（從知識庫挑一個，或自訂標題＋內容）、**編輯**、**移除**；
+  只影響這個專案的快照。
+- **從知識庫重新整理**：對來源是知識庫的項目（`sourceItemId`／`sourceDefaultId`），比對差異並讓使用者
+  逐項選擇要不要更新；來源已被刪除的會提示；自訂項目不受影響。舊專案沒有來源欄位時照常運作。
+- 新增 IPC `projects:workflow:stagePrompt:add／update／remove／checkUpdates／applyUpdates`。
+  **`projects:save` 現在一律忽略傳入的 `workflow`**，避免過期副本蓋掉進度（`workflow` 只能透過
+  `projects:workflow:*` 頻道修改）。
+
+### 功能 B：托盤專案區塊顯示範圍可設定
+
+- 「設定 → 浮動托盤」新增「專案區塊顯示範圍」：**只顯示已指派的未完成任務**（預設，維持原行為）或
+  **顯示每個進行中專案的目前步驟**（不論有沒有指派）。
+- 區塊為空時，托盤顯示一行說明原因（`unassigned`：有進行中專案但任務沒指派；`allDone`：流程步驟都完成），
+  並指出怎麼改。
+- 設定存在 `appState.ui.tray`（`normalizeTrayPrefs()`，舊資料走預設）；新增 IPC `settings:getTrayPrefs`／
+  `settings:setTrayPrefs`、廣播 `tray:prefsChanged`；`buildTrayProjectGroups()` 以參數接收模式，維持純函式。
+
+### 功能 D：托盤全域快捷鍵與最近使用
+
+- **全域快捷鍵**（預設**關閉**，預設組合 `CommandOrControl+Shift+P`，可在設定頁用「按鍵錄製」改）：
+  Platter 有焦點視窗時切換托盤展開／收合；Platter 在背景或主視窗最小化時，**先把主視窗帶到前景再展開托盤**。
+  托盤本身的顯示規則（`syncTrayVisibility()`，1.39.0）不變，所以不會蓋在其他應用前面。註冊失敗（被佔用、
+  格式無效、系統不允許）只在設定頁顯示狀態，不影響其他功能（`lib/trayHotkey.js`）。
+- **最近使用**：托盤清單最上方新增「最近使用」區，記錄最近複製的知識庫提示詞 id（預設 5 筆，0～20，0＝關閉）；
+  已被刪除的項目自動略過；設定頁可調筆數與清除。專案階段提示詞不記入（它們不是知識庫項目）。
+- 新增 IPC `tray:recordRecent`／`tray:clearRecent`、事件 `tray:hotkey`；三語系鍵 480 → 526（三語一致）。
+
+### 測試與限制
+
+- 新增測試：`atomic-write`、`docs-consistency`、`conversation-preview`、`stage-prompts-edit`、
+  `tray-project-mode`、`tray-hotkey-recent`。完整測試 175 個：173 通過、2 個因環境缺套件而 skip、0 失敗。
+- **全部沒有在真實 Electron 環境驗證**：預覽與重複提示的畫面、階段提示詞的編輯介面、設定頁的快捷鍵錄製、
+  托盤「最近使用」區；**Linux／Wayland 的全域快捷鍵與焦點行為尤其未驗證**（Wayland 可能直接不允許註冊）。
+- 沒有跑 `npm run lint`／`npm run format:check`（開發環境無法安裝 ESLint／Prettier）。
+
+---
+
 ## [1.40.1]
 
 ### 文件與工程一致性整理（無功能變更，程式碼行為與 1.40.0 相同）

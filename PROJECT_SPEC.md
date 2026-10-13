@@ -161,6 +161,10 @@ accounts` 裡有某個帳號沒出現在傳進來的順序清單裡——理論�
   `WebContentsView`、才會真的耗用資源。
 - **陣列順序就是使用者排序過的顯示順序**，拖曳排序本質上就是在改這個
   陣列的順序，跟哪個帳號的頁面有沒有載入是兩件獨立的事。
+- **資料檔寫入（1.41.0）**：所有 JSON 資料檔經 `writeJSONSafe()` 寫入，內部用
+  `writeFileAtomicSync()`（`lib/utils.js`）——先寫暫存檔、再 `rename` 覆蓋原檔，並保留上一份
+  `<檔名>.bak`，寫到一半當機或斷電不會留下被截斷的 JSON。`readJSONSafe()` 讀到主檔損毀（無法
+  解析）時改讀 `.bak` 並寫入錯誤日誌（`readJsonFileWithBackup()`）。新增資料檔一律走這兩個函式。
 
 ---
 
@@ -702,6 +706,15 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 - 步驟狀態改變後主行程回傳完整專案清單，畫面端把已持久化的任務狀態同步回 `editingTasks`
   並重繪任務清單——否則之後按「儲存專案」會把任務狀態蓋回舊值。
 
+- **階段提示詞的編輯與從知識庫更新（1.41.0）**：流程頁「本階段相關提示詞」可新增（從知識庫挑一個，
+  或自訂標題＋內容）、編輯、移除，只改這個專案的快照。`stagePrompts` 項目可帶來源
+  （`sourceItemId`：使用者從知識庫挑選；`sourceDefaultId`：範本建立時帶入的內建提示詞）；兩者皆空
+  就是自訂提示詞。「從知識庫重新整理」比對有來源的項目與知識庫目前內容（`diffStagePromptsWithSource()`），
+  列出差異讓使用者逐項決定是否更新（`applyStagePromptUpdates()`）；來源已被刪除的只提示、不動。
+  純函式在 `lib/workflow.js`，IPC 為 `projects:workflow:stagePrompt:add／update／remove／
+  checkUpdates／applyUpdates`。**`projects:save` 一律忽略傳入的 `workflow`**（只能走
+  `projects:workflow:*` 頻道改），避免畫面端過期的副本蓋掉較新的進度。舊專案沒有來源欄位照常運作。
+
 備份與還原同步支援專案資料（含 `tasks`、`issues` 與 `workflow`），匯入時已存在的
 專案 id 略過。
 
@@ -961,6 +974,11 @@ workerSrc` 指向同一個資料夾底下的 worker 檔案，讓 pdf.js 用真�
 - 對話被刪除時不影響原本已建立的文件庫紀錄，只是那份文件不再顯示跟這
   則對話的關聯；文件被刪除時，見第 8 節「連動清理」，對話庫裡引用到
   它的關聯會一併移除。
+- **擷取預覽與重複儲存提示（1.41.0）**：對話擷取後、存檔前，視窗顯示預覽（`buildConversationPreview()`）：
+  訊息總數、使用者／AI 各幾則、前幾則的前 80 字，以及「文字與同角色其他訊息完全相同」的則數。對話內容
+  正規化空白後算 sha256（`hashConversationContent()`）存為 `contentHash`；儲存前
+  `conversations:checkDuplicate` 找內容相同的另一則（`findDuplicateConversation()`，排除自己；舊資料沒有
+  `contentHash` 由內容現算），有的話跳確認、**只提示不阻擋**。
 - 備份與還原同步支援對話庫資料（已存在的 id 略過，不覆蓋使用者後續的
   編輯）；`linkedDocumentIds` 若引用到還原環境裡不存在的文件 id，不強制
   清理，畫面上自然當成「關聯的文件已被移除」顯示，不影響其他資料。
@@ -1104,8 +1122,21 @@ function openChildWindow({
   並把 `todo` 的步驟標成 `doing`（跟專案視窗按「複製提示詞」一致）；點 📎 = 複製該提示詞。
   搜尋框同時過濾這一區（比對任務／提示詞標題、專案名、階段名、指派帳號名）。訂閱
   `projects:changed`、`accounts:changed`、`knowledge:changed` 即時刷新；沒有符合的任務時
-  整區不顯示。**沒有指派帳號的任務不會出現**——從範本建專案時任務預設未指派，要到專案計畫
-  把任務指派給帳號後才會出現在托盤。
+  整區不顯示。**預設模式下沒有指派帳號的任務不會出現**——從範本建專案時任務預設未指派，要到專案計畫
+  把任務指派給帳號後才會出現在托盤；或到「設定 → 浮動托盤」改成「顯示每個進行中專案的目前步驟」。
+- **托盤設定（1.41.0，存 `appState.ui.tray`，`normalizeTrayPrefs()` 正規化，舊資料走預設；IPC
+  `settings:getTrayPrefs`／`settings:setTrayPrefs`，變更後廣播 `tray:prefsChanged`）**：
+  - `projectMode`：`assigned`（預設）或 `current`（每個進行中專案的「目前步驟」，不論有無指派；
+    `buildTrayProjectGroups(projects, accounts, mode)` 仍是純函式）。專案區塊為空時
+    `trayProjectEmptyReason()` 回傳原因（`unassigned`／`allDone`），托盤顯示一行說明。
+  - `hotkeyEnabled`（預設**關閉**）／`hotkey`（預設 `CommandOrControl+Shift+P`）：全域快捷鍵，
+    `lib/trayHotkey.js` 註冊／取消，結果（`ok`／`conflict`／`invalid`／`off`）顯示在設定頁，失敗不影響其他功能。
+    觸發時 `toggleTrayFromHotkey()`（`lib/windows.js`）：Platter 有焦點視窗 → 送 `tray:hotkey('toggle')`；
+    在背景或主視窗最小化 → 先把主視窗帶到前景、再送 `tray:hotkey('expand')`。`syncTrayVisibility()`
+    規則不變，托盤不會蓋在其他應用前面。**Linux／Wayland 行為未驗證。**
+  - `recentLimit`（0～20，預設 5，0＝關閉）／`recent`（知識庫項目 id，新的在前、去重）：清單最上方
+    「最近使用」區。複製知識庫提示詞時 `tray:recordRecent` 記錄（不廣播，托盤下次展開才重畫）；
+    對不到項目（已刪除）的 id 顯示時略過；`tray:clearRecent` 清除。專案階段提示詞不記入。
 - **已知限制**：圓形收起狀態的視窗本身是方形（56×56），圓形之外的
   四個角是透明但仍然在視窗範圍內、仍然會吃掉那幾個像素的滑鼠事件
   （不影響任何功能，只是極小範圍視覺以外的點擊判定，沒有實作
@@ -1434,6 +1465,8 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
 | `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                     | 對話庫視窗                                     |
 | `projects:changed`      | 專案/任務/issue 的新增、儲存、刪除、狀態切換、工時紀錄新增/移除                                        | （目前沒有其他視窗訂閱，保留給未來擴充）       |
 | `reminders:changed`     | 到期摘要重新計算後（每小時排程、或任一次 `projects:changed` 之後都會立刻重算一次）                     | 主視窗（側邊欄「專案計畫」角標）               |
+| `tray:prefsChanged`     | 托盤設定變更（專案區塊模式、快捷鍵、最近使用筆數）或清除最近使用（1.41.0）                              | 浮動托盤                                       |
+| `tray:hotkey`           | 全域快捷鍵觸發（只送給托盤視窗，參數 `toggle`／`expand`；1.41.0）                                      | 浮動托盤                                       |
 | `logs:changed`          | 任何一筆錯誤/稽核日誌被寫入或清除                                                                      | 日誌主控台視窗                                 |
 | `console:entry`         | main process 每呼叫一次 `console.log/info/warn/error`（含頁面 console-message 轉送），即時推送單一筆   | 日誌主控台視窗（主控台分頁）                   |
 | `language:changed`      | 語言切換                                                                                               | 所有視窗（重新載入翻譯）                       |
@@ -1546,6 +1579,8 @@ renderer/documents.html, documents.js, documents.css # 文件庫（Markdown/Word
 renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
 renderer/tray.html, tray.js, tray.css                # 右下角浮動小托盤（第 9.0 節）
+lib/trayHotkey.js                                    # 托盤全域快捷鍵註冊（第 9.0 節，1.41.0）
+scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
 test/*.test.js                                       # 單元測試（node --test，14 個檔案）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
