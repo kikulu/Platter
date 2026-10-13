@@ -17,6 +17,14 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+// 沒有安裝 sql.js 時整份略過（CI 與正式開發環境會先 npm install，不受影響）
+try {
+  require.resolve('sql.js');
+} catch (err) {
+  test('sql.js 未安裝，略過 SQLite 測試', { skip: '需要先 npm install' }, () => {});
+  return;
+}
+
 const { openDatabaseFile, saveDatabaseFile, queryAll } = require('../lib/sqlite');
 
 function genId(prefix) {
