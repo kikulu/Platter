@@ -130,6 +130,9 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   // 設定：疑難排解
   openCurrentDevTools: () => ipcRenderer.invoke('settings:openCurrentDevTools'),
   clearAppCache: () => ipcRenderer.invoke('settings:clearCache'),
+  clearBackupFiles: () => ipcRenderer.invoke('settings:clearBackupFiles'),
+  getPageConsole: () => ipcRenderer.invoke('settings:getPageConsole'),
+  setPageConsole: (enabled) => ipcRenderer.invoke('settings:setPageConsole', enabled),
 
   // 子視窗
   openAccountWindow: (presetPlatform) =>

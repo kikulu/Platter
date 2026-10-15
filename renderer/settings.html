@@ -275,6 +275,23 @@
         如果啟動時看到終端機印出 disk_cache / quota_database
         相關錯誤，或帳號畫面出現不明的載入異常，可以試著清除快取（不會登出帳號、不會刪除任何資料）。
       </div>
+      <button
+        id="btn-clear-backups"
+        data-i18n="settings.troubleshoot.clearBackups"
+        style="margin-top: 8px"
+      >
+        清除備份檔（.bak）
+      </button>
+      <div class="settings-hint" data-i18n="settings.troubleshoot.clearBackupsHint">
+        每次存檔都會留下上一版的備份檔，刪掉的內容可能還殘留在裡面。確定不需要還原時可以清除。
+      </div>
+      <label class="settings-hint" style="display: block; margin-top: 8px">
+        <input type="checkbox" id="chk-page-console" />
+        <span data-i18n="settings.troubleshoot.pageConsole">收集第三方頁面的 console 輸出（診斷用，預設關閉）</span>
+      </label>
+      <div class="settings-hint" data-i18n="settings.troubleshoot.pageConsoleHint">
+        頁面的 console 可能含有對話內容或憑證，平常請保持關閉；只在診斷擷取問題時暫時開啟。
+      </div>
     </div>
 
     <!-- 8. 關於 -->
