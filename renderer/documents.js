@@ -484,7 +484,7 @@
       return;
     }
     const pdfjsLib = await loadPdfjs();
-    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data }).promise;
+    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data, isEvalSupported: false }).promise;
     pdfCurrentPage = 1;
     await renderPdfPage();
   }
@@ -511,7 +511,7 @@
     const result = await window.workspaceAPI.getPdfBytes(currentDocId);
     if (!result.ok) return;
     const pdfjsLib = await loadPdfjs();
-    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data }).promise;
+    pdfDocProxy = await pdfjsLib.getDocument({ data: result.data, isEvalSupported: false }).promise;
     pdfCurrentPage = Math.min(keepPage, pdfDocProxy.numPages);
     await renderPdfPage();
     allDocs = await window.workspaceAPI.listDocuments();
