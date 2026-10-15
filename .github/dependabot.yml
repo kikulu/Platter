@@ -1,0 +1,13 @@
+# 相依套件與 GitHub Actions 的自動更新（資安稽核 L-6）
+# 每週開一次 PR；Electron 升級屬於大版本變動，請在冒煙測試後再合併。
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly

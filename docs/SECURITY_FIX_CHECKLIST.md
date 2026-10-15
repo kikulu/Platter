@@ -14,7 +14,7 @@
 | B   | 輸入驗證                      | M-1、M-4、M-3    | [x]   |
 | C   | 淨化與 CSP                    | M-2、L-3、L-5    | [x]   |
 | D   | 擴充功能、備份檔、頁面 console | M-5、L-1、L-4    | [x]   |
-| E   | CI 與供應鏈                   | L-6              | [ ]  |
+| E   | CI 與供應鏈                   | L-6              | [x]   |
 | F   | Electron 升級、lockfile、簽章 | H-2、L-6、資訊項 | [-]  |
 
 ## A. 導覽限制與 IPC 來源檢查
@@ -60,9 +60,9 @@
 
 ## E. CI 與供應鏈
 
-- [ ] **L-6-1** workflow 加 `permissions: contents: read`。
-- [ ] **L-6-2** `npm install` 改成 `npm install --ignore-scripts`（相依套件的 install script 不執行；測試只需要純 JS 套件）。
-- [ ] **L-6-3** 新增 `.github/dependabot.yml`（npm 與 GitHub Actions，每週）。
+- [x] **L-6-1** workflow 加 `permissions: contents: read`。
+- [x] **L-6-2** `npm install` 改成 `npm install --ignore-scripts`（相依套件的 install script 不執行；測試只需要純 JS 套件）。
+- [x] **L-6-3** 新增 `.github/dependabot.yml`（npm 與 GitHub Actions，每週）。
 
 ## F. 這次刻意不修（需要網路或真實環境）
 
