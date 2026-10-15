@@ -11,7 +11,7 @@
 | 組  | 內容                          | 對應發現         | 狀態 |
 | --- | ----------------------------- | ---------------- | ---- |
 | A   | 導覽限制與 IPC 來源檢查       | H-1、L-2         | [x]   |
-| B   | 輸入驗證                      | M-1、M-4、M-3    | [ ]  |
+| B   | 輸入驗證                      | M-1、M-4、M-3    | [x]   |
 | C   | 淨化與 CSP                    | M-2、L-3、L-5    | [ ]  |
 | D   | 擴充功能、備份檔、頁面 console | M-5、L-1、L-4    | [ ]  |
 | E   | CI 與供應鏈                   | L-6              | [ ]  |
@@ -29,14 +29,14 @@
 
 ## B. 輸入驗證
 
-- [ ] **M-1-1** 備份匯入：逐筆驗證欄位型別，帳號只留白名單欄位（`id`／`platform`／`name`／`roleId`／`url`／`serviceType`）。
-- [ ] **M-1-2** 備份匯入：文件的 `filePath` 只接受 `documents/` 資料夾底下的路徑，其餘清空（清單顯示「檔案遺失」）。
+- [x] **M-1-1** 備份匯入：逐筆驗證欄位型別，帳號只留白名單欄位（`id`／`platform`／`name`／`roleId`／`url`／`serviceType`）。
+- [x] **M-1-2** 備份匯入：文件的 `filePath` 只接受 `documents/` 資料夾底下的路徑，其餘清空（清單顯示「檔案遺失」）。
       **取捨**：原本指向外部檔案的未管理文件，還原後需要重新匯入。
-- [ ] **M-1-3** 刪除文件時，`alsoDeleteFile` 只刪「`managed` 且位於 `documents/` 底下」的檔案（第二道防線）。
-- [ ] **M-4-1** 主程序驗證本地服務網址：`addAccount`、`updateLocalService`、連線測試、載入時都只接受 `http:`／`https:`。
-- [ ] **M-4-2** `addAccount` 的 `platform` 必須是已知平台或 `local`。
-- [ ] **M-3-1** `documents:openFile` 對可執行／腳本／容易夾帶指令的副檔名（`.exe .bat .ps1 .sh .lnk .jar .html .svg`、巨集文件等）拒絕開啟，畫面提示改用「在資料夾中顯示」。
-- [ ] 測試：`test/backup-sanitize.test.js`、`test/security.test.js` 的網址與副檔名案例
+- [x] **M-1-3** 刪除文件時，`alsoDeleteFile` 只刪「`managed` 且位於 `documents/` 底下」的檔案（第二道防線）。
+- [x] **M-4-1** 主程序驗證本地服務網址：`addAccount`、`updateLocalService`、連線測試、載入時都只接受 `http:`／`https:`。
+- [x] **M-4-2** `addAccount` 的 `platform` 必須是已知平台或 `local`。
+- [x] **M-3-1** `documents:openFile` 對可執行／腳本／容易夾帶指令的副檔名（`.exe .bat .ps1 .sh .lnk .jar .html .svg`、巨集文件等）拒絕開啟，畫面提示改用「在資料夾中顯示」。
+- [x] 測試：`test/backup-sanitize.test.js`、`test/security.test.js` 的網址與副檔名案例
 
 ## C. 淨化與 CSP
 

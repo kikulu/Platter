@@ -289,7 +289,15 @@
   document.getElementById('btn-open-file').addEventListener('click', async () => {
     if (!currentDocId) return;
     const result = await window.workspaceAPI.openDocumentFile(currentDocId);
-    if (!result.ok) alert(window.i18n.t('documents.missingFlag'));
+    if (!result.ok) {
+      alert(
+        window.i18n.t(
+          result.error === 'EXECUTABLE_BLOCKED'
+            ? 'documents.executableBlocked'
+            : 'documents.missingFlag'
+        )
+      );
+    }
   });
 
   document.getElementById('btn-show-in-folder').addEventListener('click', async () => {

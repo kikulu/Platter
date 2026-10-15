@@ -35,9 +35,12 @@
     }
 
     const account = await window.workspaceAPI.addAccount(platform, name, roleId, extra);
-    if (account) {
-      await window.workspaceAPI.switchAccount(account.id);
+    if (!account) {
+      // 主程序拒絕（例如網址不是 http／https）：留在視窗讓使用者修正
+      alert(window.i18n.t('account.localUrlInvalid'));
+      return;
     }
+    await window.workspaceAPI.switchAccount(account.id);
     window.workspaceAPI.closeSelf();
   });
 
