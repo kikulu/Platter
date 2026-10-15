@@ -218,6 +218,8 @@
   "documents.manualImport": "手動匯入",
   "documents.missingWarning": "⚠ 找不到原始檔案，可能已被移動或刪除",
   "documents.missingFlag": "檔案遺失",
+  "documents.openExternalConfirm": "要用系統瀏覽器開啟這個連結嗎？\n\n{url}\n\n（連結來自文件內容，請確認你信任它。）",
+  "documents.executableBlocked": "為了安全，這種類型的檔案（程式、腳本、網頁、含巨集的文件等）不會直接開啟。請改用「在資料夾中顯示」，確認來源可信後自行開啟。",
   "documents.selectPrompt": "從左側選擇一個文件，或點「匯入檔案」加入新的",
   "documents.deleteConfirm": "確定要移除「{name}」的紀錄嗎？",
   "documents.deleteFileConfirm": "這個檔案是由文件庫管理的複本，是否連同實際檔案一起刪除？（取消則只移除紀錄，保留檔案）",

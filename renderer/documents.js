@@ -272,6 +272,20 @@
     renderList();
   });
 
+  // 預覽內容（Markdown／.docx 轉出的 HTML）裡的連結：不讓預覽視窗自己導覽離開（會把
+  // 擁有 workspaceAPI 的視窗帶到外部網站，見 docs/SECURITY_AUDIT_REPORT.md H-1），
+  // 改成攔截點擊、跳確認，確認後交給系統瀏覽器；非 http(s)／mailto 的連結直接忽略。
+  previewContent.addEventListener('click', (e) => {
+    const a = e.target && e.target.closest ? e.target.closest('a') : null;
+    if (!a) return;
+    e.preventDefault();
+    const href = a.getAttribute('href') || '';
+    if (!/^(https?:|mailto:)/i.test(href)) return;
+    if (window.confirm(window.i18n.t('documents.openExternalConfirm', { url: href }))) {
+      window.workspaceAPI.openExternal(href);
+    }
+  });
+
   document.getElementById('btn-open-file').addEventListener('click', async () => {
     if (!currentDocId) return;
     const result = await window.workspaceAPI.openDocumentFile(currentDocId);

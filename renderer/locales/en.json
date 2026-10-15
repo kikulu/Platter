@@ -218,6 +218,8 @@
   "documents.manualImport": "Manually imported",
   "documents.missingWarning": "⚠ Original file not found — it may have been moved or deleted",
   "documents.missingFlag": "File missing",
+  "documents.openExternalConfirm": "Open this link in your system browser?\n\n{url}\n\n(The link comes from the document content. Make sure you trust it.)",
+  "documents.executableBlocked": "For safety, files of this type (programs, scripts, web pages, macro-enabled documents, etc.) are not opened directly. Use \"Show in folder\" instead and open it yourself once you trust the source.",
   "documents.selectPrompt": "Select a document on the left, or click \"Import File\" to add one",
   "documents.deleteConfirm": "Remove the record for \"{name}\"?",
   "documents.deleteFileConfirm": "This file is a copy managed by the document library. Delete the actual file too? (Cancel to keep the file and only remove the record)",
