@@ -1,11 +1,11 @@
 # Platter 資安檢查報告
 
-| 項目     | 內容                                                                                                          |
-| -------- | ------------------------------------------------------------------------------------------------------------- |
-| 對象版本 | `1.41.0`（commit `83df8fd`）                                                                                  |
-| 檢查日期 | 2026-10-14                                                                                                    |
+| 項目     | 內容                                                                                                                                                 |
+| -------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 對象版本 | `1.41.0`（commit `83df8fd`）                                                                                                                         |
+| 檢查日期 | 2026-10-14                                                                                                                                           |
 | 方法     | 靜態程式碼審查（Electron 設定、IPC、檔案存取、HTML 淨化、注入點）、對淨化函式實際餵入惡意輸入、機密掃描（工作樹與完整 git 歷史）、相依與 CI 設定檢視 |
-| 未涵蓋   | 沒有在真實 Electron 環境動態測試；**沒有跑 `npm audit`**（本環境連不上 npm 套件庫，回應 403）；沒有檢查已打包的安裝檔 |
+| 未涵蓋   | 沒有在真實 Electron 環境動態測試；**沒有跑 `npm audit`**（本環境連不上 npm 套件庫，回應 403）；沒有檢查已打包的安裝檔                                |
 
 ## 1. 結論摘要
 
@@ -13,11 +13,11 @@
 
 主要風險集中在三處：**特權視窗沒有任何導覽限制**、**Electron 版本已超出支援範圍**、**備份匯入完全信任檔案內容**。
 
-| 嚴重度 | 數量 | 編號                |
-| ------ | ---- | ------------------- |
-| 高     | 2    | H-1、H-2            |
-| 中     | 5    | M-1 ～ M-5          |
-| 低     | 6    | L-1 ～ L-6          |
+| 嚴重度 | 數量 | 編號       |
+| ------ | ---- | ---------- |
+| 高     | 2    | H-1、H-2   |
+| 中     | 5    | M-1 ～ M-5 |
+| 低     | 6    | L-1 ～ L-6 |
 
 「驗證方式」欄的意思：**已重現**＝我實際跑出結果；**程式碼推論**＝從程式碼讀出來的，沒有在 Electron 裡實際點過。
 
@@ -56,6 +56,7 @@
   - `documents:delete` 搭配 `alsoDeleteFile`（`:110-116`）會刪除 `managed` 文件指到的任意檔案。
 
   備份裡的帳號可帶任意 `url`（`platform: 'local'`），會被 `loadURL`，包含 `file://`。
+
 - **前提**：使用者匯入一份別人給的惡意備份，並且在文件庫裡對那筆文件做動作。
 - **建議**：匯入時對每個欄位做 schema 驗證；文件的 `filePath` 一律丟棄，只接受位於 `documentsDir()` 底下的路徑，或匯入後標成「檔案遺失」讓使用者重新指定；帳號 `url` 只接受 `http(s)`。
 
@@ -68,6 +69,7 @@
   - `<form action="https://evil.example">`、`<meta http-equiv="refresh" content="0;url=https://evil.example">`
 
   實際影響被兩件事壓低：輸入來自 mammoth 轉出的 HTML（會把屬性值跳脫並只產生有限標籤），而且 CSP 的 `script-src 'self'` 會擋掉行內腳本與 `javascript:`。但**導覽類**（`form`、`meta refresh`、`a`）不受 CSP 限制，與 H-1 疊加。另一條路徑是編輯後存回：`documents:saveDocxEdit` 收到的 `html` 來自可編輯區域，同樣依賴這個淨化器。
+
 - **建議**：改用白名單式淨化（例如 DOMPurify，或在 main process 用 HTML parser 只保留 `p/h1-6/ul/ol/li/table/tr/td/th/strong/em/u/a/img/br` 與必要屬性），不要再靠正規表達式。
 
 #### M-3：用系統預設程式開啟任意匯入檔案，包括可執行檔
@@ -90,14 +92,14 @@
 
 ### 低
 
-| 編號 | 項目                                                                                                                                                                                                                                              | 位置                                                    | 建議                                                                                           |
-| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
-| L-1  | **`.bak` 讓「刪除」不是真的刪除**：`1.41.0` 起每次寫入都保留上一版 `.bak`，刪掉的對話／知識庫／文件中繼資料會在 `.bak` 裡多留一個版本，直到下次寫入。對話庫常含敏感內容，備份匯出也會包含。                                                    | `lib/utils.js:303-324`（`writeFileAtomicSync`）         | 在設定頁說明；提供「清除備份檔」；刪除對話庫項目時額外清掉 `.bak`。                           |
-| L-2  | **IPC 沒有輸入驗證與 sender 檢查**：127 個 handler 直接信任 payload 形狀（例如 `knowledge:save` 把整個物件展開存入）。renderer 目前可信，但與 H-1 疊加時沒有第二道防線。                                                                        | `lib/ipc/*.js`                                          | 共用 `handle()` 包裝：檢查 `senderFrame.url`、用 schema（例如手寫或 zod）驗證 payload。          |
-| L-3  | **CSP 不完整**：缺 `base-uri`、`form-action`、`frame-ancestors`、`object-src`、`img-src`。缺 `img-src` 其實讓 `.docx` 內嵌的 `data:image/…` 圖片被擋掉（功能問題）；若直接加寬，要用 `img-src 'self' data:`，不要放行 `https:`。                | 全部 `renderer/*.html` 第 6-8 行                        | 補 `base-uri 'none'; form-action 'none'; object-src 'none'; img-src 'self' data:`。            |
-| L-4  | **第三方頁面的 console 輸出被收進主控台並廣播到所有視窗**：網站若在 console 印出 token 或個資，會出現在 Platter 主控台。只在記憶體（上限 `CONSOLE_BUFFER_MAX`），沒有寫進 `logs.sqlite` 或匯出。                                               | `lib/windows.js:118-135`、`lib/console.js:34-45`         | 預設不收頁面 console，改成診斷時才開。                                                         |
-| L-5  | **pdf.js 沒有關閉 `eval`**：`getDocument({ data })` 未傳 `isEvalSupported: false`。已隨附版本 `6.3.289`，新於已知 pdf.js 任意 JS 執行漏洞的修補版，所以不是現存漏洞，屬縱深防禦。                                                                 | `renderer/documents.js:465`、`:492`                     | 加 `isEvalSupported: false`。                                                                  |
-| L-6  | **CI 與供應鏈**：workflow 沒有 `permissions:` 限縮；actions 只釘版本標籤沒釘 SHA；沒有 lockfile，`npm install` 每次解析最新符合範圍的版本並執行相依套件的 install script。`pdf-lib 1.17.1` 自 2021 年起沒有新版，卻在主程序解析不可信的 PDF。 | `.github/workflows/ci.yml`、`package.json:22-25`         | `permissions: contents: read`；提交 `package-lock.json` 並用 `npm ci --ignore-scripts`；啟用 Dependabot；評估替換或隔離 `pdf-lib`。 |
+| 編號 | 項目                                                                                                                                                                                                                                          | 位置                                             | 建議                                                                                                                                |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
+| L-1  | **`.bak` 讓「刪除」不是真的刪除**：`1.41.0` 起每次寫入都保留上一版 `.bak`，刪掉的對話／知識庫／文件中繼資料會在 `.bak` 裡多留一個版本，直到下次寫入。對話庫常含敏感內容，備份匯出也會包含。                                                   | `lib/utils.js:303-324`（`writeFileAtomicSync`）  | 在設定頁說明；提供「清除備份檔」；刪除對話庫項目時額外清掉 `.bak`。                                                                 |
+| L-2  | **IPC 沒有輸入驗證與 sender 檢查**：127 個 handler 直接信任 payload 形狀（例如 `knowledge:save` 把整個物件展開存入）。renderer 目前可信，但與 H-1 疊加時沒有第二道防線。                                                                      | `lib/ipc/*.js`                                   | 共用 `handle()` 包裝：檢查 `senderFrame.url`、用 schema（例如手寫或 zod）驗證 payload。                                             |
+| L-3  | **CSP 不完整**：缺 `base-uri`、`form-action`、`frame-ancestors`、`object-src`、`img-src`。缺 `img-src` 其實讓 `.docx` 內嵌的 `data:image/…` 圖片被擋掉（功能問題）；若直接加寬，要用 `img-src 'self' data:`，不要放行 `https:`。              | 全部 `renderer/*.html` 第 6-8 行                 | 補 `base-uri 'none'; form-action 'none'; object-src 'none'; img-src 'self' data:`。                                                 |
+| L-4  | **第三方頁面的 console 輸出被收進主控台並廣播到所有視窗**：網站若在 console 印出 token 或個資，會出現在 Platter 主控台。只在記憶體（上限 `CONSOLE_BUFFER_MAX`），沒有寫進 `logs.sqlite` 或匯出。                                              | `lib/windows.js:118-135`、`lib/console.js:34-45` | 預設不收頁面 console，改成診斷時才開。                                                                                              |
+| L-5  | **pdf.js 沒有關閉 `eval`**：`getDocument({ data })` 未傳 `isEvalSupported: false`。已隨附版本 `6.3.289`，新於已知 pdf.js 任意 JS 執行漏洞的修補版，所以不是現存漏洞，屬縱深防禦。                                                             | `renderer/documents.js:465`、`:492`              | 加 `isEvalSupported: false`。                                                                                                       |
+| L-6  | **CI 與供應鏈**：workflow 沒有 `permissions:` 限縮；actions 只釘版本標籤沒釘 SHA；沒有 lockfile，`npm install` 每次解析最新符合範圍的版本並執行相依套件的 install script。`pdf-lib 1.17.1` 自 2021 年起沒有新版，卻在主程序解析不可信的 PDF。 | `.github/workflows/ci.yml`、`package.json:22-25` | `permissions: contents: read`；提交 `package-lock.json` 並用 `npm ci --ignore-scripts`；啟用 Dependabot；評估替換或隔離 `pdf-lib`。 |
 
 ### 資訊（不是弱點，但值得知道）
 
@@ -107,30 +109,30 @@
 
 ## 3. 檢查過、沒有問題的項目
 
-| 項目                  | 結果                                                                                                                                                                                    |
-| --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 視窗安全設定          | 4 處 `webPreferences`（`lib/windows.js:89`、`:293`、`:396`、`:518`）全部 `contextIsolation: true`、`nodeIntegration: false`。Electron 20 之後預設啟用沙箱，這些視窗沒有關閉沙箱。帳號頁面視圖沒有掛 preload，第三方網站拿不到 `workspaceAPI`。 |
-| 帳號隔離              | 每個帳號使用獨立的 `persist:<id>` session 分區，移除帳號時會清除分區資料（`lib/windows.js:84`、`:264`）。                                                                              |
-| CSP 腳本政策          | 10 個頁面都有 CSP，`script-src 'self'` 沒有 `unsafe-inline`，行內事件處理器與 `javascript:` 網址在 renderer 內執行不了。                                                                 |
-| Markdown 渲染         | 已重現測試：`<img onerror>` 被跳脫成文字；`javascript:`（含大小寫混用）被換成 `#`；實體編碼與引號跳出（`"onmouseover=`）的嘗試被跳脫，無法形成屬性。                                    |
-| 注入到第三方頁面的腳本 | `executeJavaScript` 只有 3 處（`lib/conversationCapture.js:37`、`:276`、`:337`），組字串時對平台名稱與 selector 都用 `JSON.stringify`，沒有未跳脫的串接。                                |
-| 子行程／eval          | 專案程式碼沒有 `child_process`、`eval`、`new Function`。                                                                                                                                |
-| 檔案路徑              | 所有檔案選擇都由主程序對話框完成（renderer 無法指定任意路徑）；OpenSpec 匯出用白名單檢查（片段只能是 `[A-Za-z0-9._-]`、不以點開頭、必須 `.md`、限制深度）並做 `startsWith(changeDir + sep)` 二次檢查（`lib/openspec.js:40-56`、`:219-225`）。 |
-| 機密                  | 工作樹與全部 git 歷史掃描 API key、私鑰、`ghp_`／`sk-`／`AKIA` 模式、`.env`／`.pem`／`.p12`，**無發現**；`.gitignore` 排除了 `node_modules/` 與 `dist/`。                                 |
-| 資料寫入              | `1.41.0` 起為暫存檔＋rename 的原子寫入，主檔損毀會讀 `.bak`（見 L-1 的隱私取捨）。                                                                                                     |
+| 項目                   | 結果                                                                                                                                                                                                                                           |
+| ---------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 視窗安全設定           | 4 處 `webPreferences`（`lib/windows.js:89`、`:293`、`:396`、`:518`）全部 `contextIsolation: true`、`nodeIntegration: false`。Electron 20 之後預設啟用沙箱，這些視窗沒有關閉沙箱。帳號頁面視圖沒有掛 preload，第三方網站拿不到 `workspaceAPI`。 |
+| 帳號隔離               | 每個帳號使用獨立的 `persist:<id>` session 分區，移除帳號時會清除分區資料（`lib/windows.js:84`、`:264`）。                                                                                                                                      |
+| CSP 腳本政策           | 10 個頁面都有 CSP，`script-src 'self'` 沒有 `unsafe-inline`，行內事件處理器與 `javascript:` 網址在 renderer 內執行不了。                                                                                                                       |
+| Markdown 渲染          | 已重現測試：`<img onerror>` 被跳脫成文字；`javascript:`（含大小寫混用）被換成 `#`；實體編碼與引號跳出（`"onmouseover=`）的嘗試被跳脫，無法形成屬性。                                                                                           |
+| 注入到第三方頁面的腳本 | `executeJavaScript` 只有 3 處（`lib/conversationCapture.js:37`、`:276`、`:337`），組字串時對平台名稱與 selector 都用 `JSON.stringify`，沒有未跳脫的串接。                                                                                      |
+| 子行程／eval           | 專案程式碼沒有 `child_process`、`eval`、`new Function`。                                                                                                                                                                                       |
+| 檔案路徑               | 所有檔案選擇都由主程序對話框完成（renderer 無法指定任意路徑）；OpenSpec 匯出用白名單檢查（片段只能是 `[A-Za-z0-9._-]`、不以點開頭、必須 `.md`、限制深度）並做 `startsWith(changeDir + sep)` 二次檢查（`lib/openspec.js:40-56`、`:219-225`）。  |
+| 機密                   | 工作樹與全部 git 歷史掃描 API key、私鑰、`ghp_`／`sk-`／`AKIA` 模式、`.env`／`.pem`／`.p12`，**無發現**；`.gitignore` 排除了 `node_modules/` 與 `dist/`。                                                                                      |
+| 資料寫入               | `1.41.0` 起為暫存檔＋rename 的原子寫入，主檔損毀會讀 `.bak`（見 L-1 的隱私取捨）。                                                                                                                                                             |
 
 ## 4. 建議的修補順序
 
-| 順序 | 內容                                                                                                   | 對應  | 預估範圍                         |
-| ---- | ------------------------------------------------------------------------------------------------------ | ----- | -------------------------------- |
-| 1    | 所有視窗加 `will-navigate` 擋下、`setWindowOpenHandler` 拒絕；預覽區攔截連結點擊改走 `openExternal`     | H-1   | 小：`lib/windows.js` 約 30 行    |
-| 2    | 備份匯入加 schema 驗證，丟棄 `filePath`、限制帳號 `url`                                                | M-1、M-4 | 中                               |
-| 3    | 可執行副檔名不直接 `openPath`                                                                           | M-3   | 小                               |
-| 4    | `.docx` 預覽改白名單淨化                                                                                | M-2   | 中（需決定用哪個函式庫）         |
-| 5    | CSP 補齊；pdf.js `isEvalSupported: false`；CI `permissions`、`npm ci`、提交 lockfile                     | L-3、L-5、L-6 | 小                               |
-| 6    | IPC 共用包裝（sender 檢查＋payload 驗證）                                                               | L-2   | 中                               |
-| 7    | 升級 Electron（單獨一版）並在升級後重做這份檢查                                                         | H-2   | 中，需要實機驗證                 |
-| 8    | 擴充功能權限提示、`allowFileAccess` 預設關閉、`.bak` 清除機制、程式碼簽章                              | M-5、L-1 | 視需求                           |
+| 順序 | 內容                                                                                                | 對應          | 預估範圍                      |
+| ---- | --------------------------------------------------------------------------------------------------- | ------------- | ----------------------------- |
+| 1    | 所有視窗加 `will-navigate` 擋下、`setWindowOpenHandler` 拒絕；預覽區攔截連結點擊改走 `openExternal` | H-1           | 小：`lib/windows.js` 約 30 行 |
+| 2    | 備份匯入加 schema 驗證，丟棄 `filePath`、限制帳號 `url`                                             | M-1、M-4      | 中                            |
+| 3    | 可執行副檔名不直接 `openPath`                                                                       | M-3           | 小                            |
+| 4    | `.docx` 預覽改白名單淨化                                                                            | M-2           | 中（需決定用哪個函式庫）      |
+| 5    | CSP 補齊；pdf.js `isEvalSupported: false`；CI `permissions`、`npm ci`、提交 lockfile                | L-3、L-5、L-6 | 小                            |
+| 6    | IPC 共用包裝（sender 檢查＋payload 驗證）                                                           | L-2           | 中                            |
+| 7    | 升級 Electron（單獨一版）並在升級後重做這份檢查                                                     | H-2           | 中，需要實機驗證              |
+| 8    | 擴充功能權限提示、`allowFileAccess` 預設關閉、`.bak` 清除機制、程式碼簽章                           | M-5、L-1      | 視需求                        |
 
 建議第 1～3 項放進 `1.41.1`（純防禦、不改功能），第 4～6 項放 `1.42.0`，Electron 升級單獨一版。
 

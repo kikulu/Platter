@@ -15,11 +15,19 @@ const { sanitizeDocxHtml, markdownToHtml } = require('../lib/utils');
 function assertNoActiveContent(out, label) {
   const lower = out.toLowerCase();
   assert.ok(!/<\s*script/.test(lower), `${label}: script`);
-  assert.ok(!/<\s*(iframe|object|embed|svg|math|form|meta|link|base|style|template|input|button)/.test(lower), `${label}: tag`);
+  assert.ok(
+    !/<\s*(iframe|object|embed|svg|math|form|meta|link|base|style|template|input|button)/.test(
+      lower
+    ),
+    `${label}: tag`
+  );
   // 屬性只在真正的標籤內才有意義；被跳脫成文字（&lt;）的內容不會執行
   const realTags = (lower.match(/<[^>]*>/g) || []).join('');
   assert.ok(!/\son[a-z]+\s*=/.test(realTags), `${label}: on* attr`);
-  assert.ok(!/javascript:/.test(realTags.replace(/\s|&#\d+;|&#x[0-9a-f]+;/g, '')), `${label}: javascript:`);
+  assert.ok(
+    !/javascript:/.test(realTags.replace(/\s|&#\d+;|&#x[0-9a-f]+;/g, '')),
+    `${label}: javascript:`
+  );
   assert.ok(!/\sstyle\s*=/.test(realTags), `${label}: style attr`);
 }
 
@@ -36,9 +44,11 @@ const BYPASSES = {
   leading_space: '<a href="  javascript:alert(1)">x</a>',
   control_char: '<a href="\u0001javascript:alert(1)">x</a>',
   vbscript: '<a href="vbscript:msgbox(1)">x</a>',
-  data_html_href: '<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">x</a>',
+  data_html_href:
+    '<a href="data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pg==">x</a>',
   svg_img: '<img src="data:image/svg+xml;base64,PHN2ZyBvbmxvYWQ9YWxlcnQoMSk+">',
-  form_action: '<form action="https://evil.example"><input name=a><button formaction="javascript:alert(1)">go</button></form>',
+  form_action:
+    '<form action="https://evil.example"><input name=a><button formaction="javascript:alert(1)">go</button></form>',
   meta_refresh: '<meta http-equiv="refresh" content="0;url=https://evil.example">',
   base_tag: '<base href="https://evil.example/">',
   link_tag: '<link rel="stylesheet" href="https://evil.example/x.css">',
@@ -73,18 +83,30 @@ test('sanitizeDocxHtml：<script> 內容整段消失，不會變成可見文字'
 });
 
 test('sanitizeDocxHtml：href 只剩 http(s)／mailto／錨點，其餘變成 #', () => {
-  assert.equal(sanitizeDocxHtml('<a href="https://example.com/a?b=1&amp;c=2">x</a>'), '<a href="https://example.com/a?b=1&amp;c=2">x</a>');
-  assert.equal(sanitizeDocxHtml('<a href="mailto:a@b.co">x</a>'), '<a href="mailto:a@b.co">x</a>');
+  assert.equal(
+    sanitizeDocxHtml('<a href="https://example.com/a?b=1&amp;c=2">x</a>'),
+    '<a href="https://example.com/a?b=1&amp;c=2">x</a>'
+  );
+  assert.equal(
+    sanitizeDocxHtml('<a href="mailto:a@b.co">x</a>'),
+    '<a href="mailto:a@b.co">x</a>'
+  );
   assert.equal(sanitizeDocxHtml('<a href="#sec1">x</a>'), '<a href="#sec1">x</a>');
   assert.equal(sanitizeDocxHtml('<a href="//evil.example/x">x</a>'), '<a href="#">x</a>');
-  assert.equal(sanitizeDocxHtml('<a href="file:///etc/passwd">x</a>'), '<a href="#">x</a>');
+  assert.equal(
+    sanitizeDocxHtml('<a href="file:///etc/passwd">x</a>'),
+    '<a href="#">x</a>'
+  );
   assert.equal(sanitizeDocxHtml('<a href="./relative.html">x</a>'), '<a href="#">x</a>');
 });
 
 test('sanitizeDocxHtml：img 只接受 data:image 的點陣圖；alt 保留；svg／其他 data: 被拿掉', () => {
   const ok = sanitizeDocxHtml('<img src="data:image/png;base64,iVBORw0KGgo=" alt="pic">');
   assert.equal(ok, '<img src="data:image/png;base64,iVBORw0KGgo=" alt="pic">');
-  assert.equal(sanitizeDocxHtml('<img src="data:image/jpeg;base64,/9j/4AAQ">'), '<img src="data:image/jpeg;base64,/9j/4AAQ">');
+  assert.equal(
+    sanitizeDocxHtml('<img src="data:image/jpeg;base64,/9j/4AAQ">'),
+    '<img src="data:image/jpeg;base64,/9j/4AAQ">'
+  );
   assert.equal(sanitizeDocxHtml('<img src="https://evil.example/track.gif">'), '<img>');
   assert.equal(sanitizeDocxHtml('<img src="data:image/svg+xml;base64,AAAA">'), '<img>');
   assert.equal(sanitizeDocxHtml('<img src="data:text/html,<b>x</b>">'), '<img>');
@@ -105,7 +127,10 @@ test('sanitizeDocxHtml：colspan 只接受數字', () => {
 
 test('sanitizeDocxHtml：不成形的 < 與文字裡的 > 被跳脫；class／id／style 不輸出', () => {
   assert.equal(sanitizeDocxHtml('a < b > c'), 'a &lt; b &gt; c');
-  assert.equal(sanitizeDocxHtml('<p class="x" id="y" style="color:red" data-a="1">t</p>'), '<p>t</p>');
+  assert.equal(
+    sanitizeDocxHtml('<p class="x" id="y" style="color:red" data-a="1">t</p>'),
+    '<p>t</p>'
+  );
 });
 
 test('sanitizeDocxHtml：非字串輸入不會丟例外', () => {
