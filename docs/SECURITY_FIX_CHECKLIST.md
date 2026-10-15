@@ -12,7 +12,7 @@
 | --- | ----------------------------- | ---------------- | ---- |
 | A   | 導覽限制與 IPC 來源檢查       | H-1、L-2         | [x]   |
 | B   | 輸入驗證                      | M-1、M-4、M-3    | [x]   |
-| C   | 淨化與 CSP                    | M-2、L-3、L-5    | [ ]  |
+| C   | 淨化與 CSP                    | M-2、L-3、L-5    | [x]   |
 | D   | 擴充功能、備份檔、頁面 console | M-5、L-1、L-4    | [ ]  |
 | E   | CI 與供應鏈                   | L-6              | [ ]  |
 | F   | Electron 升級、lockfile、簽章 | H-2、L-6、資訊項 | [-]  |
@@ -40,13 +40,13 @@
 
 ## C. 淨化與 CSP
 
-- [ ] **M-2-1** `.docx` 預覽／存回的 HTML 淨化改成**白名單**（標籤與屬性），取代正規表達式黑名單；
+- [x] **M-2-1** `.docx` 預覽／存回的 HTML 淨化改成**白名單**（標籤與屬性），取代正規表達式黑名單；
       屬性值先解碼 HTML 實體再判斷網址協定；`<form>`、`<meta>`、無引號／單引號屬性都不再通過。`lib/utils.js`
-- [ ] **M-2-2** `safeUrl()` 補強：判斷前先去掉空白與控制字元（擋 `java<TAB>script:`）、擋 `//` 與反斜線開頭的協定相對網址。
-- [ ] **L-3-1** 10 個頁面的 CSP 補上 `base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; img-src 'self' data:`
+- [x] **M-2-2** `safeUrl()` 補強：判斷前先去掉空白與控制字元（擋 `java<TAB>script:`）、擋 `//` 與反斜線開頭的協定相對網址。
+- [x] **L-3-1** 10 個頁面的 CSP 補上 `base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'; img-src 'self' data:`
       （同時讓 `.docx` 內嵌圖片能顯示；先前被 `default-src 'self'` 擋掉）。
-- [ ] **L-5-1** pdf.js `getDocument` 加 `isEvalSupported: false`（2 處）。
-- [ ] 測試：`test/docx-sanitize.test.js`（報告裡重現過的所有繞過字串）、`test/csp.test.js`（每個頁面都有必要指令）
+- [x] **L-5-1** pdf.js `getDocument` 加 `isEvalSupported: false`（2 處）。
+- [x] 測試：`test/docx-sanitize.test.js`（報告裡重現過的所有繞過字串）、`test/csp.test.js`（每個頁面都有必要指令）
 
 ## D. 擴充功能、備份檔、頁面 console
 
