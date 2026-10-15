@@ -218,6 +218,8 @@
   "documents.manualImport": "手動インポート",
   "documents.missingWarning": "⚠ 元のファイルが見つかりません — 移動または削除された可能性があります",
   "documents.missingFlag": "ファイルが見つかりません",
+  "documents.openExternalConfirm": "このリンクをシステムのブラウザーで開きますか？\n\n{url}\n\n（リンクはドキュメントの内容に含まれていたものです。信頼できるか確認してください。）",
+  "documents.executableBlocked": "安全のため、この種類のファイル（プログラム、スクリプト、Web ページ、マクロ付き文書など）は直接開きません。「フォルダーで表示」を使い、信頼できると確認してから自分で開いてください。",
   "documents.selectPrompt": "左側からドキュメントを選択するか、「ファイルをインポート」をクリックして追加してください",
   "documents.deleteConfirm": "「{name}」の記録を削除しますか？",
   "documents.deleteFileConfirm": "このファイルはドキュメントライブラリが管理しているコピーです。実際のファイルも削除しますか？（キャンセルするとファイルは残り、記録だけ削除されます）",

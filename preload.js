@@ -234,6 +234,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('documents:save', { id, name, tags, notes }),
   deleteDocument: (id, alsoDeleteFile) =>
     ipcRenderer.invoke('documents:delete', { id, alsoDeleteFile }),
+  openExternal: (url) => ipcRenderer.invoke('app:openExternal', url),
   openDocumentFile: (id) => ipcRenderer.invoke('documents:openFile', id),
   showDocumentInFolder: (id) => ipcRenderer.invoke('documents:showInFolder', id),
   getMarkdownPreview: (id) => ipcRenderer.invoke('documents:getMarkdownPreview', id),
