@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [main, master]
 
+# 只需要讀取原始碼；token 權限收到最小（資安稽核 L-6）
+permissions:
+  contents: read
+
 jobs:
   lint-and-test:
     runs-on: ubuntu-latest
@@ -29,7 +33,9 @@ jobs:
         # （GitHub Actions 的 runner 沒有顯示器，也沒辦法互動點視窗——
         # 那部分永遠要靠 npm start 手動驗證，見 ROADMAP.md）。跳過
         # electron 本身平台安裝檔的下載，避免拖慢/卡住 CI。
-        run: npm install
+        # --ignore-scripts：相依套件的 install／postinstall 腳本不執行（供應鏈風險）；
+        # 測試與 lint 只用純 JS 套件，不需要這些腳本。
+        run: npm install --ignore-scripts
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 
