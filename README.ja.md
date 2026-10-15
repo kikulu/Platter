@@ -294,6 +294,8 @@ ai-workspace-aggregator/
 │   ├── utils.js                        # Electron に依存しない純粋関数
 │   ├── workflow.js                      # プロジェクトのステージフロー：テンプレート展開、プロンプト合成（純粋関数）
 │   ├── trayHotkey.js                     # フローティングトレイのグローバルショートカット登録（1.41.0）
+│   ├── security.js                       # セキュリティ補助：ウィンドウ制限、IPC 送信元チェック、URL／パス／拡張子の判定（1.42.0）
+│   ├── backupSanitize.js                 # バックアップ取り込みデータの検証（1.42.0）
 │   ├── openspec.js                      # OpenSpec 連携：openspec/changes/ へのエクスポート、既存スペックのインポート
 │   ├── sqlite.js                        # sql.js の薄いラッパー：開く/保存/クエリ
 │   ├── pdfEditor.js                      # PDF ページ操作（回転/削除/ウォーターマーク/結合/抽出）、pdf-lib
@@ -359,6 +361,7 @@ Cookie・localStorage は**含まれません**。
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 複数の新規チャットで別々の機能を並行開発し、あとで統合するためのプロンプト（汎用テンプレート＋機能別） |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 最適化・改修の提案（信頼性／セキュリティ、ドキュメント保守、製品方向、リリース計画案） |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | セキュリティ監査レポート（発見事項、重大度、修正の順序） |
+| [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | セキュリティ修正チェックリスト（1.42.0、項目ごとの状態） |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | ソースコードを添付せず、ドキュメントのみで新しい会話を始める際に使うプロンプトテンプレート                                          |
 
 ## コントリビューション

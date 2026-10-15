@@ -1210,6 +1210,7 @@ SD WebUI／ComfyUI 範例網址提示），確認前檢查網址格式（必須�
      清掉、把使用者的帳號登入狀態洗掉）。用來處理啟動時終端機印出
      `disk_cache` / `quota_database` 相關錯誤，或帳號畫面出現不明載入
      異常這類 Chromium 磁碟快取髒掉的疑難雜症（常見成因見第 9.6 節）。
+   - 「清除備份檔（.bak）」按鈕（1.42.0）與「收集第三方頁面的 console 輸出」核取方塊（預設關閉），見第 9.9 節。
 10. **關於**：顯示目前版本號（`Platter v{version}`，`version` 是即時透過
     `app:getVersion` IPC 讀 `app.getVersion()`，不是寫死在畫面上的字串，
     打包時 `package.json` 的 `version` 改了這裡會自動跟著變）。主視窗側邊
@@ -1317,6 +1318,43 @@ Enter 跳到選中的項目，Esc 或點背景關閉。比對範圍跟各自視�
   （任務結果跳「任務」分頁、issue 結果跳「議題」分頁），不會標記出
   清單裡具體哪一列——這是刻意的簡化，多數專案的任務/issue 清單不會長
   到需要精準定位單一列。
+
+### 9.9 資安防護（1.42.0）
+
+依 `docs/SECURITY_AUDIT_REPORT.md` 修補，逐項狀態見 `docs/SECURITY_FIX_CHECKLIST.md`。共用的判斷邏輯集中在
+`lib/security.js`（刻意不 `require('electron')`，需要 webContents／ipcMain 的函式由呼叫端傳入，所以能用假物件單元測試）。
+
+- **視窗加固**：自己的視窗（主視窗、子視窗、托盤，有 preload 的那種）呼叫 `hardenAppWebContents()`：
+  `will-navigate`／`will-redirect` 只放行 `renderer/` 底下的 `file://` 頁面，`setWindowOpenHandler` 一律 deny。
+  帳號視圖（第三方網站，沒有 preload）呼叫 `hardenAccountWebContents()`：只擋 `file:` 等非網頁協定，
+  http(s) 導覽與彈窗照舊放行（OAuth 彈窗登入需要）。
+- **IPC 來源檢查**：`registerIpcHandlers()` 用 `guardIpc()` 包住 `ipcMain`，每個 handler 執行前檢查
+  `event.senderFrame.url` 是 `renderer/` 底下的頁面，否則丟 `UNTRUSTED_SENDER` 並寫入錯誤日誌。
+  新增 handler 時照常用 `ipcMain.handle`，不需要自己檢查。
+- **外部連結**：文件庫預覽內的連結攔截點擊，只接受 `http(s):`／`mailto:`，確認後呼叫
+  `workspaceAPI.openExternal(url)`（IPC `app:openExternal`，主程序用 `isSafeExternalUrl()` 再驗一次）。
+- **備份匯入**（`lib/backupSanitize.js`）：`settings:importBackup` 先確認頂層是物件，再逐筆驗證——
+  帳號只留 `id／platform／name／roleId／url／serviceType`（未知平台、壞 `id` 丟棄；本地服務網址須為 http(s)）；
+  文件的 `filePath` 只接受 `documents/` 底下的路徑，其餘清空並取消 `managed`；其餘集合只留有字串 `id` 的物件。
+  回傳 `{ ok, clearedDocPaths }`。
+- **文件檔案操作**：`documents:delete` 的 `alsoDeleteFile` 只刪「`managed` 且位於 `documents/` 底下」的檔案；
+  `documents:openFile` 對 `isExecutableFile()` 為真的副檔名（可執行檔、腳本、`.html`／`.svg`、巨集文件）回傳
+  `{ ok: false, error: 'EXECUTABLE_BLOCKED' }`，畫面提示改用「在資料夾中顯示」。
+- **本地服務網址**：`normalizeServiceUrl()` 只接受 http(s)；`addAccount`（另限制 `platform` 必須是已知平台或
+  `local`）、`updateLocalService`、`testLocalServiceConnection`、載入帳號時都在主程序驗證。
+- **`.docx` 預覽淨化**：`sanitizeDocxHtml()`（`lib/utils.js`）是標籤／屬性白名單 tokenizer，不是正規表達式黑名單：
+  允許的標籤與屬性見檔內 `DOCX_ALLOWED_TAGS`／`DOCX_ALLOWED_ATTRS`；`script／style／iframe／svg／math／template`
+  等連內容一起丟棄；屬性值先解碼 HTML 實體、去空白與控制字元再判斷協定；`href` 只收 http(s)／mailto／`#`，
+  `img src` 只收 `data:image/` 的點陣圖（不含 svg）。`safeUrl()`（Markdown 連結）同樣先去控制字元並擋 `//`、`\` 開頭。
+- **CSP**：10 個頁面一致為 `default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;
+  base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'`，`test/csp.test.js` 逐頁檢查。
+  pdf.js 的 `getDocument` 一律帶 `isEvalSupported: false`。
+- **擴充功能**：`settings:addExtension` 先用 `summarizeExtensionPermissions()`／`formatExtensionPermissionSummary()`
+  顯示權限與可存取網站（`<all_urls>` 之類會警告），使用者確認才新增；`loadExtension` 一律 `allowFileAccess: false`。
+- **`.bak` 與 console**：`settings:clearBackupFiles` 清除資料夾第一層所有 `*.json.bak`；`conversations:delete`
+  後立刻清掉 `conversations.json.bak`；第三方頁面的 console 輸出只有 `appState.ui.capturePageConsole === true`
+  才會進主控台（IPC `settings:getPageConsole`／`settings:setPageConsole`，預設關閉）。
+- **刻意沒做**：Electron 升級、lockfile、Actions 釘 SHA、替換 `pdf-lib`、程式碼簽章（見 ROADMAP）。
 
 ---
 
@@ -1580,8 +1618,10 @@ renderer/conversation.html, conversation.js, conversation.css # 對話庫（新�
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
 renderer/tray.html, tray.js, tray.css                # 右下角浮動小托盤（第 9.0 節）
 lib/trayHotkey.js                                    # 托盤全域快捷鍵註冊（第 9.0 節，1.41.0）
+lib/security.js                                      # 資安防護：視窗加固、IPC 來源檢查、網址／路徑／副檔名判斷（第 9.9 節，1.42.0）
+lib/backupSanitize.js                                # 備份匯入資料驗證（第 9.9 節，1.42.0）
 scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
-test/*.test.js                                       # 單元測試（node --test，14 個檔案）
+test/*.test.js                                       # 單元測試（node --test，25 個檔案）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js
