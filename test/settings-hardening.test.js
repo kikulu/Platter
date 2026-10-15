@@ -64,7 +64,12 @@ function makeExtension(manifest) {
 }
 
 test('settings:addExtension：先顯示權限摘要，使用者取消就不新增', async () => {
-  ui.folder = makeExtension({ name: 'Greedy', version: '1', permissions: ['tabs'], host_permissions: ['<all_urls>'] });
+  ui.folder = makeExtension({
+    name: 'Greedy',
+    version: '1',
+    permissions: ['tabs'],
+    host_permissions: ['<all_urls>'],
+  });
   ui.response = 1; // 取消
   ui.boxes.length = 0;
   const before = state.appState.extensions.length;
@@ -78,7 +83,12 @@ test('settings:addExtension：先顯示權限摘要，使用者取消就不新�
 });
 
 test('settings:addExtension：使用者確認後才新增；窄權限不顯示警告樣式', async () => {
-  ui.folder = makeExtension({ name: 'Narrow', version: '2', permissions: ['storage'], host_permissions: ['https://example.com/*'] });
+  ui.folder = makeExtension({
+    name: 'Narrow',
+    version: '2',
+    permissions: ['storage'],
+    host_permissions: ['https://example.com/*'],
+  });
   ui.response = 0;
   ui.boxes.length = 0;
   const before = state.appState.extensions.length;
@@ -98,7 +108,10 @@ test('settings:clearBackupFiles：只刪資料資料夾第一層的 *.json.bak',
   const result = await invoke('settings:clearBackupFiles');
   assert.equal(result.ok, true);
   assert.ok(result.count >= 2); // 先前的存檔也可能已留下 .bak
-  assert.deepEqual(fs.readdirSync(dir).filter((n) => n.endsWith('.bak')), []);
+  assert.deepEqual(
+    fs.readdirSync(dir).filter((n) => n.endsWith('.bak')),
+    []
+  );
   assert.equal(fs.existsSync(path.join(dir, 'conversations.json.bak')), false);
   assert.equal(fs.existsSync(path.join(dir, 'keep.json')), true);
 });
@@ -107,7 +120,11 @@ test('settings:getPageConsole／setPageConsole：預設關閉，只有 true 才�
   assert.equal(await invoke('settings:getPageConsole'), false);
   assert.equal(await invoke('settings:setPageConsole', true), true);
   assert.equal(await invoke('settings:getPageConsole'), true);
-  assert.equal(await invoke('settings:setPageConsole', 'yes'), false, '非布林 true 一律視為關閉');
+  assert.equal(
+    await invoke('settings:setPageConsole', 'yes'),
+    false,
+    '非布林 true 一律視為關閉'
+  );
   assert.equal(await invoke('settings:getPageConsole'), false);
 });
 

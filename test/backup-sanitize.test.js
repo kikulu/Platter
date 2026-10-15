@@ -33,7 +33,12 @@ test('sanitizeBackupAccount：一般帳號只留白名單欄位，多餘欄位�
     url: 'file:///etc/passwd', // 一般平台不該有 url
     evil: { a: 1 },
   });
-  assert.deepEqual(a, { id: 'acc_1_x', platform: 'claude', name: 'Work', roleId: 'role_1' });
+  assert.deepEqual(a, {
+    id: 'acc_1_x',
+    platform: 'claude',
+    name: 'Work',
+    roleId: 'role_1',
+  });
 });
 
 test('sanitizeBackupAccount：未知平台、壞 id、非物件一律回傳 null', () => {
@@ -78,18 +83,28 @@ test('sanitizeBackupDocument：文件庫資料夾底下的路徑保留，其餘�
   assert.equal(inside.doc.managed, true);
   assert.equal(inside.pathCleared, false);
 
-  ['/etc/passwd', path.join(DOCS, '..', 'secret.pdf'), 'C:\\Windows\\system32\\cmd.exe', '../../x', DOCS].forEach(
-    (p) => {
-      const r = sanitizeBackupDocument({ id: 'd2', name: 'x', filePath: p, managed: true }, DOCS);
-      assert.equal(r.doc.filePath, '', p);
-      assert.equal(r.doc.managed, false, p);
-      assert.equal(r.pathCleared, true, p);
-    }
-  );
+  [
+    '/etc/passwd',
+    path.join(DOCS, '..', 'secret.pdf'),
+    'C:\\Windows\\system32\\cmd.exe',
+    '../../x',
+    DOCS,
+  ].forEach((p) => {
+    const r = sanitizeBackupDocument(
+      { id: 'd2', name: 'x', filePath: p, managed: true },
+      DOCS
+    );
+    assert.equal(r.doc.filePath, '', p);
+    assert.equal(r.doc.managed, false, p);
+    assert.equal(r.pathCleared, true, p);
+  });
 });
 
 test('sanitizeBackupDocument：欄位型別修正，壞 id 回傳 null', () => {
-  const r = sanitizeBackupDocument({ id: 'd3', name: 5, tags: ['a', 1, null], notes: {}, filePath: 7 }, DOCS);
+  const r = sanitizeBackupDocument(
+    { id: 'd3', name: 5, tags: ['a', 1, null], notes: {}, filePath: 7 },
+    DOCS
+  );
   assert.equal(r.doc.name, '');
   assert.deepEqual(r.doc.tags, ['a']);
   assert.equal(r.doc.notes, '');
@@ -101,7 +116,16 @@ test('sanitizeBackupDocument：欄位型別修正，壞 id 回傳 null', () => {
 
 test('validRecords：只留有字串 id 的物件', () => {
   assert.deepEqual(
-    validRecords([{ id: 'a' }, { id: '' }, { id: 5 }, null, 'x', [], { name: 'no id' }, { id: 'b', x: 1 }]),
+    validRecords([
+      { id: 'a' },
+      { id: '' },
+      { id: 5 },
+      null,
+      'x',
+      [],
+      { name: 'no id' },
+      { id: 'b', x: 1 },
+    ]),
     [{ id: 'a' }, { id: 'b', x: 1 }]
   );
   assert.deepEqual(validRecords(undefined), []);
@@ -148,7 +172,11 @@ const { registerAccountsIpc } = require('../lib/ipc/accounts');
 const stores = require('../lib/stores');
 const state = require('../lib/state');
 const { documentsDir } = require('../lib/dataDir');
-const { addAccount, testLocalServiceConnection, updateLocalService } = require('../lib/windows');
+const {
+  addAccount,
+  testLocalServiceConnection,
+  updateLocalService,
+} = require('../lib/windows');
 Module._load = originalLoad;
 
 const handlers = new Map();
@@ -171,15 +199,35 @@ test('settings:importBackup：惡意備份——外部路徑被清空、file:// 
       { id: 'good_1', platform: 'claude', name: 'Good' },
       { id: 'evil_platform', platform: 'evil', name: 'x' },
       { id: '../escape', platform: 'claude', name: 'x' },
-      { id: 'evil_local', platform: 'local', name: 'L', url: 'file:///etc/passwd', serviceType: 'custom' },
-      { id: 'web_local', platform: 'local', name: 'W', url: 'http://localhost:1234', serviceType: 'llm' },
+      {
+        id: 'evil_local',
+        platform: 'local',
+        name: 'L',
+        url: 'file:///etc/passwd',
+        serviceType: 'custom',
+      },
+      {
+        id: 'web_local',
+        platform: 'local',
+        name: 'W',
+        url: 'http://localhost:1234',
+        serviceType: 'llm',
+      },
       'not an object',
     ],
-    knowledge: { items: [{ id: 'kb_ok', title: 't', content: 'c' }, { title: 'no id' }, null], groups: 'nope' },
+    knowledge: {
+      items: [{ id: 'kb_ok', title: 't', content: 'c' }, { title: 'no id' }, null],
+      groups: 'nope',
+    },
     projects: [{ id: 'p_ok', name: 'P' }, 42],
     documents: [
       { id: 'doc_evil_1', name: 'passwd.pdf', filePath: '/etc/passwd', managed: true },
-      { id: 'doc_evil_2', name: 'cmd', filePath: 'C:\\Windows\\system32\\cmd.exe', managed: false },
+      {
+        id: 'doc_evil_2',
+        name: 'cmd',
+        filePath: 'C:\\Windows\\system32\\cmd.exe',
+        managed: false,
+      },
       { id: 'doc_ok', name: 'ok.pdf', filePath: insidePath, managed: true },
     ],
     conversations: [{ id: 'conv_ok', title: 'c', content: 'x' }, { content: 'no id' }],
@@ -195,12 +243,30 @@ test('settings:importBackup：惡意備份——外部路徑被清空、file:// 
   const ids = state.appState.accounts.map((a) => a.id);
   assert.deepEqual(ids.sort(), ['evil_local', 'good_1', 'web_local']);
   assert.equal(state.appState.accounts.find((a) => a.id === 'evil_local').url, '');
-  assert.equal(state.appState.accounts.find((a) => a.id === 'web_local').url, 'http://localhost:1234');
+  assert.equal(
+    state.appState.accounts.find((a) => a.id === 'web_local').url,
+    'http://localhost:1234'
+  );
 
-  assert.deepEqual(stores.loadKnowledgeBase().items.map((i) => i.id).filter((i) => i === 'kb_ok'), ['kb_ok']);
-  assert.equal(stores.loadKnowledgeBase().items.some((i) => !i.id), false);
-  assert.deepEqual(stores.loadProjects().map((p) => p.id), ['p_ok']);
-  assert.deepEqual(stores.loadConversations().map((c) => c.id), ['conv_ok']);
+  assert.deepEqual(
+    stores
+      .loadKnowledgeBase()
+      .items.map((i) => i.id)
+      .filter((i) => i === 'kb_ok'),
+    ['kb_ok']
+  );
+  assert.equal(
+    stores.loadKnowledgeBase().items.some((i) => !i.id),
+    false
+  );
+  assert.deepEqual(
+    stores.loadProjects().map((p) => p.id),
+    ['p_ok']
+  );
+  assert.deepEqual(
+    stores.loadConversations().map((c) => c.id),
+    ['conv_ok']
+  );
 
   const docs = stores.loadDocuments();
   const byId = Object.fromEntries(docs.map((d) => [d.id, d]));
@@ -215,7 +281,10 @@ test('settings:importBackup：整份不是物件（陣列、字串）直接當�
   const f = path.join(tmpWork, 'array-backup.json');
   fs.writeFileSync(f, JSON.stringify([1, 2, 3]));
   ui.openPaths = [f];
-  assert.deepEqual(await invoke('settings:importBackup'), { ok: false, error: 'INVALID_FILE' });
+  assert.deepEqual(await invoke('settings:importBackup'), {
+    ok: false,
+    error: 'INVALID_FILE',
+  });
 });
 
 test('documents:openFile：可執行檔／腳本／網頁／巨集文件被擋，不呼叫 shell.openPath；一般文件照常開', async () => {
@@ -233,8 +302,14 @@ test('documents:openFile：可執行檔／腳本／網頁／巨集文件被擋�
   stores.saveDocuments([...stores.loadDocuments(), ...docs]);
   ui.opened.length = 0;
 
-  assert.deepEqual(await invoke('documents:openFile', 'o_exe'), { ok: false, error: 'EXECUTABLE_BLOCKED' });
-  assert.deepEqual(await invoke('documents:openFile', 'o_html'), { ok: false, error: 'EXECUTABLE_BLOCKED' });
+  assert.deepEqual(await invoke('documents:openFile', 'o_exe'), {
+    ok: false,
+    error: 'EXECUTABLE_BLOCKED',
+  });
+  assert.deepEqual(await invoke('documents:openFile', 'o_html'), {
+    ok: false,
+    error: 'EXECUTABLE_BLOCKED',
+  });
   assert.deepEqual(ui.opened, []);
   assert.deepEqual(await invoke('documents:openFile', 'o_pdf'), { ok: true });
   assert.deepEqual(ui.opened, [docs[2].filePath]);
@@ -265,17 +340,42 @@ test('addAccount／updateLocalService／testLocalServiceConnection：主程序�
   assert.equal(addAccount('local', 'x', null, {}), null);
 
   const before = state.appState.accounts.length;
-  assert.equal(await invoke('accounts:add', { platform: 'local', name: 'x', extra: { url: 'file:///x' } }), null);
+  assert.equal(
+    await invoke('accounts:add', {
+      platform: 'local',
+      name: 'x',
+      extra: { url: 'file:///x' },
+    }),
+    null
+  );
   assert.equal(state.appState.accounts.length, before);
 
   // 合法的新增（switchAccount 需要真的視窗，這裡只驗證驗證邏輯：直接改帳號清單後測更新）
-  state.appState.accounts.push({ id: 'ls_1', platform: 'local', name: 'L', url: 'http://localhost:1', serviceType: 'llm' });
+  state.appState.accounts.push({
+    id: 'ls_1',
+    platform: 'local',
+    name: 'L',
+    url: 'http://localhost:1',
+    serviceType: 'llm',
+  });
   state.accountViews.set('ls_1', { view: null, platform: 'local', name: 'L' });
-  const updated = updateLocalService('ls_1', { url: 'file:///etc/passwd', name: 'Renamed' });
+  const updated = updateLocalService('ls_1', {
+    url: 'file:///etc/passwd',
+    name: 'Renamed',
+  });
   assert.equal(updated.url, 'http://localhost:1', '不合法網址被忽略');
   assert.equal(updated.name, 'Renamed', '其他欄位照常更新');
-  assert.equal(updateLocalService('ls_1', { url: 'https://example.com' }).url, 'https://example.com');
+  assert.equal(
+    updateLocalService('ls_1', { url: 'https://example.com' }).url,
+    'https://example.com'
+  );
 
-  assert.deepEqual(await testLocalServiceConnection('file:///etc/passwd'), { ok: false, error: 'INVALID_URL' });
-  assert.deepEqual(await testLocalServiceConnection('javascript:alert(1)'), { ok: false, error: 'INVALID_URL' });
+  assert.deepEqual(await testLocalServiceConnection('file:///etc/passwd'), {
+    ok: false,
+    error: 'INVALID_URL',
+  });
+  assert.deepEqual(await testLocalServiceConnection('javascript:alert(1)'), {
+    ok: false,
+    error: 'INVALID_URL',
+  });
 });
