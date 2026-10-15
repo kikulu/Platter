@@ -294,6 +294,8 @@ ai-workspace-aggregator/
 │   ├── utils.js                        # Pure functions with no Electron dependency
 │   ├── workflow.js                      # Project staged workflow: template expansion, prompt composition (pure functions)
 │   ├── trayHotkey.js                     # Floating-tray global hotkey registration (1.41.0)
+│   ├── security.js                       # Security helpers: window hardening, IPC sender check, URL/path/extension checks (1.42.0)
+│   ├── backupSanitize.js                 # Backup-import data validation (1.42.0)
 │   ├── openspec.js                      # OpenSpec integration: export to openspec/changes/, import existing specs
 │   ├── sqlite.js                        # Thin wrapper around sql.js: open/save/query
 │   ├── pdfEditor.js                      # PDF page operations (rotate/delete/watermark/merge/extract), pdf-lib
@@ -359,6 +361,7 @@ actual login cookies/localStorage.
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | Prompts for developing different features in parallel new chats, then merging (generic template + per-feature versions) |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | Optimization and redesign proposals (reliability/security, docs upkeep, product direction, suggested release cadence) |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | Security audit report (findings, severity, remediation order) |
+| [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | Security fix checklist (1.42.0, per-item status) |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | Prompt template for starting a new chat with only the docs attached, no source code                                               |
 
 ## Contributing

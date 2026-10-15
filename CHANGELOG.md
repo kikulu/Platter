@@ -1,5 +1,54 @@
 # Changelog
 
+## [1.42.0]
+
+資安修補版：依 [`docs/SECURITY_AUDIT_REPORT.md`](./docs/SECURITY_AUDIT_REPORT.md)（對象 `1.41.0`）的發現逐項修補，
+逐項紀錄與驗證狀態見 [`docs/SECURITY_FIX_CHECKLIST.md`](./docs/SECURITY_FIX_CHECKLIST.md)。沒有新增使用者功能。
+
+### 修補
+
+- **導覽與開窗限制（H-1）**：主視窗、各子視窗、托盤只允許停在 `renderer/` 底下的頁面，其餘導覽與
+  `window.open` 一律拒絕；帳號視圖擋掉 `file:` 等非網頁協定（http(s) 照舊，OAuth 彈窗不受影響）。
+  文件庫預覽內的連結改為攔截點擊，只接受 `http(s):`／`mailto:`，確認後交給系統瀏覽器
+  （新增 IPC `app:openExternal`，主程序再驗一次）。
+- **IPC 來源檢查（L-2）**：所有 IPC handler 統一檢查 `event.senderFrame.url`，不是自己的頁面就拒絕並寫入錯誤日誌。
+- **備份匯入驗證（M-1）**：逐筆驗證欄位型別；帳號只留白名單欄位；文件的 `filePath` 只接受 `documents/`
+  底下的路徑，其餘清空（**取捨**：指向外部檔案的未管理文件，還原後需重新匯入）。刪除文件時
+  `alsoDeleteFile` 只刪「已管理且位於 `documents/` 底下」的檔案。
+- **本地服務網址（M-4）**：主程序驗證，只接受 `http(s):`（新增、更新、連線測試皆是）；`addAccount`
+  只接受已知平台與 `local`。
+- **可執行檔（M-3）**：`documents:openFile` 對 `.exe .bat .ps1 .sh .lnk .jar .html .svg`、巨集文件等副檔名拒絕開啟，
+  提示改用「在資料夾中顯示」。
+- **`.docx` 預覽淨化（M-2）**：改為標籤與屬性白名單（tokenizer），屬性值先解碼 HTML 實體再判斷網址協定；
+  `<form>`、`<meta>`、`<svg>`、無引號／單引號屬性、`java&#9;script:` 等繞過都不再通過。`safeUrl()` 補強：
+  先去控制字元，擋 `//` 與反斜線開頭的網址。
+- **CSP（L-3）**：10 個頁面補上 `base-uri 'none'; form-action 'none'; object-src 'none'; frame-src 'none'`，
+  `img-src` 改為 `'self' data:`（`.docx` 內嵌圖片因此能顯示）。pdf.js 的 `getDocument` 加 `isEvalSupported: false`（L-5）。
+- **擴充功能（M-5）**：新增前顯示 `manifest.json` 宣告的權限並請使用者確認（可存取所有網站會警告）；
+  `loadExtension` 改為 `allowFileAccess: false`（**取捨**：需要讀本機檔案的擴充功能會失效）。
+- **備份檔與 console（L-1、L-4）**：「設定 → 疑難排解」新增「清除備份檔（.bak）」；刪除對話庫項目後立刻清掉
+  `conversations.json.bak`；第三方頁面的 console 輸出預設不再收進主控台，設定裡新增開關。
+- **CI（L-6）**：workflow 加 `permissions: contents: read`、`npm install --ignore-scripts`；新增 `.github/dependabot.yml`。
+
+### 新增檔案
+
+- `lib/security.js`（不依賴 Electron：網址／路徑／副檔名判斷、視窗加固、`guardIpc`、擴充功能權限摘要、`.bak` 清除）、
+  `lib/backupSanitize.js`（備份匯入資料驗證）。
+- 測試：`test/security.test.js`、`test/backup-sanitize.test.js`、`test/docx-sanitize.test.js`、`test/csp.test.js`、
+  `test/settings-hardening.test.js`。三語系各新增 8 個鍵（共 534 個）。
+
+### 這一版刻意沒有處理
+
+Electron 30 升級（H-2）、`package-lock.json`、GitHub Actions 釘 commit SHA、替換 `pdf-lib`、程式碼簽章：
+都需要網路或真實環境，原因與後續安排見 `docs/SECURITY_FIX_CHECKLIST.md` 的 F 組與 `ROADMAP.md`。
+
+### 已知限制
+
+- 沒有在真實 Electron 視窗環境驗證；清單末尾的「人工驗證」項目（連結攔截、子視窗與 IPC 沒被誤擋、OAuth
+  彈窗、`.docx` 圖片顯示、PDF 預覽、新增的設定項目）仍待逐項勾選。
+- 本版開發環境無法安裝依賴，`npm audit` 與完整的 `npm run lint` 沒有跑；ESLint 以等效的暫時設定檢查過，
+  Prettier 只格式化本次新增與修改的檔案（其餘舊檔的格式落差本來就存在）。
+
 ## [1.41.0]
 
 合併 `docs/parallel-dev/` 的四項功能（A～D），加上資料保護與文件一致性修補。

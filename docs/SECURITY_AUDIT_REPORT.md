@@ -7,6 +7,9 @@
 | 方法     | 靜態程式碼審查（Electron 設定、IPC、檔案存取、HTML 淨化、注入點）、對淨化函式實際餵入惡意輸入、機密掃描（工作樹與完整 git 歷史）、相依與 CI 設定檢視 |
 | 未涵蓋   | 沒有在真實 Electron 環境動態測試；**沒有跑 `npm audit`**（本環境連不上 npm 套件庫，回應 403）；沒有檢查已打包的安裝檔                                |
 
+> **修補狀態（`1.42.0`）**：除 H-2（Electron 升級）與 L-6 中需要網路的部分外，其餘發現都已修補，
+> 逐項狀態與刻意不修的原因見 [`SECURITY_FIX_CHECKLIST.md`](./SECURITY_FIX_CHECKLIST.md)。本報告內容維持 `1.41.0` 當時的檢查結果，不隨修補改寫。
+
 ## 1. 結論摘要
 
 整體基礎做得不差：視窗都開了 `contextIsolation`、關了 `nodeIntegration`，每個頁面都有不含 `unsafe-inline` 腳本的 CSP，帳號之間用獨立 session 分區，Markdown 渲染會先跳脫再組標籤，OpenSpec 匯出有嚴格的路徑白名單，工作樹與 git 歷史裡沒有找到金鑰。
