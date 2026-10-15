@@ -13,7 +13,7 @@
 | A   | 導覽限制與 IPC 來源檢查       | H-1、L-2         | [x]   |
 | B   | 輸入驗證                      | M-1、M-4、M-3    | [x]   |
 | C   | 淨化與 CSP                    | M-2、L-3、L-5    | [x]   |
-| D   | 擴充功能、備份檔、頁面 console | M-5、L-1、L-4    | [ ]  |
+| D   | 擴充功能、備份檔、頁面 console | M-5、L-1、L-4    | [x]   |
 | E   | CI 與供應鏈                   | L-6              | [ ]  |
 | F   | Electron 升級、lockfile、簽章 | H-2、L-6、資訊項 | [-]  |
 
@@ -50,13 +50,13 @@
 
 ## D. 擴充功能、備份檔、頁面 console
 
-- [ ] **M-5-1** 新增擴充功能前顯示 `manifest.json` 的 `permissions`／`host_permissions`，使用者確認才安裝；範圍過大（`<all_urls>`）加註警告。
-- [ ] **M-5-2** `loadExtension` 的 `allowFileAccess` 改為 `false`（3 處）。
+- [x] **M-5-1** 新增擴充功能前顯示 `manifest.json` 的 `permissions`／`host_permissions`，使用者確認才安裝；範圍過大（`<all_urls>`）加註警告。
+- [x] **M-5-2** `loadExtension` 的 `allowFileAccess` 改為 `false`（3 處）。
       **取捨**：需要讀本機檔案的擴充功能會失效。
-- [ ] **L-1-1** 「設定 → 疑難排解」新增「清除備份檔（.bak）」按鈕。
-- [ ] **L-1-2** 刪除對話庫項目後立刻清掉 `conversations.json.bak`。
-- [ ] **L-4-1** 第三方頁面的 console 輸出預設**不再**收進主控台；「設定 → 疑難排解」新增開關，診斷擷取問題時再打開。
-- [ ] 測試：`test/security.test.js`（權限摘要、`.bak` 清除）
+- [x] **L-1-1** 「設定 → 疑難排解」新增「清除備份檔（.bak）」按鈕。
+- [x] **L-1-2** 刪除對話庫項目後立刻清掉 `conversations.json.bak`。
+- [x] **L-4-1** 第三方頁面的 console 輸出預設**不再**收進主控台；「設定 → 疑難排解」新增開關，診斷擷取問題時再打開。
+- [x] 測試：`test/security.test.js`（權限摘要、`.bak` 清除）
 
 ## E. CI 與供應鏈
 

@@ -396,6 +396,21 @@
     alert(window.i18n.t('settings.troubleshoot.clearCacheDone'));
   });
 
+  document.getElementById('btn-clear-backups').addEventListener('click', async () => {
+    const ok = window.confirm(window.i18n.t('settings.troubleshoot.clearBackupsConfirm'));
+    if (!ok) return;
+    const result = await window.workspaceAPI.clearBackupFiles();
+    alert(window.i18n.t('settings.troubleshoot.clearBackupsDone', { count: result.count }));
+  });
+
+  const pageConsoleCheckbox = document.getElementById('chk-page-console');
+  window.workspaceAPI.getPageConsole().then((on) => {
+    pageConsoleCheckbox.checked = on === true;
+  });
+  pageConsoleCheckbox.addEventListener('change', () => {
+    window.workspaceAPI.setPageConsole(pageConsoleCheckbox.checked);
+  });
+
   // --- 帳號角色機制 ---
   const ROLE_COLOR_PALETTE = [
     '#4f8cff',
