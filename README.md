@@ -316,6 +316,7 @@ extensions.json         # 已安裝的擴充功能清單
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板                                                                      |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 多個新對話平行開發不同功能、再合併的提示詞（通用範本＋各功能版本）                                    |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 優化與改版建議（可靠性／安全、文件維護、產品方向、建議版本節奏） |
+| [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | 資安檢查報告（發現、嚴重度、修補順序） |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | 開新對話只附文件、不附原始碼時用的提示詞模板                                                          |
 
 ## 貢獻

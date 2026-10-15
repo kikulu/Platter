@@ -61,17 +61,12 @@
 
 這一項成本低、直接消除本次發現的整類問題，建議最先做。
 
-#### 2.4 內嵌第三方網站的安全加固（待確認）
+#### 2.4 內嵌第三方網站的安全加固
 
-依 grep：`lib/windows.js` 的 `webPreferences` 有 `contextIsolation: true`、`nodeIntegration: false`，
-各 HTML 也都有 CSP，這部分良好。但沒有看到 `sandbox: true`、`setWindowOpenHandler`、
-`will-navigate` 限制或 `setPermissionRequestHandler`。帳號視圖載入的是第三方網站，建議：
-
-- 帳號視圖啟用 `sandbox: true`（需確認 preload 是否需要調整）。
-- 以 `setWindowOpenHandler` 把外部連結交給系統瀏覽器，避免第三方頁面在 App 內開出任意視窗。
-- 以 permission handler 預設拒絕攝影機／麥克風／通知以外未預期的權限，必要時再逐站開放。
-- 取捨：登入流程（OAuth 彈窗、Google 登入）可能依賴開新視窗，需逐平台實測，不要一次全擋。
-- 與核心原則的關係：這些是「收緊」，不涉及繞過網站保護機制。
+**已另做完整資安檢查，見 [`SECURITY_AUDIT_REPORT.md`](./SECURITY_AUDIT_REPORT.md)。** 先前這一節寫「沒有看到
+`sandbox: true`」並不準確：Electron 20 之後渲染程序預設就啟用沙箱，這些視窗沒有關掉它，帳號視圖也沒有掛 preload。
+真正的缺口是**所有視窗都沒有 `will-navigate`／`setWindowOpenHandler` 限制**（報告 H-1），以及備份匯入不驗證內容（M-1）。
+修補順序與範圍以報告 §4 為準。
 
 #### 2.5 Electron 升級
 

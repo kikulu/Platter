@@ -358,6 +358,7 @@ actual login cookies/localStorage.
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature                                                                       |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | Prompts for developing different features in parallel new chats, then merging (generic template + per-feature versions) |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | Optimization and redesign proposals (reliability/security, docs upkeep, product direction, suggested release cadence) |
+| [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | Security audit report (findings, severity, remediation order) |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | Prompt template for starting a new chat with only the docs attached, no source code                                               |
 
 ## Contributing
