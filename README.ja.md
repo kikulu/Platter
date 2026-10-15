@@ -358,6 +358,7 @@ Cookie・localStorage は**含まれません**。
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 既存機能の不具合を修正する際に使うプロンプトテンプレート                                                                            |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 複数の新規チャットで別々の機能を並行開発し、あとで統合するためのプロンプト（汎用テンプレート＋機能別） |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 最適化・改修の提案（信頼性／セキュリティ、ドキュメント保守、製品方向、リリース計画案） |
+| [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | セキュリティ監査レポート（発見事項、重大度、修正の順序） |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | ソースコードを添付せず、ドキュメントのみで新しい会話を始める際に使うプロンプトテンプレート                                          |
 
 ## コントリビューション

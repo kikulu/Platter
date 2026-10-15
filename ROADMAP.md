@@ -32,6 +32,9 @@
 3. **跑一次 lint 與 format**：`1.41.0` 的開發環境無法安裝 ESLint／Prettier，新增的程式碼與文件沒有跑過
    `npm run lint`、`npm run format:check`（CI 已加上 format 檢查，第一次可能會要求重新排版，請單獨 commit）。
 
+4. **資安修補**：2026-10-14 的資安檢查（[`docs/SECURITY_AUDIT_REPORT.md`](./docs/SECURITY_AUDIT_REPORT.md)）發現 2 項高、5 項中、6 項低。
+   最優先：所有視窗加導覽／開窗限制（H-1）、備份匯入加驗證（M-1）、可執行副檔名不直接開啟（M-3）；之後 Electron 升級（H-2）。
+
 已完成（`1.41.0`）：資料檔原子寫入並保留 `.bak`；`npm run check:docs` 文件／版本漂移檢查；CI 加上
 `format:check`；功能 A～D。
 
