@@ -1427,6 +1427,19 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
     DOM 事件，讓各視窗自己重繪動態產生的內容（例如清單、空狀態提示）。
 - JS 裡的動態字串（`alert()`/`confirm()` 訊息）一律用
   `window.i18n.t(key, vars)`，不要寫死。
+- **內建內容與主程序文字（1.43.0）**：
+  - 主程序用 `lib/i18n.js` 的 `t(key, vars, lang)`，跟 renderer 共用同一份 `renderer/locales/<lang>.json`，
+    主程序專用的鍵以 `main.` 開頭；對話框、錯誤訊息、稽核日誌文字、預設檔名、組給 AI 的說明文字都不可寫死中文。
+    `test/i18n-keys.test.js` 會掃描程式碼：引用的鍵必須存在、視窗標題要用 `<title data-i18n>`、
+    不得新增寫死的中文（白名單見該測試）。
+  - 內建角色／提示詞／套餐／專案範本：繁中原文在 `extractors/default-*.json`，英文與日文在
+    `extractors/i18n/<lang>/{roles,knowledge-base,project-templates}.json`（只含可翻譯欄位，以 `id`／`defaultId` 對應）。
+    `lib/builtinContent.js` 提供「某語言的內建預設內容」與「把使用者資料裡沒改過的內建項目換成新語言」
+    （逐欄位比對，等於任一語言原文才換）。切換語言（IPC `ui:setLanguage`）與啟動時都會同步。
+  - 新增內建內容時：先寫繁中原文，再同步補英文與日文疊加檔；填空標記用固定譯法
+    （`[請填入]`／`[Please fill in]`／`[ご記入ください]`），檔名與 `=== FILE: ... ===` 標記不翻譯；
+    OpenSpec 的「建議變更名稱」標記行三種語言都要能被 `lib/openspec.js` 解析。
+  - 不可用標籤的字串當程式邏輯的判斷依據（標籤會跟著語言換）；必須判斷時要涵蓋三種寫法（例如專案頁的簡報橋接）。
 
 ---
 
@@ -1618,10 +1631,13 @@ renderer/conversation.html, conversation.js, conversation.css # 對話庫（新�
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
 renderer/tray.html, tray.js, tray.css                # 右下角浮動小托盤（第 9.0 節）
 lib/trayHotkey.js                                    # 托盤全域快捷鍵註冊（第 9.0 節，1.41.0）
+lib/i18n.js                                          # 主程序用的語系翻譯 t()（第 11 節，1.43.0）
+lib/builtinContent.js                                # 內建角色／提示詞／套餐／範本的多語系與切換語言同步（第 11 節，1.43.0）
+extractors/i18n/                                     # 內建內容的英文／日文疊加檔（en／ja，第 11 節，1.43.0）
 lib/security.js                                      # 資安防護：視窗加固、IPC 來源檢查、網址／路徑／副檔名判斷（第 9.9 節，1.42.0）
 lib/backupSanitize.js                                # 備份匯入資料驗證（第 9.9 節，1.42.0）
 scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
-test/*.test.js                                       # 單元測試（node --test，25 個檔案）
+test/*.test.js                                       # 單元測試（node --test，28 個檔案）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js

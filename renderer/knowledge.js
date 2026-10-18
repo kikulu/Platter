@@ -138,7 +138,7 @@
 
       const title = document.createElement('div');
       title.className = 'kb-title';
-      title.textContent = it.title || '(未命名)';
+      title.textContent = it.title || `(${window.i18n.t('main.knowledge.untitled')})`;
 
       const meta = document.createElement('div');
       meta.className = 'kb-tags';
@@ -197,7 +197,7 @@
 
       const title = document.createElement('div');
       title.className = 'kb-title';
-      title.textContent = `📦 ${g.title || '(未命名套餐)'}`;
+      title.textContent = `📦 ${g.title || `(${window.i18n.t('main.knowledge.untitledBundle')})`}`;
 
       const meta = document.createElement('div');
       meta.className = 'kb-tags';
@@ -383,7 +383,7 @@
   document.getElementById('btn-save').addEventListener('click', async () => {
     const item = {
       id: currentItemId,
-      title: titleInput.value.trim() || '未命名',
+      title: titleInput.value.trim() || window.i18n.t('main.knowledge.untitled'),
       tags: parseTags(tagsInput.value),
       content: contentInput.value,
       systemPrompt: systemPromptInput.value,
@@ -765,7 +765,7 @@
   document.getElementById('btn-save-group').addEventListener('click', async () => {
     const group = {
       id: currentGroupId,
-      title: grpTitleInput.value.trim() || '未命名套餐',
+      title: grpTitleInput.value.trim() || window.i18n.t('main.knowledge.untitledBundle'),
       tags: parseTags(grpTagsInput.value),
       description: grpDescInput.value,
       steps: rowsToSteps(),

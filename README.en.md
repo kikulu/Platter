@@ -295,6 +295,8 @@ ai-workspace-aggregator/
 │   ├── workflow.js                      # Project staged workflow: template expansion, prompt composition (pure functions)
 │   ├── trayHotkey.js                     # Floating-tray global hotkey registration (1.41.0)
 │   ├── security.js                       # Security helpers: window hardening, IPC sender check, URL/path/extension checks (1.42.0)
+│   ├── i18n.js                           # Main-process translations (1.43.0)
+│   ├── builtinContent.js                 # Built-in content i18n and language-switch sync (1.43.0)
 │   ├── backupSanitize.js                 # Backup-import data validation (1.42.0)
 │   ├── openspec.js                      # OpenSpec integration: export to openspec/changes/, import existing specs
 │   ├── sqlite.js                        # Thin wrapper around sql.js: open/save/query
