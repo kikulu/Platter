@@ -295,6 +295,8 @@ ai-workspace-aggregator/
 │   ├── workflow.js                      # プロジェクトのステージフロー：テンプレート展開、プロンプト合成（純粋関数）
 │   ├── trayHotkey.js                     # フローティングトレイのグローバルショートカット登録（1.41.0）
 │   ├── security.js                       # セキュリティ補助：ウィンドウ制限、IPC 送信元チェック、URL／パス／拡張子の判定（1.42.0）
+│   ├── i18n.js                           # メインプロセス用の翻訳（1.43.0）
+│   ├── builtinContent.js                 # 組み込みコンテンツの多言語化と言語切替時の同期（1.43.0）
 │   ├── backupSanitize.js                 # バックアップ取り込みデータの検証（1.42.0）
 │   ├── openspec.js                      # OpenSpec 連携：openspec/changes/ へのエクスポート、既存スペックのインポート
 │   ├── sqlite.js                        # sql.js の薄いラッパー：開く/保存/クエリ

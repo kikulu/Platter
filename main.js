@@ -12,6 +12,7 @@ const { registerIpcHandlers } = require('./lib/ipc');
 const { startDueTaskReminders } = require('./lib/reminders');
 const { applyTrayHotkey, unregisterTrayHotkey } = require('./lib/trayHotkey');
 const { getTrayPrefs } = require('./lib/stores');
+const { t } = require('./lib/i18n');
 
 // ---------------------------------------------------------------------------
 // main.js（App 入口）
@@ -42,12 +43,12 @@ if (!gotSingleInstanceLock) {
   // 全域錯誤保護網：main process 沒被 try/catch 接住的例外都會記錄進錯誤
   // 日誌，方便在「日誌主控台」裡回溯，而不是只留在終端機/使用者根本看不到。
   process.on('uncaughtException', (err) => {
-    logError('process', '未捕捉的例外 (uncaughtException)', err);
+    logError('process', t('main.process.uncaughtException'), err);
   });
   process.on('unhandledRejection', (reason) => {
     logError(
       'process',
-      '未處理的 Promise rejection (unhandledRejection)',
+      t('main.process.unhandledRejection'),
       reason instanceof Error ? reason : new Error(String(reason))
     );
   });

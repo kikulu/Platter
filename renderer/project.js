@@ -2129,7 +2129,11 @@
   const wfPitchGenerateBtn = document.getElementById('btn-wf-pitch-generate');
 
   function presentationKnowledgeItems() {
-    return allKnowledgeItems.filter((item) => (item.tags || []).includes('簡報製作'));
+    // 標籤文字跟著介面語言變（內建項目切換語言時會換成對應語言），三種寫法都要認得
+    const pitchTags = ['簡報製作', 'Presentation Making', 'プレゼン資料作成'];
+    return allKnowledgeItems.filter((item) =>
+      (item.tags || []).some((tag) => pitchTags.includes(tag))
+    );
   }
 
   function renderPitchBridge(wf) {

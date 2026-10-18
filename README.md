@@ -257,6 +257,8 @@ Platter/
 │   ├── workflow.js                      # 專案階段流程與範本展開、組合提示詞（純函式）
 │   ├── trayHotkey.js                     # 托盤全域快捷鍵註冊（1.41.0）
 │   ├── security.js                       # 資安防護：視窗加固、IPC 來源檢查、網址／路徑／副檔名判斷（1.42.0）
+│   ├── i18n.js                           # 主程序用的語系翻譯（1.43.0）
+│   ├── builtinContent.js                 # 內建內容多語系與切換語言同步（1.43.0）
 │   ├── backupSanitize.js                 # 備份匯入資料驗證（1.42.0）
 │   ├── openspec.js                      # OpenSpec 整合：匯出成 openspec/changes/、匯入現有規格
 │   ├── sqlite.js                        # sql.js 的最小包裝：開檔/存檔/查詢
@@ -285,7 +287,7 @@ Platter/
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json, ja.json
 ├── scripts/check-docs.js     # 文件與版本一致性檢查（npm run check:docs）
-├── test/*.test.js            # 單元測試（node --test，共 25 個檔案）
+├── test/*.test.js            # 單元測試（node --test，共 28 個檔案）
 ├── docs/parallel-dev/        # 多對話平行開發提示詞（通用範本＋功能 A～D）
 └── assets/                    # App 圖示與生成提示詞
 ```
