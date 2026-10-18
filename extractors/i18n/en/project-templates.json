@@ -1,0 +1,437 @@
+{
+  "proj-tpl-ai-drama": {
+    "name": "AI Short Drama Production (Concept → Script → Storyboard → Generation → Editing & Release)",
+    "description": "Take an AI short drama from topic positioning all the way to release and performance review: first build the character bible and episode scripts, then break them into storyboards, generate costume reference images and shot videos, plan voiceover and music, and finally edit, publish, and optimize. The prompts are not tied to any specific AI tool. They ask you to fill in the image, video, and voice tools you use, and any feature you are unsure about is marked \"TBD\" rather than inventing tool specs.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Script",
+        "steps": [
+          {
+            "title": "Topic Positioning & Episode Planning",
+            "prompt": "# Topic Positioning & Episode Planning\n\n## Role & Goal\nYou are a veteran short-drama (vertical format, about 1-3 minutes per episode) producer. Help me narrow an idea into a positioning that can be made as an AI short drama: what it is about, who it is for, how many episodes in total, and how each episode keeps viewers watching.\n\n## Input\n- Short drama topic/idea: {{topic}}\n- Target audience and release platform: [Please fill in]\n- Genre and tone (e.g. sweet romance, revenge, suspense, comedy, fantasy): [Please fill in]\n- Planned total episodes and length per episode: [Please fill in]\n- AI tools I have available (text-to-image / image-to-video / voice): [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **One-line selling point**: the core premise that makes people want to click at a glance\n2. **Target audience profile** and which emotions will move them\n3. **Concrete approach to genre and tone** (which story beats to include, which to avoid)\n4. **Episode count and pacing plan**: total episodes, length per episode, principles for the 3-second opening hook, and the type of cliffhanger at the end of each episode\n5. **AI production feasibility notes**: which subjects are harder for AI video (e.g. lots of complex fight scenes, precise hand movements, multiple people talking in one frame) and how to make trade-offs\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Worldbuilding & Character Setup (Character Bible)",
+            "prompt": "# Worldbuilding & Character Setup (Character Bible)\n\n## Role & Goal\nYou are a screenwriting consultant. Based on the positioning above, build the \"character bible\" for this short drama. The key is to **make the visual appearance specific enough**, because every later shot will rely on this description to keep characters consistent across different AI generations.\n\n## Input\n- Positioning and episode plan from the previous steps: (see the output of the previous steps)\n- Characters or settings already decided: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Worldbuilding**: time, place, social background, and rules, kept within a scope that can be shown with a small number of fixed locations\n2. **2-4 main characters**, each with: name, apparent age, personality, motivation, relationships with other characters, catchphrase or way of speaking\n3. **Fixed visual description (ready to copy into image-generation prompts)**: face shape and facial features, hairstyle and hair color, skin tone, build, fixed outfit and accessories, each as one fixed descriptive paragraph in English\n4. **Fixed location list**: 3-6 main locations, each with spatial characteristics, lighting and atmosphere, and color palette\n5. **Consistency rules**: which features must never change and which can change with the story (e.g. clothing)\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Episode Outline & Hooks",
+            "prompt": "# Episode Outline & Hooks\n\n## Role & Goal\nYou are a short-drama screenwriter. Expand the character bible into an outline for each episode so that viewers keep watching one episode after another.\n\n## Input\n- Positioning and character bible: (see the output of the previous steps)\n- Key twist or ending you want (if any): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Overall story arc**: setup (first 10%), development, turn (where the biggest reversal lands), resolution, and mark the paywall point or climax episode (if applicable)\n2. **Episode-by-episode outline**: one paragraph per episode, with three items: \"opening 3-second hook,\" \"core conflict of this episode,\" and \"ending cliffhanger\"\n3. **Emotion curve**: mark the emotional high and low of each episode (tense / satisfying / heart-wrenching / light), avoiding many consecutive episodes with the same emotion\n4. **Foreshadowing and payoff table**: which episode each setup is planted in and which episode it pays off in\n5. **AI production cost notes**: flag episodes with many locations, characters, or effects, and suggest merging or simplifying them\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Single-Episode Script (with Dialogue)",
+            "prompt": "# Single-Episode Script (with Dialogue)\n\n## Role & Goal\nYou are a short-drama screenwriter. Turn the outline of the specified episode into a script that is ready to shoot. Dialogue should be short and conversational, and every line should advance the plot or the emotion.\n\n## Input\n- Episode to write this time: [Please fill in, e.g. Episode 1]\n- Outline of that episode and the character bible: (see the output of the previous steps)\n- Episode length: [Please fill in, e.g. 90 seconds]\n\n## Output Requirements\n1. **Script**: in a \"scene heading / action description / character dialogue\" format; action should only describe what the camera can see, not inner thoughts\n2. **Time allocation**: estimated seconds for each scene, with the total close to the episode length\n3. **Dialogue length check**: approximate word count of the whole episode's dialogue and the estimated time to speak it; if it runs over, point out lines that can be cut\n4. **AI-friendliness check**: flag shots that are harder for AI video (multi-person interaction, delicate hand movements, fast action) and offer alternative ways to write them\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          }
+        ],
+        "relatedPrompts": [
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Storyboard & Visual Setup",
+        "steps": [
+          {
+            "title": "Storyboard Script (Shot List)",
+            "prompt": "# Storyboard Script (Shot List)\n\n## Role & Goal\nYou are a storyboard artist. Break the single-episode script into individual shots that can each be generated on its own. Each shot should be short, with a single action and a single location, because most AI video tools can only generate very short clips reliably at a time.\n\n## Input\n- Single-episode script: (see the output of the previous steps)\n- The video generation tool I use and the length it can generate per run: [Please fill in; if unsure, write \"TBD\" and plan in units of 3-5 seconds first]\n\n## Output Requirements\nOutput each shot as a table:\n1. **Shot number**, **location**, **characters appearing**\n2. **Shot size and camera movement** (close-up / medium shot / wide shot; static / push in / pull out / pan / follow)\n3. **Picture content** (one sentence, only what is visible)\n4. **Dialogue or voiceover** (write \"None\" if there is none)\n5. **Estimated seconds**\n6. **Transition and continuity**: whether eyeline direction and position match the previous shot\n\nFinally, total up the number of shots and total seconds, and flag the shots most likely to fail in generation and worth preparing a backup for.\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Character & Scene Image Generation Prompts",
+            "prompt": "# Character & Scene Image Generation Prompts\n\n## Role & Goal\nYou are an AI visual designer. Turn the character bible into text-to-image prompts, creating \"character costume reference images\" and \"scene baseline images\" first. All later shots will use these images as references to stay consistent.\n\n## Input\n- Character bible (fixed visual descriptions, fixed locations): (see the output of the previous steps)\n- Aspect ratio and style (e.g. 9:16 vertical, realistic cinematic / anime / watercolor): [Please fill in]\n- The image generation tool I use: [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **Unified style prefix**: a paragraph of style, lighting, and quality description to add to every prompt\n2. **Costume reference image prompts for each character**: one set each for front view, side view, and full body, reusing the fixed visual description word for word\n3. **Baseline image prompts for each location**: empty scenes with no people, including lighting and color palette\n4. **Negative prompt suggestions**: common flaws (extra fingers, facial distortion, garbled text)\n5. **Consistency tips**: how to use reference images, fixed seeds, or the same model to stay consistent, and alternatives when the tool lacks these features\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          }
+        ],
+        "relatedPrompts": [
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: AI Video & Audio Generation",
+        "steps": [
+          {
+            "title": "Shot Video Generation Prompts",
+            "prompt": "# Shot Video Generation Prompts\n\n## Role & Goal\nYou are an AI video prompt engineer. Based on the storyboard, write a prompt for each shot that can be pasted directly into an image-to-video / text-to-video tool.\n\n## Input\n- Storyboard and unified style prefix: (see the output of the previous steps)\n- Range of shot numbers to generate: [Please fill in, e.g. 1-8]\n- The video tool I use, and whether it supports first-frame images, last-frame images, and camera movement control: [Please fill in; if unsure, write \"TBD\"]\n\n## Output Requirements\nFor each shot, output:\n1. **Main prompt**: subject + action + scene + camera movement + lighting, as one coherent description with only one action\n2. **First-frame reference image suggestion**: which costume reference or baseline image to use\n3. **Negative prompt**\n4. **Fallback plan**: ways to simplify if the generation goes off (shorten the action, change the shot size, switch to a still image with a camera push-in)\n5. **Post-production reminder**: what this shot needs added at the editing stage (subtitles, sound effects, transitions)\n\nIf you are unsure which parameters the tool supports, list your assumptions first and do not pretend to know the tool's specific features.\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Voiceover, Narration & Music Prompts",
+            "prompt": "# Voiceover, Narration & Music Prompts\n\n## Role & Goal\nYou are a sound designer. Plan the voice acting, narration, music, and sound effects for this episode, and write prompts that can be pasted into text-to-speech / music generation tools.\n\n## Input\n- Single-episode script and storyboard: (see the output of the previous steps)\n- The voice and music tools I use: [Please fill in, or leave blank if unsure]\n- Language and accent: [Please fill in]\n\n## Output Requirements\n1. **Voice setup for each character**: apparent age, timbre, speaking pace, and emotional baseline (each as a reusable paragraph to paste, consistent across the whole series)\n2. **Line-by-line voiceover script**: mark emotion, pace, and pauses\n3. **Narration script** (if any): word count and estimated seconds\n4. **Music prompts**: genre, tempo, instruments, and emotional arc, split into opening / conflict / ending sections\n5. **Sound effects list**: ambient sounds and action sound effects needed for each shot\n6. **Copyright reminder**: do not imitate a specific singer's voice or a specific work's score; confirm the commercial license of the tools used ([TBD])\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          }
+        ],
+        "relatedPrompts": [
+          {}
+        ]
+      },
+      {
+        "title": "Stage 4: Editing & Release",
+        "steps": [
+          {
+            "title": "Editing Rhythm & Subtitles",
+            "prompt": "# Editing Rhythm & Subtitles\n\n## Role & Goal\nYou are a short-drama editor. Plan an editing approach that assembles all generated shots, voiceover, and music into a finished episode.\n\n## Input\n- Storyboard, voiceover script, and music plan: (see the output of the previous steps)\n- Editing tool: [Please fill in, or leave blank if unsure]\n- Target platform specs (aspect ratio, length, subtitle safe area): [Please fill in; if unsure, write \"TBD\"]\n\n## Output Requirements\n1. **Editing timeline**: in and out points in seconds and transitions for each shot\n2. **Handling the opening 3 seconds**: how to grab attention with visuals, subtitles, or sound effects\n3. **Subtitle specs**: character limit, line-breaking principles, font size and position, whether to highlight key words\n4. **Continuity fix list**: how to patch inconsistencies between shots (clothing, props, lighting)\n5. **AI content labeling reminder**: whether the target platform requires labeling AI-generated content ([TBD]; follow the platform's latest rules)\n6. **Export settings suggestions**: resolution, frame rate, file format\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Title, Cover, Description & Release Plan",
+            "prompt": "# Title, Cover, Description & Release Plan\n\n## Role & Goal\nYou are a short-drama distribution strategist. Plan the title, cover, description, and release schedule for this episode and for the whole series.\n\n## Input\n- Outline and finished content of this episode: (see the output of the previous steps)\n- Release platform and current account status (follower count, existing data): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **5 titles**: each from a different angle (suspense, emotion, contrast, question, number), noting which platform each suits\n2. **Cover image suggestions**: composition, subject, and text, written as a prompt that can be pasted into an image generation tool\n3. **Description and tags**: description copy and 5-10 tags\n4. **Release schedule**: how many episodes per day, recommended posting times, and the reasoning (if data is missing, mark [TBD] and do not invent data)\n5. **Compliance checklist**: content moderation risks (violence, minors, real-person likeness, copyright), AI-generated content labeling, commercial licensing\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          },
+          {
+            "title": "Performance Review & Next-Episode Optimization",
+            "prompt": "# Performance Review & Next-Episode Optimization\n\n## Role & Goal\nYou are a short-drama data analysis consultant. Based on the performance data of published episodes, find out why viewers drop off and propose concrete adjustments for the next episode or the next series.\n\n## Input\n- Data for each episode (views, completion rate, 3-second bounce rate, engagement, follow conversion): [Please paste, or write \"No data yet\" if there is none]\n- Episodes completed so far and story progress: (see the output of the previous steps)\n\n## Output Requirements\n1. **Data interpretation**: which episode and at which point viewers drop off, and the most likely causes (story, pacing, visuals, sound)\n2. **Hypotheses and how to verify them**: for each cause, one small experiment the next episode can run\n3. **Production workflow optimization**: which steps (generation failure rate, image retouching time, consistency issues) take the most time, and how to simplify them\n4. **Next-episode adjustment list**: concrete changes for the opening, pacing, shots, and sound\n5. **Criteria for deciding whether to continue**: what level of data is needed to justify further investment\n\nIf there is no data, only list \"which data to collect\" and how to judge it, and do not make up numbers.\n\n## Notes\n- Where information is missing, mark it [TBD: ...] instead of inventing it. Do not use real people, or characters or lines from existing works.\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-game-design": {
+    "name": "Game Design (Concept → Systems & Numbers → Art & UI → Prototype & Testing)",
+    "description": "Take a game idea from core gameplay positioning all the way to a testable prototype: first define the core gameplay and a GDD outline, then design system rules and numeric formulas and plan level content, next settle the art style and interface flow, and finally plan a minimum playable prototype, playtests, and the direction of the next iteration. The prompts are not tied to any specific game engine or tool. Any spec you are unsure about is marked \"TBD\", and tool specs or numeric data are never invented.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Design Document",
+        "steps": [
+          {
+            "title": "Core Gameplay & Market Positioning",
+            "prompt": "# Core Gameplay & Market Positioning\n\n## Role & Goal\nYou are a game design consultant. Help me narrow a game idea into a clear core gameplay positioning: what the player is doing, why it is fun, and how it differs from other games on the market.\n\n## Input\n- Game theme/idea: {{topic}}\n- Platform (PC / console / mobile / web): [Please fill in]\n- Genre (action, puzzle, simulation/management, card, roguelike...): [Please fill in]\n- Target player profile: [Please fill in]\n- Existing games used as reference (to explain tone or mechanic inspiration, not to copy): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **One-line core gameplay**: the action loop the player repeats\n2. **Core fun**: the fundamental reason this gameplay is fun (sense of control, puzzle-solving achievement, strategic depth, social showing off...)\n3. **Target players and their motivations**\n4. **Differentiated positioning**: compared with similar games on the market, what is this game's unique selling point\n5. **Scope reminder**: at the scale described so far, which parts should be scaled down first (e.g. start with a single level and a single mechanic) to avoid planning too big from the start\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Game Design Document (GDD) Outline",
+            "prompt": "# Game Design Document (GDD) Outline\n\n## Role & Goal\nYou are a game design consultant. Expand the core gameplay positioning into a chapter outline for a game design document (GDD), so that the team or collaborating AI tools can later fill in the details chapter by chapter based on this outline.\n\n## Input\n- Core gameplay and positioning: (see the output of the previous step)\n- Planned development scale (solo / small team / prototype testing): [Please fill in]\n\n## Output Requirements\n1. **GDD chapter outline**: list each chapter title in order along with the questions it should answer (e.g. \"Core Mechanics,\" \"Progression & Rewards,\" \"Level Design Principles,\" \"Numeric Systems,\" \"UI Flow,\" \"Art Direction,\" \"Audio Direction\")\n2. **Priority of each chapter**: which chapters must be written clearly at this stage (validating core gameplay with a prototype) and which can be left blank for now\n3. **Consistency notes**: places where later chapters must be consistent with each other (e.g. the numeric system must match the progression design)\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Core Loop & Progression Curve Design",
+            "prompt": "# Core Loop & Progression Curve Design\n\n## Role & Goal\nYou are a game design consultant. Help me design the core loop and progression curve that take a player from their first playthrough to long-term engagement, ensuring the game keeps giving players a reason to stay.\n\n## Input\n- Core gameplay and GDD outline: (see the output of the previous steps)\n- Expected play time (one play session, total time to finish the game): [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **Core loop diagram**: describe in text the cycle of \"what the player does → what they get → why they want to do it again\"\n2. **Short / medium / long-term goals**: what sense of purpose the player gets within a session, daily, and over the long term\n3. **Progression curve**: roughly how difficulty and rewards grow as play time advances, marking risk points where players are likely to drop off (too hard, too boring, progress stalls)\n4. **Onboarding focus**: what players should learn and experience in the first few minutes\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Systems & Numeric Design",
+        "steps": [
+          {
+            "title": "Core System Design",
+            "prompt": "# Core System Design\n\n## Role & Goal\nYou are a systems design consultant. Break the core gameplay down into concrete system rules that can be implemented (combat, building, collecting, character growth, etc., depending on the game genre).\n\n## Input\n- Core gameplay and core loop: (see the output of the previous steps)\n- The system to design this time (e.g. combat system, building system, card system): [Please fill in]\n\n## Output Requirements\n1. **System rules**: specific enough to be written as program logic (conditions, triggers, results), not just abstract descriptions\n2. **Interactions between systems**: how this system affects and is affected by other known systems (progression, economy)\n3. **Edge cases**: list 3-5 exceptional situations that are easy to overlook but need to be thought through first (e.g. what happens when resources run out, the priority order when multiple effects trigger at once)\n4. **Implementation complexity notes**: which rules are costly to build, and should be simplified or simulated with dummy data at the prototype stage\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Balance & Formula Design",
+            "prompt": "# Balance & Formula Design\n\n## Role & Goal\nYou are a numeric design consultant. Help me convert the core system rules into concrete numeric formulas and initial parameters, and point out which parts must be tuned through playtesting rather than getting right in one pass with formulas.\n\n## Input\n- Core system design: (see the output of the previous steps)\n- Any numeric ideas or constraints already in place (e.g. number of levels, max level): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Key numeric formulas**: formulas for damage, growth, resource output, etc., with the meaning of each variable\n2. **Suggested initial parameters**: a set of starting numbers you can test right away, noting that this is only a starting point that needs tuning through playtesting\n3. **Balance risk points**: which parameter combinations are prone to imbalance (e.g. snowball effects, unwinnable stalls) and how to prevent them\n4. **Do-not-fabricate reminder**: if I ask for the exact numbers of a known game, say plainly that you do not know the real data and can only give estimates that are reasonable from a design-principles standpoint\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Level / Content Planning List",
+            "prompt": "# Level / Content Planning List\n\n## Role & Goal\nYou are a level design consultant. Expand the core systems and progression curve into a concrete level or content planning list, deciding what each level/stage teaches the player and what it challenges them with.\n\n## Input\n- Core systems and progression curve: (see the output of the previous steps)\n- Planned number of levels/stages: [Please fill in, or leave blank if unsure and suggest a number suited to prototype validation]\n\n## Output Requirements\n1. **Level/content list**, in order, with each level's:\n   - Key mechanic this level teaches or tests\n   - Change in difficulty relative to the previous level\n   - Estimated play time\n2. **Content reuse suggestions**: which elements (scenes, enemies, items) can be reused to lower production cost\n3. **Prototype stage suggestions**: which 1-3 levels are best to build first to validate the core gameplay, and why you chose them\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          }
+        ],
+        "relatedPrompts": [
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Art, Audio & Interface",
+        "steps": [
+          {
+            "title": "Art Style Guide",
+            "prompt": "# Art Style Guide\n\n## Role & Goal\nYou are an art direction consultant. Help me turn the game's tone into a concrete art style guide, ensuring that the visuals produced later (whether drawn by hand or generated with AI) stay consistent.\n\n## Input\n- Game core gameplay and tone: (see the output of the previous steps)\n- How art assets will be sourced (draw myself / outsource / AI image generation / ready-made assets): [Please fill in]\n- Reference visual style direction (expressive, pixel, low-poly, realistic...): [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **Overall art style description**: a style description that can be applied repeatedly (color tone, brushwork/materials, lighting and atmosphere)\n2. **Color plan**: color principles for primary colors, secondary colors, and warning colors (e.g. dangerous / interactive objects)\n3. **Visual consistency rules for characters and scenes**: which visual elements must run through all content\n4. **If using AI image generation**: provide a style prompt prefix that can be used directly, and remind me to manage character/scene consistency (you can refer to the image-generation prompt templates in the knowledge base other than \"Presentation Making\")\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "UI/UX Interface Design Plan",
+            "prompt": "# UI/UX Interface Design Plan\n\n## Role & Goal\nYou are a game UI/UX design consultant. Help me plan the interface flow players will use, making sure information is easy to understand and controls feel smooth.\n\n## Input\n- Core systems and platform (which determine whether controls are touch / mouse and keyboard / gamepad): (see the output of the previous steps)\n- Interfaces to plan (main menu, combat interface, inventory, settings...): [Please fill in]\n\n## Output Requirements\n1. **Screen list and flow**: list the screens needed and how players move between them\n2. **Information priority on each screen**: where the most important information goes and how secondary information is tucked away\n3. **Interaction flow check**: whether core actions (e.g. casting a skill in combat) take few enough steps and fit platform conventions\n4. **Usability risk notes**: which designs are likely to confuse new players, and how to simplify them or add hints\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          }
+        ],
+        "relatedPrompts": [
+          {}
+        ]
+      },
+      {
+        "title": "Stage 4: Prototype, Testing & Iteration",
+        "steps": [
+          {
+            "title": "Minimum Playable Prototype (MVP) Plan",
+            "prompt": "# Minimum Playable Prototype (MVP) Plan\n\n## Role & Goal\nYou are a production consultant. Help me plan a \"minimum playable prototype\" that validates, at the lowest development cost, whether the core gameplay is actually fun, instead of building the full version from the start.\n\n## Input\n- Core gameplay, system design, and level plan: (see the output of the previous steps)\n- Time/people available (a rough estimate is fine): [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **Prototype scope**: explicitly list the features this prototype \"must have\" and those it \"deliberately leaves out\"\n2. **Substitute approaches**: for art, audio, and other parts not yet made, simplified stand-ins to use at the prototype stage (graybox, placeholder assets)\n3. **Validation goals**: the 1-3 specific questions this prototype should answer once built\n4. **Risk notes**: which part of the current plan is most likely to hold up the prototype's completion, and should be handled first or simplified\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Playtest Plan & Feedback Collection Framework",
+            "prompt": "# Playtest Plan & Feedback Collection Framework\n\n## Role & Goal\nYou are a user research consultant. Help me plan the playtest once the prototype is done, making sure the feedback collected can actually answer the \"core gameplay validation goals\" rather than just vague opinions like \"it's pretty good.\"\n\n## Input\n- Prototype scope and validation goals: (see the output of the previous step)\n- Planned test participants and number: [Please fill in, or leave blank if unsure]\n\n## Output Requirements\n1. **Test flow design**: how players start, whether to explain the rules first, and test duration\n2. **Observation focus**: which player behaviors to watch during the test (where they get stuck, actions they repeat, facial reactions)\n3. **Feedback questions**: design 5-8 specific questions, avoiding vague ones like \"is it fun?\" and asking about concrete behaviors and feelings instead (e.g. \"At which moment did you most want to keep playing?\")\n4. **Data organization**: how to turn qualitative observations and survey feedback into conclusions you can use for decisions\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          },
+          {
+            "title": "Data Analysis & Next Iteration Direction",
+            "prompt": "# Data Analysis & Next Iteration Direction\n\n## Role & Goal\nYou are a game data analysis consultant. Based on the feedback collected from the playtest and any data, find the directions to adjust first in the next round, avoiding changing too many things at once so that you cannot tell which change worked.\n\n## Input\n- Playtest feedback summary (you can paste observation notes and survey results): [Please paste, or write \"No test data yet\" if there is none]\n- Original validation goals: (see the output of the previous steps)\n\n## Output Requirements\n1. **Feedback grouping**: group scattered feedback into several themes (e.g. unclear onboarding, numbers too hard, clunky interface controls)\n2. **Prioritization**: rank the 3-5 items to handle first in this iteration by \"how much they affect core fun\" and \"cost to change\"\n3. **Specific hypothesis for each adjustment**: after making this change, what change in player behavior is expected, and how to tell whether it improved\n4. **Next-round test suggestions**: after this round of adjustments, what the next playtest should pay special attention to\n\nIf there is no actual test data, only list \"which data to collect\" and how to judge it, and do not fabricate player feedback or data.\n\n## Notes\nWhere information is missing, mark it [TBD: ...] instead of inventing data or specs. Do not use real games, or characters, art, or trademarks from existing IPs."
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-mvp": {
+    "name": "MVP Rapid Prototype (Lean Validation)",
+    "description": "Identify the riskiest assumption first, build only the smallest product that can validate it, then decide whether to persevere, pivot, or stop based on real data. Suited to quick validation of new products and new ideas before committing to full development.",
+    "stages": [
+      {
+        "title": "Stage 1: Problem & Assumptions",
+        "steps": [
+          {
+            "title": "Problem & Assumption Validation",
+            "prompt": "# Problem & Assumption Validation\n\n## Role & Objective\nYou are a Lean Startup coach. Help me break a product idea into \"testable assumptions\" and find the riskiest one that should be validated first.\n\n## Input\n- Product idea: [Please fill in]\n- Target customers and how they solve this problem today: [Please fill in]\n- Evidence I have so far (interviews, data, competitor observations): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: One sentence saying whose problem is being solved and what it is\n2. **Assumption list**: Split into \"value assumptions (does anyone want it?)\", \"growth assumptions (how will customers find us?)\", and \"feasibility assumptions (can we build it?)\"\n3. **Risk ranking**: Rank by \"if the assumption is wrong, does the whole idea fall apart?\" and point out the 1-2 riskiest\n4. **Fastest way to validate**: For each riskiest assumption, the lowest-cost method to validate it (interviews, fake landing page, manual service...), with a \"success threshold\" (for example, at least 5 out of 20 people willing to sign up)\n5. **Evidence vs. pure guesswork**: Label which items are evidence and which are guesses; do not present guesses as facts\n"
+          },
+          {
+            "title": "MVP Scope Definition",
+            "prompt": "# MVP Scope Definition\n\n## Role & Objective\nYou are a product manager. Based on the riskiest assumption, help me define the MVP: build only the smallest product that can validate the assumption.\n\n## Input\n- Problem statement and assumption list: (see the output of the previous step)\n- Available people and time: [Please fill in]\n\n## Output Requirements\n1. **Core user journey**: Keep only the one main flow that can validate the assumption, listed step by step\n2. **Must-have features**: For each, state which assumption it validates\n3. **Explicit not-doing list**: Go through the usual tempting features (login system, admin panel, multi-language...) and decide for each whether it can be left out for now\n4. **What can be manual or faked**: What to replace for now with manual work, off-the-shelf services, or fake data (Wizard of Oz)\n5. **Done criteria**: How to tell the MVP is ready to put in front of users\n6. **Estimated duration**: Assess against the people and time above, and if it runs over, suggest what more scope to cut\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Prototype Implementation",
+        "steps": [
+          {
+            "title": "Prototype Implementation Plan",
+            "prompt": "# Prototype Implementation Plan\n\n## Role & Objective\nYou are a senior engineer. Help me build the MVP in as little time as possible, while making sure we can collect the data needed to validate the assumption.\n\n## Input\n- MVP scope and core user journey: (see the output of the previous step)\n- Technology the team knows and off-the-shelf services available: [Please fill in]\n\n## Output Requirements\n1. **Minimal technical approach**: Prefer off-the-shelf services or low-code, and explain the reasoning\n2. **Task list**: Each task completable within 1 day, ordered by implementation sequence\n3. **Data instrumentation**: Which events to record so that the success metrics and success threshold can be calculated\n4. **Quality aspects deliberately sacrificed**: What is skipped this time (testing, scalability, security hardening...) and when it will be addressed later, as a technical debt list\n5. **Risks**: Where the schedule could spiral out of control\n"
+          },
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Validation & Iteration",
+        "steps": [
+          {
+            "title": "Validation Results & Iteration Decision",
+            "prompt": "# Validation Results & Iteration Decision\n\n## Role & Objective\nYou are a Lean Startup coach. Based on the actual data and user feedback after the MVP went live, help me judge whether the assumptions hold and decide the next step.\n\n## Input\n- Original assumptions and success thresholds: (see the output of the previous step)\n- Actual data (usage, conversion rate, retention...): [Please fill in]\n- User feedback (interviews, customer support, reviews): [Please fill in]\n\n## Output Requirements\n1. **Assumption testing**: Mark each assumption as \"validated / invalidated / insufficient evidence\", with the supporting data or feedback\n2. **Insights**: The real reasons behind the data, separating \"observed facts\" from \"our speculation\"\n3. **Decision recommendation**: Persevere / Pivot / Stop, with reasoning\n4. **Next experiments or Backlog**: The next 1-3 things to do, each with a success threshold\n5. **Lessons learned**: The knowledge accumulated in this round of validation, to avoid repeating the same mistakes\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-openspec": {
+    "name": "OpenSpec Change Workflow (Spec First, Exportable to Your Project)",
+    "description": "Follows the OpenSpec workflow: explore → proposal (proposal.md) → delta specs (ADDED/MODIFIED/REMOVED) → design (design.md) → tasks (tasks.md) → implement → verify → archive rehearsal. Suited to incrementally modifying behavior in an existing project. The workflow's outputs can be exported in one click to an openspec/changes/<change-name>/ folder in your project, and you can also first import your project's existing openspec/specs to serve as the basis for the delta specs.",
+    "stages": [
+      {
+        "title": "Stage 1: Explore & Propose",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Spec & Design",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Tasks & Implementation",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 4: Verify & Archive",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-scrum": {
+    "name": "Agile Scrum Iterative Development",
+    "description": "Start from the product vision and Product Backlog, plan the first Sprint, break down tasks, run acceptance, and finish with a Sprint retrospective. Suited to product development where requirements change over time and delivery happens continuously in small batches.",
+    "stages": [
+      {
+        "title": "Stage 1: Product Vision & Backlog",
+        "steps": [
+          {
+            "title": "Product Vision & Goals",
+            "prompt": "# Product Vision & Goals\n\n## Role & Objective\nYou are a seasoned Product Owner coach. Help me write a clear product vision and measurable goals for this product, so the whole team knows \"for whom, which problem it solves, and what success looks like\".\n\n## Input\n- Product/project idea: [Please fill in]\n- Target users and their current pain points: [Please fill in]\n- Market or organizational context and constraints (budget, timeline, regulations): [Please fill in]\n\n## Output Requirements\n1. **Product vision**: One sentence in this form: \"For [target users] who need [need], [product] is a [category] that [key value]. Unlike [existing alternatives], we [differentiator].\"\n2. **Target user profiles**: 1-3 main personas, each with usage scenarios and pain points\n3. **Success metrics**: 3-5 measurable metrics (include current baselines if known)\n4. **Scope boundaries**: What is \"in\" and \"out\" for the first phase\n5. **Assumptions and open items**: Mark with [TBD: ...]; do not make things up\n"
+          },
+          {
+            "title": "User Stories & Product Backlog",
+            "prompt": "# User Stories & Product Backlog\n\n## Role & Objective\nYou are the Product Owner. Based on the product vision, help me build a prioritized Product Backlog.\n\n## Input\n- Product vision and goals: (see the output of the previous step)\n- Known must-have features or constraints: [Please fill in]\n\n## Output Requirements\n1. **Epic list**: Break the product into 3-7 main themes\n2. **User stories**: Under each Epic, write stories as \"As a [Role], I want [Feature], so that [Goal]\"\n3. **Acceptance criteria**: At least one Given / When / Then set per story\n4. **Priority**: Label with MoSCoW (Must/Should/Could/Won't) and briefly explain why\n5. **Dependencies and risks**: Point out dependencies between stories, and the highest-risk stories that are best done first to reduce uncertainty\n6. **Suggested MVP scope**: Which stories, if they are the only ones done, let us ship first and validate the value\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Sprint Planning",
+        "steps": [
+          {
+            "title": "Sprint Goal & Planning",
+            "prompt": "# Sprint Goal & Planning\n\n## Role & Objective\nYou are a Scrum Master. Help me plan the first Sprint: decide what this Sprint should achieve and which stories to pull in.\n\n## Input\n- Sprint length (e.g. 2 weeks): [Please fill in]\n- Team size and available hours per person: [Please fill in]\n- Product Backlog: (see the output of the previous step)\n\n## Output Requirements\n1. **Sprint Goal**: One sentence, verifiable at the end of the Sprint\n2. **Stories selected for the Sprint**: Listed by priority, with a total that does not exceed team capacity, and the reasoning behind the trade-offs\n3. **Definition of Done**: What counts as \"done\" for this Sprint's stories\n4. **Risks and dependencies**: Factors that could derail the Sprint Goal, and how to respond\n5. **Stories not selected but worth watching**: Candidates for the next Sprint\n\nIf the information is insufficient to judge capacity, list what I need to supply instead of making assumptions.\n"
+          },
+          {
+            "title": "Task Breakdown & Estimation",
+            "prompt": "# Task Breakdown & Estimation\n\n## Role & Objective\nYou are a senior engineer. Help me break the user stories selected for the Sprint into engineering tasks and estimate the effort.\n\n## Input\n- Sprint Goal and selected stories: (see the output of the previous step)\n- Technology in use / overview of existing code: [Please fill in]\n- Estimation unit (Story Points or hours): [Please fill in]\n\n## Output Requirements\n1. **Task list**: Break each story into tasks that take 0.5-2 days (including testing and documentation), with each task labeled by its story\n2. **Points/hours**: An estimate for every task; where an estimate is uncertain, state why\n3. **Dependencies and parallel work**: Which tasks must happen in sequence and which can run in parallel\n4. **Capacity check**: Compare the total estimate with team capacity, and if it is exceeded, suggest which stories to move out\n5. **Technical risks**: Areas that need a small experiment (Spike) first\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Development & Acceptance",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 4: Sprint Retrospective",
+        "steps": [
+          {},
+          {
+            "title": "Sprint Retrospective",
+            "prompt": "# Sprint Retrospective\n\n## Role & Objective\nYou are a Scrum Master. Facilitate our Sprint retrospective: identify what went well and what can be improved in this Sprint, and set improvement actions we can realistically carry out in the next Sprint.\n\n## Input\n- How the Sprint Goal turned out: [Please fill in]\n- Completed and unfinished stories: [Please fill in]\n- Problems and highlights encountered along the way: [Please fill in]\n- Team feelings or feedback (if any): [Please fill in]\n\n## Output Requirements\n1. **What went well** (to keep doing)\n2. **What could be better**\n3. **Impediments**: External or internal factors that affected progress or quality\n4. **Root cause analysis**: Dig into the 1-2 most important problems with \"5 Whys\"\n5. **Improvement actions**: 1-3 concrete actions for the next Sprint, each with an owner and a way to verify \"how we will know it improved\"\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-sdd": {
+    "name": "SDD Spec-Driven Development",
+    "description": "First write \"what to build and why\" as a verifiable specification, then let the spec drive technical planning, task breakdown, and implementation (the workflow follows GitHub Spec Kit). Suited to projects where you want AI to help with development without drifting from the requirements as you go. Run every step in the same AI conversation, and save the outputs as constitution.md/spec.md/plan.md/tasks.md.",
+    "stages": [
+      {
+        "title": "Stage 1: Principles & Spec",
+        "steps": [
+          {},
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: Plan & Tasks",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Analysis & Implementation",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {},
+          {}
+        ]
+      }
+    ]
+  },
+  "proj-tpl-waterfall": {
+    "name": "Traditional Waterfall Development",
+    "description": "Requirements analysis → system design → implementation and testing → deployment and operations. Each stage produces documents and is confirmed before moving on to the next. Suited to projects with clear, stable requirements that need complete documentation and an audit trail (for example internal systems or regulated software).",
+    "stages": [
+      {
+        "title": "Stage 1: Requirements Analysis",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 2: System Design",
+        "steps": [
+          {},
+          {
+            "title": "System Architecture & Database Design",
+            "prompt": "# System Architecture & Database Design\n\n## Role & Objective\nYou are a senior system architect. Based on the confirmed requirements specification and technology selection, help me produce a system design document that can be handed directly to the development team.\n\n## Input\n- Requirements specification and risk assessment: (see the output of the previous step)\n- Technology selection results: (see the output of the previous step)\n- Deployment environment and constraints from existing systems: [Please fill in]\n\n## Output Requirements\n1. **Architecture overview**: Module/component breakdown, their responsibilities, and data flow; may be described in text or as a Mermaid diagram\n2. **Database design**: Entities, fields and types, primary and foreign keys, indexes, and normalization trade-offs\n3. **Interface design**: List of external and inter-module APIs/events (inputs, outputs, error cases)\n4. **Non-functional design**: How performance, security, backup and restore, and logging and monitoring will be achieved\n5. **Design decisions and alternatives**: Why key decisions were made this way and what was set aside\n6. **Requirements traceability**: Which module or interface each requirement maps to, with any requirement that has no mapping specifically flagged\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 3: Implementation & Testing",
+        "steps": [
+          {},
+          {}
+        ],
+        "relatedPrompts": [
+          {},
+          {},
+          {}
+        ]
+      },
+      {
+        "title": "Stage 4: Deployment & Operations",
+        "steps": [
+          {
+            "title": "Go-Live Checklist & Deployment Plan",
+            "prompt": "# Go-Live Checklist & Deployment Plan\n\n## Role & Objective\nYou are a Release Manager. Help me plan this production release so as to reduce the risk of mistakes and of changes that cannot be undone.\n\n## Input\n- System overview and what is being released this time: (see the output of the previous step)\n- Deployment environment (cloud/data center, number of environments): [Please fill in]\n- Acceptable downtime and release window: [Please fill in]\n\n## Output Requirements\n1. **Pre-release checklist**: Tests passed, configuration and secrets, database migration, backups, dependent services, documentation and training\n2. **Deployment steps**: Listed in order, each with an owner and estimated time\n3. **Rollback plan**: When to roll back, how to roll back, and how to handle data\n4. **Post-release verification**: Which functions and metrics to check, and how soon stability should be confirmed\n5. **Communication plan**: Who to notify before and after the release, and what to tell them\n6. **Risks and countermeasures**\n"
+          },
+          {
+            "title": "Operations Handover Document",
+            "prompt": "# Operations Handover Document\n\n## Role & Objective\nYou are a senior engineer. Help me hand the system over to the operations team so that people who did not take part in development can still run it reliably.\n\n## Input\n- System design and deployment information: (see the output of the previous step)\n- Skills of the operations team and existing tools: [Please fill in]\n\n## Output Requirements\n1. **System overview**: Purpose, architecture, key dependent services\n2. **Environment and configuration list**: Address of each environment, configuration items, how secrets are managed (do not write out actual secrets)\n3. **Routine operations**: Backups, updates, certificate expiry, capacity checks, and so on, with frequency and steps\n4. **Monitoring and alerting**: Which metrics to watch, thresholds, and how to respond after an alert\n5. **Common troubleshooting**: Symptom → possible cause → resolution steps\n6. **Escalation path and contacts**\n7. **Known issues and to-dos**\n"
+          }
+        ],
+        "relatedPrompts": [
+          {},
+          {},
+          {}
+        ]
+      }
+    ]
+  }
+}
