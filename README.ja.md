@@ -306,7 +306,7 @@ ai-workspace-aggregator/
 ├── scripts/check-docs.js     # ドキュメントとバージョンの整合性チェック（npm run check:docs）
 ├── test/*.test.js            # ユニットテスト（utils、sqlite、ナレッジベースのセット、プロジェクトフロー）
 ├── package.json              # npm スクリプト + electron-builder 設定
-├── .eslintrc.json / .prettierrc.json
+├── eslint.config.js / .prettierrc.json
 ├── .github/workflows/ci.yml
 ├── extractors/
 │   ├── domCapture.js         # ページに注入される会話キャプチャスクリプト

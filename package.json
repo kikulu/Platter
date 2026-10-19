@@ -7,7 +7,7 @@
     "start": "electron .",
     "test": "node --test",
     "check:docs": "node scripts/check-docs.js",
-    "lint": "eslint . --ext .js",
+    "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "build": "electron-builder",
@@ -25,9 +25,11 @@
     "sql.js": "^1.14.2"
   },
   "devDependencies": {
-    "electron": "^30.0.0",
-    "electron-builder": "^24.13.3",
-    "eslint": "^8.57.1",
+    "@eslint/js": "^10.0.0",
+    "electron": "^44.8.0",
+    "electron-builder": "^26.15.3",
+    "eslint": "^10.12.0",
+    "globals": "^16.0.0",
     "pdfjs-dist": "^6.3.289",
     "prettier": "^3.3.3"
   },

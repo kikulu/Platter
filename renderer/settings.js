@@ -145,7 +145,7 @@
     if (!(e.ctrlKey || e.metaKey || e.altKey)) return null;
     const k = e.key;
     if (['Control', 'Meta', 'Alt', 'Shift'].includes(k)) return null;
-    let key = null;
+    let key;
     if (/^[a-zA-Z0-9]$/.test(k)) key = k.toUpperCase();
     else if (/^F([1-9]|1[0-9]|2[0-4])$/.test(k)) key = k;
     else {

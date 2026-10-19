@@ -306,7 +306,7 @@ ai-workspace-aggregator/
 ├── scripts/check-docs.js     # Docs/version consistency check (npm run check:docs)
 ├── test/*.test.js            # Unit tests (utils, sqlite, knowledge bundles, project workflow)
 ├── package.json              # npm scripts + electron-builder config
-├── .eslintrc.json / .prettierrc.json
+├── eslint.config.js / .prettierrc.json
 ├── .github/workflows/ci.yml
 ├── extractors/
 │   ├── domCapture.js         # Injected conversation-capture script
