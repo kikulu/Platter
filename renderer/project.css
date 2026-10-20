@@ -940,6 +940,48 @@ body {
   justify-content: flex-end;
   margin: 2px 0 6px;
 }
+#wf-dispatch-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 0 0 8px;
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--bg-hover);
+}
+#wf-dispatch-hint,
+#wf-dispatch-last {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-dispatch-last.ok {
+  color: #2ecc71;
+}
+#wf-dispatch-last.error {
+  color: #e74c3c;
+}
+.wf-dispatch-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.wf-dispatch-row select {
+  flex: 1;
+  min-width: 0;
+}
+.wf-step-dispatch {
+  flex-shrink: 0;
+  max-width: 40%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 8px;
+  color: var(--text-secondary);
+  border: 1px solid var(--border);
+}
 #wf-saved-hint,
 #wf-template-saved {
   min-height: 16px;

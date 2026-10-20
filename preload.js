@@ -202,6 +202,8 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
     ipcRenderer.invoke('projects:workflow:stagePrompt:applyUpdates', { projectId, ids }),
   composeWorkflowPrompt: (projectId, stepId) =>
     ipcRenderer.invoke('projects:workflow:compose', { projectId, stepId }),
+  dispatchWorkflowStep: (projectId, stepId, accountId) =>
+    ipcRenderer.invoke('projects:workflow:dispatch', { projectId, stepId, accountId }),
   saveWorkflowAsTemplate: (projectId, payload) =>
     ipcRenderer.invoke('projects:workflow:saveAsTemplate', { projectId, ...payload }),
   // OpenSpec 整合：匯出成 openspec/changes/<變更名稱>/、匯入現有 openspec/specs 當既有規格

@@ -691,7 +691,7 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 （`{ templateId, topic, name? }`，主題必填）、`projects:workflow:setMeta`（主題／帶入方式／
 目前步驟）、`projects:workflow:updateStep`（只接受 `output`／`prompt`／`title`）、
 `projects:workflow:setStepStatus`、`projects:workflow:compose`、
-`projects:workflow:saveAsTemplate`。快速搜尋的專案比對也涵蓋專案主題。
+`projects:workflow:dispatch`（1.44.0）、`projects:workflow:saveAsTemplate`。快速搜尋的專案比對也涵蓋專案主題。
 
 **畫面**（`project.html` / `project.js`）：
 
@@ -714,6 +714,16 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
   純函式在 `lib/workflow.js`，IPC 為 `projects:workflow:stagePrompt:add／update／remove／
   checkUpdates／applyUpdates`。**`projects:save` 一律忽略傳入的 `workflow`**（只能走
   `projects:workflow:*` 頻道改），避免畫面端過期的副本蓋掉較新的進度。舊專案沒有來源欄位照常運作。
+
+- **派發（1.44.0）**：流程頁每一步有「派發…」按鈕，把這一步交給某個帳號（`projects:workflow:dispatch`，
+  `{ projectId, stepId, accountId }`）。主程序依序：記下 `step.dispatch = { accountId, accountName, at }`
+  （名稱為快照，帳號之後被刪除仍可辨識）→ 把對應任務的 `assigneeId` 設成該帳號 → 待辦步驟轉進行中並同步任務
+  狀態（已完成的不變）、目前步驟移到這一步（純函式 `applyDispatch()`，`normalizeDispatch()` 負責載入時補齊／
+  清理欄位）→ 以 `composeStepPrompt()` 組出完整提示詞並寫入剪貼簿 → `switchAccount()` 並呼叫
+  `bringMainWindowToFront()` 把主視窗帶到前景。**不自動貼上或送出**，由使用者在該帳號輸入框貼上後送出（符合
+  第 2 節核心原則，不碰各平台 DOM）。專案／步驟／帳號任一不存在回 `{ ok: false, error: 'NOT_FOUND' }`，不改資料。
+  成功後廣播 `projects:changed`、`accounts:changed` 並寫稽核日誌。畫面端打開面板時重新載入帳號與角色，
+  派發後把負責人同步回 `editingTasks`（避免之後「儲存專案」蓋回舊負責人）；步驟清單顯示「→ 帳號名稱」標籤。
 
 備份與還原同步支援專案資料（含 `tasks`、`issues` 與 `workflow`），匯入時已存在的
 專案 id 略過。
@@ -1514,7 +1524,7 @@ nonEmptyMessageCount, pageUrl }`，這是為了診斷「AI 平台網站的 DOM
 | `knowledge:changed`     | 知識庫項目/套餐的新增、編輯、刪除、匯入、角色刪除清理                                                  | 側邊欄「預設提示詞」區塊                       |
 | `documents:changed`     | 文件匯入/儲存/刪除、對話匯出自動登記                                                                   | 文件庫視窗、對話庫視窗                         |
 | `conversations:changed` | 對話庫新增/儲存/刪除、匯出自動登記、文件刪除連動清理關聯、備份匯入                                     | 對話庫視窗                                     |
-| `projects:changed`      | 專案/任務/issue 的新增、儲存、刪除、狀態切換、工時紀錄新增/移除                                        | （目前沒有其他視窗訂閱，保留給未來擴充）       |
+| `projects:changed`      | 專案/任務/issue 的新增、儲存、刪除、狀態切換、工時紀錄新增/移除、流程步驟派發                          | （目前沒有其他視窗訂閱，保留給未來擴充）       |
 | `reminders:changed`     | 到期摘要重新計算後（每小時排程、或任一次 `projects:changed` 之後都會立刻重算一次）                     | 主視窗（側邊欄「專案計畫」角標）               |
 | `tray:prefsChanged`     | 托盤設定變更（專案區塊模式、快捷鍵、最近使用筆數）或清除最近使用（1.41.0）                              | 浮動托盤                                       |
 | `tray:hotkey`           | 全域快捷鍵觸發（只送給托盤視窗，參數 `toggle`／`expand`；1.41.0）                                      | 浮動托盤                                       |

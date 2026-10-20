@@ -12,6 +12,7 @@ const assert = require('node:assert/strict');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
+const { pathToFileURL } = require('url');
 
 const {
   isHttpUrl,
@@ -31,7 +32,9 @@ const {
 } = require('../lib/security');
 
 const RENDERER = path.join(path.sep, 'app', 'renderer');
-const fileUrl = (rel) => `file://${path.posix.join('/app/renderer', rel)}`;
+// 用 pathToFileURL 產生網址，Windows（含磁碟機代號）與 POSIX 都能通過
+const fileUrl = (rel) => pathToFileURL(path.join(RENDERER, rel)).href;
+const appFileUrl = (...parts) => pathToFileURL(path.join(path.sep, 'app', ...parts)).href;
 
 // ---- 網址 ----
 
@@ -134,8 +137,8 @@ test('isTrustedAppUrl：只認 renderer/ 底下的 file:// 頁面（含查詢字
     isTrustedAppUrl(fileUrl('project.html') + '?select=abc#x', RENDERER),
     true
   );
-  assert.equal(isTrustedAppUrl('file:///app/renderer/../main.js', RENDERER), false);
-  assert.equal(isTrustedAppUrl('file:///app/other/index.html', RENDERER), false);
+  assert.equal(isTrustedAppUrl(appFileUrl('main.js'), RENDERER), false);
+  assert.equal(isTrustedAppUrl(appFileUrl('other', 'index.html'), RENDERER), false);
   assert.equal(
     isTrustedAppUrl('https://evil.example/app/renderer/index.html', RENDERER),
     false

@@ -268,9 +268,25 @@
               <textarea id="wf-prompt-edit"></textarea>
             </details>
             <div class="wf-actions">
+              <button id="btn-wf-dispatch" data-i18n="project.wfDispatch">派發…</button>
               <button id="btn-wf-copy" class="primary" data-i18n="project.wfCopy">
                 複製提示詞
               </button>
+            </div>
+            <div id="wf-dispatch-panel" style="display: none">
+              <div id="wf-dispatch-hint" data-i18n="project.wfDispatchHint">
+                把這一步交給指定帳號：複製完整提示詞並切換到該帳號，到輸入框貼上後自行送出。
+              </div>
+              <div class="wf-dispatch-row">
+                <label class="label" for="wf-dispatch-target" data-i18n="project.wfDispatchTarget"
+                  >派發給</label
+                >
+                <select id="wf-dispatch-target"></select>
+                <button id="btn-wf-dispatch-go" class="primary" data-i18n="project.wfDispatchGo">
+                  派發並切換帳號
+                </button>
+              </div>
+              <div id="wf-dispatch-last"></div>
             </div>
             <label class="label" data-i18n="project.wfOutputLabel"
               >AI 的產出（貼回這裡；會帶入後面步驟的提示詞）</label

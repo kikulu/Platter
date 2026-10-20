@@ -1551,6 +1551,12 @@
   const wfOutputEl = document.getElementById('wf-output');
   const wfSavedHintEl = document.getElementById('wf-saved-hint');
   const wfCopyBtn = document.getElementById('btn-wf-copy');
+  const wfDispatchBtn = document.getElementById('btn-wf-dispatch');
+  const wfDispatchPanelEl = document.getElementById('wf-dispatch-panel');
+  const wfDispatchTargetEl = document.getElementById('wf-dispatch-target');
+  const wfDispatchGoBtn = document.getElementById('btn-wf-dispatch-go');
+  const wfDispatchLastEl = document.getElementById('wf-dispatch-last');
+  let allRoles = [];
   const wfPrevBtn = document.getElementById('btn-wf-prev');
   const wfDoneBtn = document.getElementById('btn-wf-done');
   const wfTemplateNameEl = document.getElementById('wf-template-name');
@@ -1613,6 +1619,104 @@
     renderPitchBridge(wf);
   }
 
+  // 派發（1.44.0）：顯示用的帳號名稱——帳號還在就用目前的名稱，已被刪除就用派發當下的快照
+  function dispatchAccountName(dispatch) {
+    const acc = allAccounts.find((a) => a.id === dispatch.accountId);
+    if (acc) return acc.name;
+    return `${dispatch.accountName || ''} ${window.i18n.t('project.wfDispatchMissing')}`.trim();
+  }
+
+  function dispatchOptionLabel(acc) {
+    const role = acc.roleId ? allRoles.find((r) => r.id === acc.roleId) : null;
+    return `${acc.name} (${[acc.platform, role && role.name].filter(Boolean).join(' · ')})`;
+  }
+
+  function refreshDispatchPanel(wf, step) {
+    wfDispatchLastEl.className = '';
+    if (step && step.dispatch) {
+      const when = step.dispatch.at ? new Date(step.dispatch.at).toLocaleString() : '';
+      wfDispatchLastEl.textContent = window.i18n.t('project.wfDispatchLast', {
+        name: dispatchAccountName(step.dispatch),
+        time: when,
+      });
+    } else {
+      wfDispatchLastEl.textContent = '';
+    }
+  }
+
+  // 打開派發面板時才重新載入帳號與角色（使用者可能剛新增帳號或改了角色）
+  async function openDispatchPanel() {
+    const wf = currentWorkflow();
+    const step = wf && wf.steps.find((s) => s.id === wfSelectedStepId);
+    if (!step) return;
+    [allAccounts, allRoles] = await Promise.all([
+      window.workspaceAPI.listAccounts(),
+      window.workspaceAPI.listRoles(),
+    ]);
+    wfDispatchTargetEl.innerHTML = '';
+    if (allAccounts.length === 0) {
+      const opt = document.createElement('option');
+      opt.value = '';
+      opt.textContent = window.i18n.t('project.wfDispatchNoAccounts');
+      wfDispatchTargetEl.appendChild(opt);
+      wfDispatchGoBtn.disabled = true;
+    } else {
+      wfDispatchGoBtn.disabled = false;
+      allAccounts.forEach((acc) => {
+        const opt = document.createElement('option');
+        opt.value = acc.id;
+        opt.textContent = dispatchOptionLabel(acc);
+        wfDispatchTargetEl.appendChild(opt);
+      });
+      // 預選順序：上次派發的對象 → 這一步任務目前的負責人 → 現在正在用的帳號
+      const project = currentProject();
+      const task =
+        step.taskId && project && project.tasks.find((tk) => tk.id === step.taskId);
+      const preferred = [
+        step.dispatch && step.dispatch.accountId,
+        task && task.assigneeId,
+        (allAccounts.find((a) => a.active) || {}).id,
+      ].find((id) => id && allAccounts.some((a) => a.id === id));
+      if (preferred) wfDispatchTargetEl.value = preferred;
+    }
+    refreshDispatchPanel(wf, step);
+    wfDispatchPanelEl.style.display = 'flex';
+  }
+
+  wfDispatchBtn.addEventListener('click', () => {
+    if (wfDispatchPanelEl.style.display === 'none') openDispatchPanel();
+    else wfDispatchPanelEl.style.display = 'none';
+  });
+
+  wfDispatchGoBtn.addEventListener('click', async () => {
+    const accountId = wfDispatchTargetEl.value;
+    const wf = currentWorkflow();
+    const step = wf && wf.steps.find((s) => s.id === wfSelectedStepId);
+    if (!accountId || !step) return;
+    const res = await window.workspaceAPI.dispatchWorkflowStep(
+      currentProjectId,
+      step.id,
+      accountId
+    );
+    if (!res || !res.ok) {
+      wfDispatchLastEl.textContent = window.i18n.t('project.wfDispatchFailed');
+      wfDispatchLastEl.className = 'error';
+      return;
+    }
+    // 任務負責人已在主程序改好；同步目前編輯中的任務清單，
+    // 避免之後按「儲存專案」把舊的負責人蓋回去
+    const editing = editingTasks.find((tk) => tk.id === step.taskId);
+    if (editing) editing.assigneeId = accountId;
+    adoptProjects(res.projects);
+    renderWorkflow();
+    wfDispatchPanelEl.style.display = 'flex';
+    wfDispatchLastEl.textContent = window.i18n.t(
+      res.copied ? 'project.wfDispatchDone' : 'project.wfDispatchNotCopied',
+      { name: res.accountName }
+    );
+    wfDispatchLastEl.className = res.copied ? 'ok' : 'error';
+  });
+
   function renderWorkflowSteps(wf) {
     const done = wf.steps.filter((s) => s.status === 'done').length;
     wfProgressEl.textContent = window.i18n.t('project.wfProgress', {
@@ -1655,6 +1759,12 @@
       title.textContent = `${numbers[i]} ${step.title}`;
       row.appendChild(icon);
       row.appendChild(title);
+      if (step.dispatch) {
+        const badge = document.createElement('span');
+        badge.className = 'wf-step-dispatch';
+        badge.textContent = `→ ${dispatchAccountName(step.dispatch)}`;
+        row.appendChild(badge);
+      }
       row.addEventListener('click', () => selectWorkflowStep(step.id));
       wfStepsEl.appendChild(row);
     });
@@ -1989,6 +2099,11 @@
       idx === wf.steps.length - 1 ? 'project.wfDoneLast' : 'project.wfDoneNext'
     );
     wfCopyBtn.textContent = window.i18n.t('project.wfCopy');
+    // 切換步驟時收起派發面板（對象與紀錄是每一步各自的）
+    if (wfDispatchPanelEl.dataset.stepId !== step.id) {
+      wfDispatchPanelEl.style.display = 'none';
+      wfDispatchPanelEl.dataset.stepId = step.id;
+    }
     refreshComposedPrompt();
   }
 

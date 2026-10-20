@@ -16,9 +16,9 @@ jobs:
     strategy:
       matrix:
         # 跨兩個 Node 版本跑，跟 lib/utils.js、lib/sqlite.js 主要目標的
-        # LTS 版本對齊，避免只在單一版本上測試出現「本機能跑、CI 用的
+        # LTS 版本對齊（ESLint 10 需要 Node 20.19+），避免只在單一版本上測試出現「本機能跑、CI 用的
         # 版本卻壞掉」的落差。
-        node-version: [18.x, 20.x]
+        node-version: [20.x, 22.x]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
