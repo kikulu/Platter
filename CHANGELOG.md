@@ -1,5 +1,47 @@
 # Changelog
 
+## [1.46.0]
+
+專案範本檔匯入：可以從 `.json` 檔匯入自訂專案範本，並附上格式說明文件與 6 個企業行銷／教育訓練／財務會計範本檔。
+
+### 匯入範本檔（專案 › 從範本建立 › 匯入範本檔…）
+
+- 新 IPC `projectTemplates:import`（`preload.js`：`importProjectTemplates()`）：選一個 `.json`（上限 10 MB，可含 BOM），
+  驗證後以**自訂範本**加進清單並自動選取第一個；回傳 `{ ok, imported, skipped, firstId }`，失敗回 `{ ok: false, error }`
+  （`canceled`／`too-large`／`invalid-file`／`no-valid-template`）。寫一筆稽核日誌。
+- 驗證是純函式 `lib/workflow.js` 的 `sanitizeImportedTemplates()`：匯入檔是外部輸入，只留白名單欄位
+  （`name`／`description`／`stages[].title／steps／relatedPrompts`、步驟的 `title`／`prompt`／`itemDefaultId`／`artifact`／
+  `useBaseContext`）、一律重新產生 `id` 與 `createdAt`（重複匯入不會覆蓋既有範本）、長度與數量設上限
+  （50 範本／30 階段／50 步驟／20 相關提示詞／提示詞 50,000 字）、`artifact` 只接受不含 `..` 的 `.md` 相對路徑。
+  能用的留下、不能用的略過並回報原因（`no-name`／`no-steps`／`too-many`／`not-object`），不會因一個壞步驟讓整份失敗。
+  最上層接受 `{ format, formatVersion, templates }`（建議）、範本陣列、單一範本物件三種。
+- 畫面：範本選擇頁新增「匯入範本檔…」按鈕與結果提示（匯入幾個、略過幾個）；新增語系鍵 `project.tplImport*` 6 個＋
+  `main.projects.templateImportTitle`／`main.projects.log.templatesImported`（三語系各 687 個鍵）。
+
+### 文件與範本檔
+
+- 新增 [`docs/PROJECT_TEMPLATE_FORMAT.md`](./docs/PROJECT_TEMPLATE_FORMAT.md)：匯入方式、檔案結構與欄位表、上限、
+  `{{topic}}`／`[請填入]`／`[待確認]` 標記、提示詞寫法建議、驗證規則與常見錯誤、「請 AI 幫你產生範本檔」的提示詞、範例檔索引。
+- 新增 6 個可直接匯入的範本檔（`docs/project-templates/`，每個 3～4 個階段、8～11 個步驟，提示詞統一用
+  「角色與目標／輸入資訊／輸出要求／補充」骨架，並要求缺資料標 `[待確認]`、不編造數據、金額或法規）：
+  - 企業行銷：`marketing-integrated-campaign.json`（整合行銷活動企劃與執行）、`marketing-content-social.json`（內容行銷與社群經營規劃）
+  - 教育訓練：`training-course-development.json`（企業內訓課程開發，ADDIE）、`training-new-hire-onboarding.json`（新人到職訓練計畫）
+  - 財務會計：`finance-month-end-close.json`（月結與財務報表作業）、`finance-annual-budget.json`（年度預算編製與預測）
+- 這些是通用骨架，不是內建範本：不影響內建範本數量與三語系內建內容；稅務與會計準則相關步驟都提醒
+  「依當地法規與公司會計政策確認，由會計師或主管覆核」。
+
+### 測試
+
+- 新增 `test/project-template-import.test.js`（10 項）：三種最上層格式、格式錯誤、新 id、壞步驟／空階段／無名範本、
+  `artifact` 路徑白名單、上限、IPC（取消／壞檔／成功含 BOM／重複匯入／匯入後建立專案並確認 `{{topic}}` 被代換），
+  以及 `docs/project-templates/*.json` 每個範本檔都必須完整匯入（零略過、步驟數不變、提示詞含四個必要區塊）。共 302 項測試。
+
+### 已知限制
+
+- **尚未在真正的 Electron 視窗驗證**（沒有顯示器）：檔案選擇對話框與匯入按鈕版面只做了單元測試。
+- 匯入的範本沒有匯出對應功能（要分享範本請直接複製 JSON 檔）；匯入不支援覆蓋或合併同名範本。
+- 範例範本沒有 `en`／`ja` 版本（內容為繁體中文）。
+
 ## [1.45.0]
 
 內部整理，沒有新功能、沒有畫面變化：專案視窗的大檔拆分，以及資料檔 schema 版本號與集中式 migration。

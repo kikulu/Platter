@@ -687,7 +687,8 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
   IPC `tray:projectPrompts`）——見第 11 節浮動托盤說明。
 
 **IPC**（見 `preload.js`）：`projectTemplates:list`（內建在前、自訂在後，只回傳階段與
-步驟標題預覽、不含提示詞全文）、`projectTemplates:delete`、`projects:createFromTemplate`
+步驟標題預覽、不含提示詞全文）、`projectTemplates:delete`、`projectTemplates:import`（1.46.0，匯入 `.json` 範本檔，
+驗證規則與格式見 `docs/PROJECT_TEMPLATE_FORMAT.md`，純函式 `sanitizeImportedTemplates()`）、`projects:createFromTemplate`
 （`{ templateId, topic, name? }`，主題必填）、`projects:workflow:setMeta`（主題／帶入方式／
 目前步驟）、`projects:workflow:updateStep`（只接受 `output`／`prompt`／`title`）、
 `projects:workflow:setStepStatus`、`projects:workflow:compose`、
@@ -1650,7 +1651,9 @@ extractors/i18n/                                     # 內建內容的英文／�
 lib/security.js                                      # 資安防護：視窗加固、IPC 來源檢查、網址／路徑／副檔名判斷（第 9.9 節，1.42.0）
 lib/backupSanitize.js                                # 備份匯入資料驗證（第 9.9 節，1.42.0）
 scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
-test/*.test.js                                       # 單元測試（node --test，29 個檔案）
+test/*.test.js                                       # 單元測試（node --test，30 個檔案）
+docs/PROJECT_TEMPLATE_FORMAT.md                      # 專案範本檔匯入格式（1.46.0）
+docs/project-templates/*.json                        # 可直接匯入的範例範本檔（行銷／教育訓練／財務會計各 2 個，1.46.0）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js

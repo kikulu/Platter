@@ -362,6 +362,7 @@ actual login cookies/localStorage.
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | Prompt template for adding a new feature once all existing phases are done                                                        |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | Prompt template for fixing a problem in an existing feature                                                                       |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | Prompts for developing different features in parallel new chats, then merging (generic template + per-feature versions) |
+| [docs/PROJECT_TEMPLATE_FORMAT.md](./docs/PROJECT_TEMPLATE_FORMAT.md) | Project template file import format (zh-TW); sample files in `docs/project-templates/` |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | Optimization and redesign proposals (reliability/security, docs upkeep, product direction, suggested release cadence) |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | Security audit report (findings, severity, remediation order) |
 | [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | Security fix checklist (1.42.0, per-item status) |

@@ -288,7 +288,7 @@ Platter/
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json, ja.json
 ├── scripts/check-docs.js     # 文件與版本一致性檢查（npm run check:docs）
-├── test/*.test.js            # 單元測試（node --test，共 29 個檔案）
+├── test/*.test.js            # 單元測試（node --test，共 30 個檔案）
 ├── docs/parallel-dev/        # 多對話平行開發提示詞（通用範本＋功能 A～D）
 └── assets/                    # App 圖示與生成提示詞
 ```
@@ -320,6 +320,7 @@ extensions.json         # 已安裝的擴充功能清單
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既有階段都做完之後，要加新功能時用的提示詞模板                                                        |
 | [FIX_EXISTING_FEATURE_PROMPT.md](./FIX_EXISTING_FEATURE_PROMPT.md) | 修正既有功能問題時用的提示詞模板                                                                      |
 | [docs/parallel-dev/](./docs/parallel-dev/README.md)                | 多個新對話平行開發不同功能、再合併的提示詞（通用範本＋各功能版本）                                    |
+| [docs/PROJECT_TEMPLATE_FORMAT.md](./docs/PROJECT_TEMPLATE_FORMAT.md) | 專案範本檔匯入格式（欄位、驗證規則、提示詞寫法、請 AI 產生範本檔的提示詞）；範例檔在 `docs/project-templates/` |
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 優化與改版建議（可靠性／安全、文件維護、產品方向、建議版本節奏） |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | 資安檢查報告（發現、嚴重度、修補順序） |
 | [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | 資安修補清單檢核表（1.42.0，逐項狀態） |
