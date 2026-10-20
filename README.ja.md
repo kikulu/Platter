@@ -288,6 +288,7 @@ ai-workspace-aggregator/
 │   ├── console.js                 # コンソールキャプチャ：グローバル console.* を上書き
 │   ├── logs.js                     # ログコンソール：エラーログ + 監査ログ（sql.js/SQLite）
 │   ├── stores.js                    # データ層：各データファイルの loadX()/saveX()
+│   ├── migrations.js                # データファイルのスキーマバージョンと集中マイグレーション（純粋関数、1.45.0）
 │   ├── windows.js                    # ウィンドウとアカウントごとの WebContentsView の管理
 │   ├── conversationCapture.js         # 会話のキャプチャ/エクスポート、セレクタピッカーツール
 │   ├── reminders.js                    # タスク期限リマインダー：期限サマリー、1時間ごとのスケジュール、ネイティブ通知
@@ -321,7 +322,7 @@ ai-workspace-aggregator/
 │   ├── knowledge.html / knowledge.js / knowledge.css  # ナレッジベース（独立ウィンドウ）
 │   ├── documents.html / documents.js / documents.css  # ドキュメントライブラリ（Markdown/Word/PDF 予覧、Word/PDF 基本編集）
 │   ├── team.html, team.js, team.css              # 仮想チームコンソール
-│   ├── project.html, project.js, project.css     # プロジェクト計画管理
+│   ├── project.html, project/*.js, project.css     # プロジェクト計画管理
 │   ├── conversation.html, conversation.js, conversation.css # 会話ライブラリ
 │   ├── log.html, log.js, log.css                 # ログコンソール（エラーログ／監査ログ／ライブコンソール）
 │   ├── tray.html / tray.js / tray.css            # 右下隅のフローティングトレイ（ナレッジベースのプロンプトをすぐ使える）

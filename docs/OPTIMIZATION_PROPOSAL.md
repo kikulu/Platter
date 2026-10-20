@@ -89,14 +89,14 @@ sql.js WASM 初始化。README 的 Electron 徽章已改回實際的 `^30`，升
 - 三份 README 的功能總覽表有極長的儲存格（單格上千字）。建議表格只留一句話摘要，細節移到
   `docs/features/*.md`，三語 README 的同步成本會明顯下降。
 
-#### 2.7 `renderer/project.js` 拆分
+#### 2.7 `renderer/project.js` 拆分（✅ `1.45.0` 已完成，改用多支一般 `<script>`，見 CHANGELOG）
 
 2,216 行且持續成長（每個專案相關功能都往裡加）。比照 `1.17.0` 對 `main.js` 的做法，依功能拆成
 任務清單、月曆、甘特圖、Issue、階段流程、關聯文件／簡報橋接等檔案，用 `<script type="module">`
 載入（renderer 沒有打包工具，原生 ES module 即可，不需引入建置流程）。
 取捨：純重構、沒有使用者可見的收益，所以只在動到該區域時順手做，並且獨立 commit。
 
-#### 2.8 資料檔 schema 版本與集中式 migration
+#### 2.8 資料檔 schema 版本與集中式 migration（✅ `1.45.0` 已完成，見 `lib/migrations.js`；原子寫入部分已於 `1.41.0` 完成）
 
 各資料檔目前沒有版本欄位，「舊資料正規化」散在各 loader 與功能裡（例如 1.40.0 的舊專案補
 `stagePrompts`）。建議在 `lib/stores.js` 加 `schemaVersion` 與一組依序執行的 migration，

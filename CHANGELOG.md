@@ -1,5 +1,60 @@
 # Changelog
 
+## [1.45.0]
+
+內部整理，沒有新功能、沒有畫面變化：專案視窗的大檔拆分，以及資料檔 schema 版本號與集中式 migration。
+
+### 大檔拆分：`renderer/project.js`（2,595 行）→ `renderer/project/*.js`
+
+- 原本包在單一 IIFE 裡的 `project.js` 依功能拆成 14 支檔（全部在 `renderer/project/`）：`project-core`
+  （DOM 參照／共用狀態／日期工具／專案清單／分頁）、`project-tasks`、`project-calendar`、`project-gantt`、
+  `project-issues`、`project-overview`、`project-templates`、`project-linked-docs`、`project-workflow`、
+  `project-stage-prompts`、`project-workflow-detail`、`project-pitch`、`project-openspec`、`project-main`
+  （專案編輯＋初始化，必須最後載入）。最大的一支約 410 行。
+- **做法**：不用 ES module，改成多支一般 `<script>`，彼此共用全域詞法作用域（頂層 `const`／`let`／`function`
+  互相看得到）；`project.html` 依原本的區段順序列出 14 個 `<script src>`，載入順序與原本檔案內的宣告順序相同，
+  所以暫時性死區（TDZ）與事件接線順序都沒變。CSP（`script-src 'self'`）不需要改。每支檔案開頭有
+  `/* global … */`／`/* exported … */` 註解列出跨檔使用的名稱，避免 ESLint 的 `no-undef`／`no-unused-vars` 誤報。
+- 已逐一確認這 149 個頂層名稱不會跟瀏覽器 `window` 既有屬性撞名。
+- `test/i18n-keys.test.js` 的中文白名單改指向 `renderer/project/project-pitch.js`（簡報製作標籤的三種寫法）。
+
+### 資料檔 schema 版本號與集中式 migration（新增 `lib/migrations.js`）
+
+- 8 種資料檔（`app-state.json`、`knowledge-base.json`、`selectors.json`、`projects.json`、`project-templates.json`、
+  `documents.json`、`conversations.json`、`seeded-defaults.json`）最上層新增整數 `schemaVersion`（目前都是 `1`）；
+  沒有這個欄位的舊檔視為版本 0。
+- 原本散在 `loadProjects()`／`loadKnowledgeBase()`／`loadConversations()` 的「舊資料補欄位」（任務 `timeEntries`、
+  `linkedDocumentIds`、`systemPrompt`／`userPrompt`、`step.stage`、壞掉的 `workflow` 丟棄……）全部集中成
+  `lib/migrations.js` 的 v0→v1 步驟（純函式、冪等）。之後新增欄位只要在 `MIGRATIONS[kind]` 補一個步驟＋一個測試。
+- **讀檔**（`lib/stores.js` 的 `loadVersionedFile()`）：版本比較舊就升級並寫回磁碟，升級前先把原檔留成
+  `<檔名>.v<舊版本>.bak`（只留第一次升級前的原貌）；已是最新版的檔案不會重寫；檔案版本比程式新（降版）時不動檔案、
+  只在主控台警告。
+- **寫檔**（`writeVersionedFile()`）：一律先過一遍 migration 再寫，等於補齊欄位並蓋上版本，所以各處 IPC 新建的紀錄
+  就算沒帶齊欄位，磁碟上的檔案也永遠是最新形狀。
+- `selectors.json` 最上層本來就是「平台 → 選擇器」對照表，`schemaVersion` 與平台鍵並列；讀進來就拿掉，其餘程式碼看到
+  的仍是純對照表。
+- **備份**：匯出的備份新增 `schemaVersions`（各資料種類當下的版本）。匯入時備份是外部輸入、宣告的版本不可信，
+  所以每種資料都從版本 0 完整重跑 migration（只有備份宣告的版本比程式新時才原樣保留），取代原本各處的
+  `{ tasks: [], issues: [], ...p }` 式補欄位。
+- 「清除備份檔」（設定頁）同步改成也清掉 `*.json.v<N>.bak`，避免升級前的舊資料殘留。
+- UI 預設值的深合併（`loadAppState()` 的 `ui`／`sidebarGroups`）與內建內容補種不屬於一次性格式升級，維持原本做法。
+
+### 測試
+
+- 新增 `test/migrations.test.js`（17 項）：版本表與連號、各資料種類舊形狀→新形狀、冪等、壞輸入、降版不動資料、
+  舊檔升級＋`.v0.bak`、最新版不重寫、各種 save 蓋版本並補欄位、`selectors` 版本鍵不外洩、`app-state` 與
+  `seeded-defaults` 升級、清除備份檔涵蓋升級前備份。`test/backup-sanitize.test.js` 新增 1 項（舊備份匯入補齊欄位）。
+  共 292 項測試（原 274）。
+- 拆分前後用 Chromium（假 `workspaceAPI`＋真實範本資料）載入 `project.html` 走過所有分頁、階段流程、派發面板、總覽與新增
+  專案，15 個畫面快照逐字一致。
+
+### 已知限制
+
+- **尚未在真正的 Electron 視窗驗證**（沒有顯示器），只做了上述 Chromium 冒煙比對與單元測試。
+- 這個環境無法安裝 npm 套件，`npm run lint`／`npm run format:check` 沒有跑過；新檔案已照 Prettier 設定（CRLF、單引號、
+  90 欄）手動排版，請在有網路的環境跑一次 `npm run format:check`。
+- 降版（用舊版程式開新版資料檔）不受支援：只保證不改檔，舊版的 `loadX()` 看到的 `schemaVersion` 欄位會被忽略。
+
 ## [1.44.0]
 
 專案流程新增「派發」：把某一步交給指定的 AI 帳號，一鍵完成「指派負責人 → 複製提示詞 → 切到該帳號」。

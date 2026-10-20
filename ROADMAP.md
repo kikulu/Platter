@@ -1,6 +1,6 @@
 # Roadmap
 
-> 最後更新：`1.44.0`（2026-10-20）。更深入的優化與改版評估見
+> 最後更新：`1.45.0`（2026-10-20）。更深入的優化與改版評估見
 > [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
 
 ## 明確排除的功能
@@ -37,6 +37,8 @@
    **仍待處理**：Electron 30 升級（H-2，要在有網路的環境升級並跑冒煙測試）、產生並提交 `package-lock.json` 後 CI 改 `npm ci`、
    Actions 釘 commit SHA、評估替換或隔離 `pdf-lib`、`npm audit`、程式碼簽章；以及清單末尾的人工驗證項目。
 
+已完成（`1.45.0`）：`renderer/project.js` 拆成 `renderer/project/*.js`（14 支）；8 種資料檔加上 `schemaVersion` 與集中式 migration（`lib/migrations.js`）。
+
 已完成（`1.44.0`）：專案流程「派發」——把某一步交給指定帳號（指派負責人、複製完整提示詞、切換帳號，不自動貼上送出）。
 
 已完成（`1.43.0`）：內建角色／提示詞／套餐／專案範本與主程序文字三語系（繁中／英文／日文），切換語言時自動換未改動的內建項目。
@@ -68,10 +70,13 @@
   寫入頻率變大時應重新評估 `better-sqlite3`（原生模組，要處理 `electron-rebuild`／
   `asarUnpack`），不要預設沿用 sql.js。完整取捨見 `PROJECT_SPEC.md` 第 9.7 節。
   建議先訂出觸發條件（例如單一 JSON 檔超過數 MB、或全域搜尋延遲可感知）再動手。
-- **大檔拆分**：`renderer/project.js` 已超過 2,200 行，比照 `1.17.0` 對 `main.js` 的
-  做法拆成多個檔案（renderer 沒有打包工具，可用 `<script type="module">`）。
-- **資料檔 schema 版本號與集中式 migration**：目前各種「舊資料正規化」散在各處，
-  新增欄位時容易漏掉舊資料的預設值。
+- **其餘大檔拆分**：`renderer/knowledge.js`（932 行）、`lib/utils.js`（837）、`renderer/settings.js`（756）、
+  `lib/windows.js`（733）、`lib/ipc/projects.js`（726）是下一批候選；`project.js` 已在 `1.45.0` 拆完，
+  做法（多支一般 `<script>` 共用全域詞法作用域）見 `CHANGELOG.md` `1.45.0`。
+- **補上 `eslint.config.js`**：`README` 與 `package.json` 都寫了 `npm run lint`，但這份 repo 目前沒有受版控的 ESLint 設定檔
+  （`eslint .` 在 ESLint 10 需要 flat config）。補上時 `renderer/project/*.js` 要設成 `sourceType: 'script'`，
+  各檔頂端的 `/* global */`／`/* exported */` 註解已備好。
+- **新資料種類／新欄位**：照 `lib/migrations.js` 檔頭的三步驟（補 migration 步驟、補測試、不改 loader）。
 
 ## 已完成（索引，細節見各版 `CHANGELOG.md` 與 `PROJECT_SPEC.md`）
 
@@ -98,6 +103,7 @@
 | `1.42.0`           | 資安修補：導覽／開窗限制、IPC 來源檢查、備份匯入驗證、`.docx` 白名單淨化、CSP、擴充功能權限確認、CI 最小權限（沒有新功能） |
 | `1.43.0`           | 多語系補完：內建角色／提示詞／套餐／範本與主程序文字支援繁中、英文、日文，切換語言自動換未改動項目 |
 | `1.44.0`           | 專案流程「派發」：把步驟交給指定帳號（指派負責人、複製完整提示詞、切換帳號） |
+| `1.45.0`           | 內部整理：`project.js` 拆成 `renderer/project/*.js`；資料檔 `schemaVersion` 與集中式 migration（`lib/migrations.js`） |
 
 ## 已完成的舊項目（原始記載，保留作為決策脈絡）
 

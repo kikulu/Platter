@@ -693,7 +693,7 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 `projects:workflow:setStepStatus`、`projects:workflow:compose`、
 `projects:workflow:dispatch`（1.44.0）、`projects:workflow:saveAsTemplate`。快速搜尋的專案比對也涵蓋專案主題。
 
-**畫面**（`project.html` / `project.js`）：
+**畫面**（`project.html` / `renderer/project/*.js`，1.45.0 起由 14 支檔組成，見第 15 節）：
 
 - 專案清單工具列的「**從範本建立**」：右側顯示範本卡片（名稱、內建/自訂、階段與步驟數、
   各階段的步驟預覽），輸入專案主題（必填）與專案名稱（選填，預設用主題）後建立，建立完直接
@@ -797,7 +797,7 @@ string[]`（見第 7 節開頭的資料結構註解），多對多、只存 id �
 `workflow.steps[].output` 裡。步驟輸出還是空的時候回 `{ ok: false, error: 'EMPTY_OUTPUT' }`，
 畫面上擋掉、不會產生空文件。
 
-**簡報橋接**（`wf-pitch-bridge`，完全是 `renderer/project.js` 端的邏輯，**沒有新增
+**簡報橋接**（`wf-pitch-bridge`，完全是 `renderer/project/project-pitch.js` 端的邏輯，**沒有新增
 IPC**——需要的資料 `listDocuments()`／`listKnowledge()`／專案本身都已經是既有 API）：
 階段流程分頁最下面一塊，勾選任意數量「已經填了 `output`」的步驟，選一個知識庫裡標籤含
 「簡報製作」的項目（第 7.6 節提過的簡報製作全流程套餐＋場景化範本，見
@@ -1601,6 +1601,7 @@ lib/dataDir.js           # DATA_DIR 讀寫/搬移、各資料檔路徑、readJSO
 lib/broadcast.js         # broadcastToAllWindows（跨視窗即時同步）
 lib/console.js           # 主控台（Console）：攔截全域 console.*，即時緩衝區
 lib/logs.js              # 日誌主控台：錯誤日誌 + 稽核日誌（sql.js/SQLite）
+lib/migrations.js        # 資料檔 schema 版本與集中式 migration（第 15 節「資料檔」，1.45.0；純函式）
 lib/stores.js            # 資料層：app-state/knowledge-base/selectors/projects/documents/conversations 的 loadX()/saveX()
 lib/windows.js           # 視窗與帳號 WebContentsView 管理：主視窗、各子視窗、openChildWindow helper
 lib/conversationCapture.js # 對話擷取/匯出（executeJavaScript 注入 extractors/domCapture.js）、選取器工具
@@ -1635,7 +1636,9 @@ renderer/account.html, account.js                    # 新增帳號視窗
 renderer/knowledge.html, knowledge.js, knowledge.css # 知識庫（提示詞/套餐/檢核表/角色配置）
 renderer/settings.html, settings.js, settings.css    # 設定視窗
 renderer/team.html, team.js, team.css                # 虛擬團隊主控台
-renderer/project.html, project.js, project.css       # 專案計畫管理
+renderer/project.html, project.css                   # 專案計畫管理
+renderer/project/project-*.js                        # 專案視窗腳本（1.45.0 由單一 project.js 拆成 14 支；一般 <script>，共用全域詞法作用域，
+                                                     # 載入順序見 project.html，project-main.js 必須最後載入）
 renderer/documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
 renderer/conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫互相關聯）
 renderer/log.html, log.js, log.css                   # 日誌主控台（錯誤日誌／稽核日誌）
@@ -1647,7 +1650,7 @@ extractors/i18n/                                     # 內建內容的英文／�
 lib/security.js                                      # 資安防護：視窗加固、IPC 來源檢查、網址／路徑／副檔名判斷（第 9.9 節，1.42.0）
 lib/backupSanitize.js                                # 備份匯入資料驗證（第 9.9 節，1.42.0）
 scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
-test/*.test.js                                       # 單元測試（node --test，28 個檔案）
+test/*.test.js                                       # 單元測試（node --test，29 個檔案）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用
 renderer/i18n.js
@@ -1671,10 +1674,23 @@ renderer/locales/zh-TW.json, en.json, ja.json
   不要再塞入本來該放在 `lib/windows.js`／`lib/stores.js`／
   `lib/conversationCapture.js` 的商業邏輯。
 - 新增一種資料類型（例如未來的 XXX 資料）時，照現有慣例：`lib/stores.js`
-  加一組 `loadXxx()`/`saveXxx()`，`lib/ipc/` 底下新增或擴充對應的
+  加一組 `loadXxx()`/`saveXxx()`（用 `loadVersionedFile()`／`writeVersionedFile()`），
+  `lib/migrations.js` 的 `MIGRATIONS` 加一個種類，`lib/ipc/` 底下新增或擴充對應的
   `registerXxxIpc()`，不要直接寫進 `main.js`。
+- 既有資料種類新增欄位或改格式時：在 `lib/migrations.js` 的 `MIGRATIONS[kind]` 結尾加一個
+  `{ to: N+1, up(envelope) }`（純函式、必須冪等）並補測試，**不要**在 loader 或 IPC 裡逐處補預設值。
+- `renderer/project/*.js` 之間共用全域詞法作用域：新增頂層名稱前先確認沒有重名（也不要跟 `window` 既有屬性撞名），
+  跨檔使用的名稱要更新檔頭的 `/* global */`／`/* exported */` 註解。
 
-資料檔（存在 DATA_DIR，預設是 Electron `userData`，可搬到外部資料夾）：
+資料檔（存在 DATA_DIR，預設是 Electron `userData`，可搬到外部資料夾）。
+
+**schema 版本（1.45.0）**：`app-state`／`knowledge-base`／`selectors`／`projects`／`project-templates`／`documents`／
+`conversations`／`seeded-defaults` 這 8 種檔案最上層有整數 `schemaVersion`（目前都是 `1`，缺少視為 `0`）。
+`lib/migrations.js`（純函式）維護每種資料依序執行的 `MIGRATIONS[kind]` 步驟與 `SCHEMA_VERSIONS`：
+讀檔時 `loadVersionedFile()` 升級舊檔並寫回（升級前留 `<檔名>.v<舊版本>.bak`），寫檔時 `writeVersionedFile()`
+先過一遍 migration（冪等）再寫；檔案比程式新時不動檔案、只警告。`selectors.json` 沒有包一層，版本鍵與平台鍵並列，
+讀進來即移除。備份匯出帶 `schemaVersions`，匯入時每種資料從版本 0 完整重跑 migration（備份是外部輸入）。
+`logs.sqlite` 不在此機制內。
 
 ```
 app-state.json      # 帳號清單、UI 狀態（含側邊欄群組展開狀態）、擴充功能、角色

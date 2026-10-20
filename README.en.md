@@ -288,6 +288,7 @@ ai-workspace-aggregator/
 │   ├── console.js                 # Console capture: overrides global console.*
 │   ├── logs.js                     # Log console: error + audit logs (sql.js/SQLite)
 │   ├── stores.js                    # Data layer: loadX()/saveX() for each data file
+│   ├── migrations.js                # Data-file schema versions and centralized migrations (pure functions, 1.45.0)
 │   ├── windows.js                    # Window and per-account WebContentsView management
 │   ├── conversationCapture.js         # Conversation capture/export, selector picker tool
 │   ├── reminders.js                    # Task due-date reminders: due summary, hourly schedule, native notification
@@ -321,7 +322,7 @@ ai-workspace-aggregator/
 │   ├── knowledge.html / knowledge.js / knowledge.css  # Knowledge Base (separate window)
 │   ├── documents.html / documents.js / documents.css  # Document Library (Markdown/Word/PDF preview, Word/PDF basic editing)
 │   ├── team.html, team.js, team.css              # Virtual Team console
-│   ├── project.html, project.js, project.css     # Project planning
+│   ├── project.html, project/*.js, project.css     # Project planning
 │   ├── conversation.html, conversation.js, conversation.css # Conversation library
 │   ├── log.html, log.js, log.css                 # Log console (error log / audit log / live console)
 │   ├── tray.html, tray.js, tray.css              # Floating quick-prompt tray (bottom-right corner)

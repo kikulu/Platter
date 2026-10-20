@@ -250,6 +250,7 @@ Platter/
 │   ├── console.js                 # 主控台：攔截全域 console.*
 │   ├── logs.js                     # 日誌主控台：錯誤日誌 + 稽核日誌（sql.js/SQLite）
 │   ├── stores.js                    # 資料層：各資料檔的 loadX()/saveX()
+│   ├── migrations.js                # 資料檔 schema 版本與集中式 migration（純函式，1.45.0）
 │   ├── windows.js                    # 視窗與帳號 WebContentsView 管理
 │   ├── conversationCapture.js         # 對話擷取/匯出、選取器工具
 │   ├── reminders.js                    # 任務到期日提醒：到期摘要、排程、系統通知
@@ -280,14 +281,14 @@ Platter/
 │   ├── team.html, team.js, team.css              # 虛擬團隊主控台
 │   ├── conversation.html, conversation.js, conversation.css # 對話庫（新增對話 Markdown、匯出、跟文件庫關聯）
 │   ├── log.html, log.js, log.css                 # 日誌主控台（錯誤日誌／稽核日誌／即時主控台）
-│   ├── project.html, project.js, project.css     # 專案計畫管理
+│   ├── project.html, project/*.js, project.css     # 專案計畫管理
 │   ├── documents.html, documents.js, documents.css # 文件庫（Markdown/Word/PDF 預覽，Word/PDF 基本編輯）
 │   ├── tray.html, tray.js, tray.css              # 右下角浮動小托盤（快速取用知識庫提示詞）
 │   ├── vendor/pdfjs/                              # vendor 進來的 pdf.js 官方 build（pdf.min.mjs、pdf.worker.min.mjs），PDF 檢視畫面的 canvas 渲染用
 │   ├── i18n.js                                   # 多國語系
 │   └── locales/zh-TW.json, en.json, ja.json
 ├── scripts/check-docs.js     # 文件與版本一致性檢查（npm run check:docs）
-├── test/*.test.js            # 單元測試（node --test，共 28 個檔案）
+├── test/*.test.js            # 單元測試（node --test，共 29 個檔案）
 ├── docs/parallel-dev/        # 多對話平行開發提示詞（通用範本＋功能 A～D）
 └── assets/                    # App 圖示與生成提示詞
 ```
