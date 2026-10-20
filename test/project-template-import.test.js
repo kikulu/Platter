@@ -16,7 +16,13 @@ const os = require('os');
 const path = require('path');
 const Module = require('module');
 
-const { sanitizeImportedTemplates, IMPORT_LIMITS } = require('../lib/workflow');
+const {
+  sanitizeImportedTemplates,
+  importTemplateFiles,
+  buildTemplateExport,
+  IMPORT_LIMITS,
+  IMPORT_FILE_LIMITS,
+} = require('../lib/workflow');
 
 const step = (title = 'S', prompt = 'P {{topic}}') => ({ title, prompt });
 const tpl = (over = {}) => ({
@@ -151,7 +157,7 @@ test('sanitize：relatedPrompts 只留 { title, prompt | itemDefaultId }；數�
 // ---------------------------------------------------------------------------
 
 const tmpUserData = fs.mkdtempSync(path.join(os.tmpdir(), 'platter-tpl-import-'));
-const ui = { canceled: false, filePaths: [] };
+const ui = { canceled: false, filePaths: [], savePath: null };
 const fakeElectron = {
   app: { getPath: () => tmpUserData },
   BrowserWindow: { getAllWindows: () => [] },
@@ -161,7 +167,10 @@ const fakeElectron = {
     }
   },
   clipboard: { writeText() {} },
-  dialog: { showOpenDialog: async () => ({ canceled: ui.canceled, filePaths: ui.filePaths }) },
+  dialog: {
+    showOpenDialog: async () => ({ canceled: ui.canceled, filePaths: ui.filePaths }),
+    showSaveDialog: async () => ({ canceled: !ui.savePath, filePath: ui.savePath }),
+  },
 };
 const originalLoad = Module._load;
 Module._load = function (request, ...rest) {
@@ -271,4 +280,176 @@ test('docs/project-templates/ 的範本檔：完整匯入、零略過、步驟�
       assert.ok(t.stages.some((st) => st.steps.some((s) => s.prompt.includes('{{topic}}'))), `${t.name} 至少一步帶入 {{topic}}`);
     });
   });
+});
+
+// ---------------------------------------------------------------------------
+// 批次匯入（1.47.0）：多檔、拖拉內容
+// ---------------------------------------------------------------------------
+
+const fileOf = (name, obj) => ({ name, text: typeof obj === 'string' ? obj : JSON.stringify(obj) });
+
+test('importTemplateFiles：多個檔案各自驗證，好檔不受壞檔影響，順序與統計正確', () => {
+  const r = importTemplateFiles([
+    fileOf('a.json', { templates: [tpl({ name: 'A1' }), tpl({ name: 'A2' }), { name: 'bad' }] }),
+    fileOf('broken.json', '{oops'),
+    fileOf('wrong.json', { hello: 1 }),
+    fileOf('empty.json', { templates: [{ name: 'x', stages: [] }] }),
+    fileOf('bom.json', '\uFEFF' + JSON.stringify(tpl({ name: 'B1' }))),
+    { name: 'note.txt', error: 'not-json' },
+    { name: 'huge.json', error: 'too-large' },
+  ]);
+  assert.deepEqual(r.templates.map((t) => t.name), ['A1', 'A2', 'B1']);
+  assert.equal(new Set(r.templates.map((t) => t.id)).size, 3, 'id 不重複');
+  assert.deepEqual(
+    r.files.map((f) => [f.name, f.ok, f.imported, f.skipped, f.error]),
+    [
+      ['a.json', true, 2, 1, undefined],
+      ['broken.json', false, 0, 0, 'invalid-file'],
+      ['wrong.json', false, 0, 0, 'invalid-file'],
+      ['empty.json', false, 0, 1, 'no-valid-template'],
+      ['bom.json', true, 1, 0, undefined],
+      ['note.txt', false, 0, 0, 'not-json'],
+      ['huge.json', false, 0, 0, 'too-large'],
+    ]
+  );
+  assert.deepEqual(r.skipped.map((x) => [x.file, x.reason]), [
+    ['a.json', 'no-steps'],
+    ['empty.json', 'no-steps'],
+  ]);
+});
+
+test('importTemplateFiles：非陣列、壞項目、太大的文字、檔案數量上限', () => {
+  assert.deepEqual(importTemplateFiles(null), { templates: [], skipped: [], files: [] });
+  const r = importTemplateFiles([null, 'x', { name: 'n' }, { name: 'n2', text: 5 }]);
+  assert.equal(r.templates.length, 0);
+  assert.ok(r.files.every((f) => !f.ok && f.error === 'invalid-file'));
+  const big = importTemplateFiles([{ name: 'big.json', text: ' '.repeat(IMPORT_FILE_LIMITS.bytes + 1) }]);
+  assert.equal(big.files[0].error, 'too-large');
+  const many = importTemplateFiles(
+    Array.from({ length: IMPORT_FILE_LIMITS.files + 5 }, (_, i) => fileOf(`f${i}.json`, tpl({ name: `T${i}` })))
+  );
+  assert.equal(many.files.length, IMPORT_FILE_LIMITS.files);
+  assert.equal(many.templates.length, IMPORT_FILE_LIMITS.files);
+});
+
+test('projectTemplates:import：對話框一次選多個檔案 → 全部匯入並回報每個檔案結果', async () => {
+  const before = stores.loadProjectTemplates().length;
+  ui.canceled = false;
+  ui.filePaths = [
+    writeTmp('m1.json', { templates: [tpl({ name: 'M1' })] }),
+    writeTmp('m2.json', [tpl({ name: 'M2' }), tpl({ name: 'M3' })]),
+    writeTmp('m3.json', '{broken'),
+  ];
+  const res = await invoke('projectTemplates:import');
+  assert.equal(res.ok, true);
+  assert.equal(res.imported, 3);
+  assert.deepEqual(res.files.map((f) => [f.name, f.ok]), [['m1.json', true], ['m2.json', true], ['m3.json', false]]);
+  assert.equal(stores.loadProjectTemplates().length, before + 3);
+  assert.equal(stores.loadProjectTemplates().find((t) => t.id === res.firstId).name, 'M1');
+});
+
+test('projectTemplates:importFiles（拖拉）：多檔成功、全部失敗不寫入、輸入不是陣列視為取消', async () => {
+  const before = stores.loadProjectTemplates().length;
+  const ok = await invoke('projectTemplates:importFiles', [
+    fileOf('d1.json', tpl({ name: 'D1' })),
+    fileOf('d2.json', { templates: [tpl({ name: 'D2' })] }),
+    { name: 'readme.md', error: 'not-json' },
+  ]);
+  assert.equal(ok.ok, true);
+  assert.equal(ok.imported, 2);
+  assert.equal(ok.files[2].error, 'not-json');
+  assert.equal(stores.loadProjectTemplates().length, before + 2);
+
+  const bad = await invoke('projectTemplates:importFiles', [fileOf('x.json', '{bad'), fileOf('y.json', {})]);
+  assert.equal(bad.ok, false);
+  assert.equal(bad.error, 'no-valid-template');
+  assert.equal(bad.files.length, 2);
+  const single = await invoke('projectTemplates:importFiles', [fileOf('x.json', '{bad')]);
+  assert.equal(single.error, 'invalid-file');
+  assert.equal(stores.loadProjectTemplates().length, before + 2, '失敗時不寫入');
+
+  assert.equal((await invoke('projectTemplates:importFiles', 'nope')).error, 'canceled');
+  assert.equal((await invoke('projectTemplates:importFiles', [])).error, 'canceled');
+  // 惡意形狀（非字串 text／name）不會丟例外，只算壞檔
+  const weird = await invoke('projectTemplates:importFiles', [{ name: 1, text: { a: 1 } }, null]);
+  assert.equal(weird.ok, false);
+});
+
+// ---------------------------------------------------------------------------
+// 匯出（1.47.0）
+// ---------------------------------------------------------------------------
+
+test('buildTemplateExport：展開知識庫引用、不輸出 id／builtIn、丟掉解析不到的步驟與空階段，且能被匯入讀回', () => {
+  const resolve = (id) => (id === 'kb-1' ? { title: '知識庫標題', prompt: '知識庫提示詞' } : null);
+  const out = buildTemplateExport(
+    [
+      {
+        id: 'ptpl_x',
+        builtIn: true,
+        name: '內建式',
+        description: 'D',
+        createdAt: 'x',
+        stages: [
+          {
+            title: 'S1',
+            steps: [
+              { title: 'own', prompt: 'P {{topic}}', artifact: 'proposal.md', useBaseContext: true },
+              { itemDefaultId: 'kb-1' },
+              { itemDefaultId: 'missing' },
+            ],
+            relatedPrompts: [{ itemDefaultId: 'kb-1' }, { itemDefaultId: 'missing' }],
+          },
+          { title: 'empty', steps: [{ itemDefaultId: 'missing' }] },
+        ],
+      },
+      { name: '', stages: [{ steps: [{ title: 'a', prompt: 'b' }] }] },
+      null,
+    ],
+    resolve,
+    { now: '2026-01-01T00:00:00.000Z' }
+  );
+  assert.equal(out.format, 'platter-project-templates');
+  assert.equal(out.exportedAt, '2026-01-01T00:00:00.000Z');
+  assert.equal(out.templates.length, 1);
+  const t = out.templates[0];
+  assert.equal('id' in t || 'builtIn' in t || 'createdAt' in t, false);
+  assert.equal(t.stages.length, 1);
+  assert.deepEqual(t.stages[0].steps, [
+    { title: 'own', prompt: 'P {{topic}}', artifact: 'proposal.md', useBaseContext: true },
+    { title: '知識庫標題', prompt: '知識庫提示詞' },
+  ]);
+  assert.deepEqual(t.stages[0].relatedPrompts, [{ title: '知識庫標題', prompt: '知識庫提示詞' }]);
+
+  const back = sanitizeImportedTemplates(out);
+  assert.equal(back.skipped.length, 0);
+  assert.equal(back.templates[0].stages[0].steps.length, 2);
+});
+
+test('projectTemplates:export：取消、沒有自訂範本、匯出單一內建範本、匯出全部自訂範本並可再匯入', async () => {
+  ui.savePath = null;
+  assert.equal((await invoke('projectTemplates:export', null)).ok === false, true);
+
+  const builtIn = (await invoke('projectTemplates:list')).find((t) => t.builtIn);
+  assert.ok(builtIn);
+  ui.savePath = path.join(tmpUserData, 'one.json');
+  const one = await invoke('projectTemplates:export', [builtIn.id]);
+  assert.equal(one.ok, true);
+  assert.equal(one.exported, 1);
+  const file = JSON.parse(fs.readFileSync(ui.savePath, 'utf8'));
+  assert.equal(file.templates[0].name, builtIn.name);
+  assert.ok(file.templates[0].stages.every((s) => s.steps.every((x) => x.title && x.prompt)));
+  const reimported = importTemplateFiles([{ name: 'one.json', text: JSON.stringify(file) }]);
+  assert.equal(reimported.templates.length, 1);
+  assert.deepEqual(reimported.skipped, []);
+
+  const customCount = stores.loadProjectTemplates().length;
+  assert.ok(customCount > 0);
+  ui.savePath = path.join(tmpUserData, 'all.json');
+  const all = await invoke('projectTemplates:export', null);
+  assert.equal(all.exported, customCount);
+
+  // 沒有符合的 id → nothing-to-export
+  ui.savePath = path.join(tmpUserData, 'nothing-export.json');
+  assert.equal((await invoke('projectTemplates:export', ['no-such-id'])).error, 'nothing-to-export');
+  assert.equal(fs.existsSync(ui.savePath), false);
 });

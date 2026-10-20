@@ -756,11 +756,162 @@ body {
   font-size: 12px;
   margin-bottom: 6px;
 }
-.tpl-info {
-  min-height: 18px;
+
+/* 專案清單層級的「專案範本」區：匯入（點擊／拖拉）與匯出 */
+#tpl-lib {
+  margin-top: 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.tpl-lib-title {
+  font-size: 11px;
+  letter-spacing: 0.04em;
   color: var(--text-secondary);
+}
+#proj-list-toolbar button.tpl-dropzone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+  text-align: left;
+  background: transparent;
+  border: 1px dashed var(--border);
+  border-radius: 8px;
+}
+#proj-list-toolbar button.tpl-dropzone:hover {
+  border-color: var(--accent);
+  background: var(--bg-hover);
+}
+.tpl-dropzone-icon {
+  font-size: 18px;
+  color: var(--accent);
+  flex-shrink: 0;
+}
+.tpl-dropzone-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.tpl-dropzone-title {
+  font-size: 13px;
+  font-weight: 600;
+}
+.tpl-dropzone-hint {
+  font-size: 11px;
+  line-height: 1.4;
+  color: var(--text-secondary);
+  white-space: normal;
+}
+
+/* 拖著檔案進視窗時的全視窗提示（不攔截滑鼠事件，放開時由 document 的 drop 處理） */
+#tpl-drop-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(79, 140, 255, 0.14);
+  pointer-events: none;
+}
+#tpl-drop-overlay.show {
+  display: flex;
+}
+.tpl-drop-box {
+  padding: 28px 44px;
+  text-align: center;
+  border: 2px dashed var(--accent);
+  border-radius: 14px;
+  background: var(--bg-active);
+}
+.tpl-drop-icon {
+  font-size: 34px;
+  color: var(--accent);
+}
+.tpl-drop-title {
+  margin-top: 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.tpl-drop-sub {
+  margin-top: 4px;
   font-size: 12px;
-  margin-bottom: 6px;
+  color: var(--text-secondary);
+}
+
+/* 匯入結果面板（範本選擇頁上方） */
+#tpl-import-result {
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-hover);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.tpl-result-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+.tpl-result-title {
+  font-weight: 600;
+  font-size: 13px;
+}
+#tpl-result-files {
+  margin: 6px 0 0;
+  padding: 0;
+  list-style: none;
+}
+#tpl-result-files li {
+  display: flex;
+  gap: 6px;
+}
+#tpl-result-files .tpl-file-name {
+  font-weight: 600;
+  word-break: break-all;
+}
+#tpl-result-files li.ok .tpl-file-mark {
+  color: #30a46c;
+}
+#tpl-result-files li.fail .tpl-file-mark,
+#tpl-result-files li.fail .tpl-file-msg {
+  color: #e5484d;
+}
+#tpl-result-extra {
+  margin-top: 4px;
+  color: var(--text-secondary);
+}
+
+/* 通知列（匯入／匯出結果，任何畫面都看得到） */
+#tpl-toast {
+  position: fixed;
+  left: 50%;
+  bottom: 20px;
+  z-index: 1001;
+  transform: translateX(-50%);
+  display: none;
+  align-items: center;
+  gap: 12px;
+  max-width: 80vw;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--bg-active);
+  font-size: 12px;
+  line-height: 1.5;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+#tpl-toast.show {
+  display: flex;
+}
+#tpl-toast.error {
+  border-color: #e5484d;
 }
 #tpl-actions {
   display: flex;

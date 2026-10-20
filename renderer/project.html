@@ -20,6 +20,32 @@
           從範本建立
         </button>
         <button id="btn-overview" data-i18n="project.overview">跨專案總覽</button>
+        <div id="tpl-lib">
+          <div class="tpl-lib-title" data-i18n="project.tplLibTitle">專案範本</div>
+          <button
+            id="btn-tpl-import"
+            class="tpl-dropzone"
+            type="button"
+            data-i18n-title="project.tplImportHint"
+          >
+            <span class="tpl-dropzone-icon" aria-hidden="true">⤓</span>
+            <span class="tpl-dropzone-text">
+              <span class="tpl-dropzone-title" data-i18n="project.tplImport"
+                >匯入範本檔</span
+              >
+              <span class="tpl-dropzone-hint" data-i18n="project.tplDropHint"
+                >點擊選擇，或把 .json 檔拖進來（可一次多個）</span
+              >
+            </span>
+          </button>
+          <button
+            id="btn-tpl-export-all"
+            data-i18n="project.tplExportAll"
+            data-i18n-title="project.tplExportAllHint"
+          >
+            匯出全部自訂範本
+          </button>
+        </div>
       </div>
       <div id="proj-list"></div>
     </div>
@@ -34,6 +60,23 @@
       <div class="tpl-hint" data-i18n="project.tplHint">
         選一組專案範本並輸入專案主題，就會建立一個帶有分階段提示詞流程的專案；接著在專案的「階段流程」分頁，依序把每個步驟的提示詞複製給
         AI、貼回產出，逐步完成專案。
+      </div>
+      <div id="tpl-import-result" style="display: none">
+        <div class="tpl-result-head">
+          <span class="tpl-result-title" data-i18n="project.tplResultTitle"
+            >匯入結果</span
+          >
+          <button
+            id="btn-tpl-result-close"
+            class="step-icon-btn"
+            data-i18n-title="project.tplResultClose"
+          >
+            ✕
+          </button>
+        </div>
+        <div id="tpl-result-summary"></div>
+        <ul id="tpl-result-files"></ul>
+        <div id="tpl-result-extra"></div>
       </div>
       <div id="tpl-list"></div>
       <div class="field">
@@ -51,16 +94,7 @@
         <input type="text" id="tpl-name" />
       </div>
       <div id="tpl-error" class="tpl-error"></div>
-      <div id="tpl-info" class="tpl-info"></div>
       <div id="tpl-actions">
-        <button
-          id="btn-tpl-import"
-          data-i18n="project.tplImport"
-          data-i18n-title="project.tplImportHint"
-        >
-          匯入範本檔…
-        </button>
-        <span class="tpl-actions-spacer"></span>
         <button id="btn-tpl-cancel" data-i18n="project.tplCancel">取消</button>
         <button id="btn-tpl-create" class="primary" data-i18n="project.tplCreate">
           建立專案
@@ -438,6 +472,19 @@
         </div>
         <div id="ov-issue-list"></div>
       </div>
+    </div>
+
+    <!-- 拖拉匯入範本檔：拖著檔案進視窗時整個視窗蓋一層提示；匯入結果用 toast 通知 -->
+    <div id="tpl-drop-overlay" aria-hidden="true">
+      <div class="tpl-drop-box">
+        <div class="tpl-drop-icon">⤓</div>
+        <div class="tpl-drop-title" data-i18n="project.tplOverlay">放開滑鼠以匯入範本檔</div>
+        <div class="tpl-drop-sub" data-i18n="project.tplOverlaySub">可一次拖入多個 .json 檔</div>
+      </div>
+    </div>
+    <div id="tpl-toast" role="status" aria-live="polite">
+      <span id="tpl-toast-text"></span>
+      <button id="btn-tpl-toast-view" data-i18n="project.tplToastView">查看範本</button>
     </div>
 
     <script src="i18n.js"></script>

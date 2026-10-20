@@ -1,5 +1,76 @@
 # Changelog
 
+## [1.47.0]
+
+專案範本匯入／匯出提到「專案計畫」這一層（專案清單左側），改善介面，並新增多檔批次匯入（檔案對話框多選＋整個視窗拖拉）。同時補完上一版遺留的「匯出範本」功能。
+
+### 入口與介面
+
+- **不用先進「從範本建立」**：專案清單工具列（新增專案／從範本建立／跨專案總覽）下方新增「專案範本」區：
+  - 「匯入範本檔」：虛線框的點擊／拖放區（圖示＋說明文字），點擊開檔案對話框。
+  - 「匯出全部自訂範本」。
+  - 原本在範本選擇頁底部的匯入／匯出按鈕移除（該頁只剩「取消」「建立專案」）。
+- **單一範本匯出**：範本卡片右上角新增 ↥ 按鈕（內建與自訂範本都有），匯出該範本。
+- **拖拉匯入**：把一個或多個 `.json` 拖進專案視窗的任何位置，拖著檔案時整個視窗蓋上「放開滑鼠以匯入範本檔」提示遮罩
+  （只處理檔案拖曳，拖文字不理會；一律 `preventDefault`，避免 Electron 把視窗導向被放開的檔案）。
+- **匯入結果面板**：範本選擇頁上方顯示總數（幾個範本、幾個檔案、略過幾個無效範本）與逐檔結果（✓ 匯入 N 個／✕ 失敗原因），可關閉；
+  成功時自動選取第一個新範本。失敗原因分 5 種：不是有效範本檔／超過 10 MB／沒有可用範本／不是 .json／無法讀取。
+- **不打斷編輯**：拖拉時若正在編輯專案或看跨專案總覽，不會跳頁，改在底部顯示通知列（附「查看範本」按鈕）；
+  按工具列匯入鈕、或範本選擇頁已開著／沒有開任何專案時，直接進範本選擇頁顯示結果。匯出結果（成功／失敗）一律用通知列。
+
+### 批次匯入（主行程）
+
+- 新增純函式 `lib/workflow.js` 的 `importTemplateFiles(files)`：`files = [{ name, text } | { name, error }]`，
+  每個檔案各自剝 BOM → 解析 → `sanitizeImportedTemplates()`，**一個壞檔不影響其他檔案**；回傳
+  `{ templates, skipped（每筆多一個 file 欄位）, files: [{ name, ok, imported, skipped, error? }] }`。
+  上限常數 `IMPORT_FILE_LIMITS`：一次 50 個檔案、每檔 10 MB。
+- `projectTemplates:import`：檔案對話框改為可多選；回傳新增 `files[]`（逐檔結果），其餘欄位相容 1.46.0
+  （單一檔案失敗時仍回該檔的錯誤碼 `invalid-file`／`too-large`；多檔全部失敗回 `no-valid-template`）。
+- 新 IPC `projectTemplates:importFiles`（`preload.js`：`importProjectTemplateFiles(files)`）：給拖拉用。renderer 讀檔
+  （只收 `.json`、超過 10 MB 不讀；非 `.json`／過大／讀取失敗的檔案帶 `error` 一起送回報），主行程只收字串、限制數量，
+  不信任 renderer 的任何欄位，其餘交給 `importTemplateFiles()` 驗證；寫一筆稽核日誌（沿用 `main.projects.log.templatesImported`）。
+- 匯入仍一律產生新 `id`、新增自訂範本、不覆蓋既有範本。
+
+### 匯出範本（原 1.47.0 半成品，這版補完並加測試）
+
+- 新 IPC `projectTemplates:export`（`preload.js`：`exportProjectTemplates(ids)`）：`ids` 指定範本（內建或自訂），省略／`null`
+  則匯出全部自訂範本；存檔對話框、寫一筆稽核日誌；回傳 `{ ok, exported, filePath }` 或 `{ ok: false, error }`
+  （`canceled`／`nothing-to-export`／`write-failed`）。
+- 純函式 `buildTemplateExport(templates, resolveItem)`：輸出格式與匯入相同（`{ format, formatVersion, exportedAt, templates }`）；
+  引用知識庫的步驟（`itemDefaultId`）**展開成內嵌的標題＋提示詞**，所以檔案拿到別台電腦也能用；不輸出 `id`／`createdAt`／`builtIn`；
+  解析不到的步驟、沒有任何有效步驟的階段、沒有任何有效階段或沒有名稱的範本都不輸出。匯出檔可直接用匯入讀回。
+
+### 語系
+
+- 新增 `project.tplLibTitle`／`tplDropHint`／`tplOverlay`／`tplOverlaySub`／`tplResult*`（7 個）／`tplReason*`（5 個）／`tplToastView` 共 17 個鍵；
+  移除不再使用的 `project.tplImportDone`、`project.tplExportHint`；調整 `tplImport`／`tplImportHint`／`tplExport`／`tplExportAll(Hint)`／`tplExportErrNone` 文字。
+  三語系各 711 個鍵（zh-TW／en／ja 一致）。
+
+### 文件
+
+- `docs/PROJECT_TEMPLATE_FORMAT.md`：匯入方式改寫（工具列入口、多檔、拖拉、結果面板），新增匯出說明。
+- `PROJECT_SPEC.md` §7.6：IPC 清單加 `importFiles`／`export`，新增「專案範本匯入／匯出（1.47.0）」畫面段落。
+- `README.md`／`README.en.md`／`README.ja.md`：專案範本列補上匯入／匯出與拖拉匯入說明。
+- `ROADMAP.md`、`NEW_FEATURE_BUILD_PROMPT.md`、`FIX_EXISTING_FEATURE_PROMPT.md`：版本與功能方向同步到 1.47.0（ROADMAP 版本表 1.45.0／1.46.0 順序一併修正）。
+
+### 測試
+
+- `test/project-template-import.test.js` 新增 6 項：`importTemplateFiles`（多檔各自驗證與統計、壞輸入與上限）、
+  對話框多選、`projectTemplates:importFiles`（多檔成功、全部失敗不寫入、惡意形狀不丟例外）、`buildTemplateExport`
+  （展開知識庫引用、丟棄無效項目、可被匯入讀回）、`projectTemplates:export`（取消、單一內建範本、全部自訂、找不到 id）。共 320 項測試。
+- 另用 Chromium＋假的 `workspaceAPI` 載入 `project.html` 做了一次前端冒煙驗證（拖拉遮罩、多檔匯入、結果面板、編輯中不跳頁只出通知、
+  通知列「查看範本」、文字拖曳被忽略），**過程中抓到並修正一個 bug**：遮罩與通知元素若放在 `<script>` 之後，
+  `project-templates.js` 載入時找不到元素會讓整個專案頁初始化失敗；現在放在 script 之前。此驗證用的腳本沒有加進 repo。
+
+### 已知限制
+
+- **尚未在真正的 Electron 視窗驗證**（沒有顯示器）：檔案對話框多選、從系統檔案管理員實際拖檔進視窗只由單元測試與 Chromium 模擬事件驗證，
+  Electron 版本差異（拖入檔案的 `File` 物件行為）未實測。
+- 匯入不支援覆蓋或合併同名範本；匯出檔不含範本的 `id`，重新匯入會變成新範本。
+- 範例範本沒有 `en`／`ja` 版本（內容為繁體中文）。
+- `npm run lint` 在這份專案裡找不到 `eslint.config.*`（zip 內沒有），因此本版沒跑 ESLint，只做了 `node --check`＋`npm test`；
+  `prettier --check` 在變更前就有既有檔案不合格（含 CRLF 換行相關），本版沒有重新格式化。
+
 ## [1.46.0]
 
 專案範本檔匯入：可以從 `.json` 檔匯入自訂專案範本，並附上格式說明文件與 6 個企業行銷／教育訓練／財務會計範本檔。

@@ -688,7 +688,11 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 
 **IPC**（見 `preload.js`）：`projectTemplates:list`（內建在前、自訂在後，只回傳階段與
 步驟標題預覽、不含提示詞全文）、`projectTemplates:delete`、`projectTemplates:import`（1.46.0，匯入 `.json` 範本檔，
-驗證規則與格式見 `docs/PROJECT_TEMPLATE_FORMAT.md`，純函式 `sanitizeImportedTemplates()`）、`projects:createFromTemplate`
+驗證規則與格式見 `docs/PROJECT_TEMPLATE_FORMAT.md`，純函式 `sanitizeImportedTemplates()`；1.47.0 起檔案對話框可多選，回傳每個檔案的結果 `files[]`）、
+`projectTemplates:importFiles`（1.47.0，拖拉匯入：renderer 讀好 `[{ name, text } | { name, error }]` 送來，
+主行程只收字串、限制 50 檔／每檔 10 MB，純函式 `importTemplateFiles()`）、`projectTemplates:export`（1.47.0，
+`ids` 指定單一或多個範本〔內建或自訂〕，省略則匯出全部自訂範本；純函式 `buildTemplateExport()` 把知識庫引用展開成內嵌提示詞、
+不輸出 id／builtIn，輸出可再匯入的檔案）、`projects:createFromTemplate`
 （`{ templateId, topic, name? }`，主題必填）、`projects:workflow:setMeta`（主題／帶入方式／
 目前步驟）、`projects:workflow:updateStep`（只接受 `output`／`prompt`／`title`）、
 `projects:workflow:setStepStatus`、`projects:workflow:compose`、
@@ -696,6 +700,16 @@ dueTodayCount }` 給側邊欄即時刷新角標數字（見第 13 節）。
 
 **畫面**（`project.html` / `renderer/project/*.js`，1.45.0 起由 14 支檔組成，見第 15 節）：
 
+- **專案範本匯入／匯出（1.47.0）**：入口在專案清單層級（左側工具列下方的「專案範本」區），不必先進「從範本建立」。
+  「匯入範本檔」是一個虛線框的點擊／拖放區：點擊開檔案對話框（可多選 `.json`）；也可以把一個或多個 `.json`
+  拖進**整個專案視窗**（拖著檔案進來時全視窗出現「放開滑鼠以匯入範本檔」遮罩；只處理「檔案」拖曳，一律
+  `preventDefault` 避免視窗被導向檔案）。拖拉時 renderer 讀檔（只收 `.json`、單檔 10 MB、最多 50 檔，
+  非 `.json`／過大／讀不了的檔案帶原因一起回報），用 `importProjectTemplateFiles()` 送主行程。
+  每個檔案各自驗證、互不影響，結果 `files[] = { name, ok, imported, skipped, error? }`
+  （`invalid-file`／`too-large`／`no-valid-template`／`not-json`／`read-failed`）。
+  結果顯示：在範本選擇頁上方的「匯入結果」面板（總數、逐檔 ✓／✕ 與原因）；若使用者正在編輯專案或看總覽，
+  拖拉匯入不跳頁，改用底部 toast 通知並附「查看範本」。「匯出全部自訂範本」在同一區；單一範本（含內建）用
+  範本卡片上的 ↥ 匯出。匯出／匯入的檔案格式相同，可互相讀回。
 - 專案清單工具列的「**從範本建立**」：右側顯示範本卡片（名稱、內建/自訂、階段與步驟數、
   各階段的步驟預覽），輸入專案主題（必填）與專案名稱（選填，預設用主題）後建立，建立完直接
   切到新專案的「階段流程」分頁。
@@ -1652,7 +1666,7 @@ lib/security.js                                      # 資安防護：視窗加�
 lib/backupSanitize.js                                # 備份匯入資料驗證（第 9.9 節，1.42.0）
 scripts/check-docs.js                                # 文件與版本一致性檢查（npm run check:docs，1.41.0）
 test/*.test.js                                       # 單元測試（node --test，30 個檔案）
-docs/PROJECT_TEMPLATE_FORMAT.md                      # 專案範本檔匯入格式（1.46.0）
+docs/PROJECT_TEMPLATE_FORMAT.md                      # 專案範本檔匯入／匯出格式（1.46.0；1.47.0 補批次匯入與匯出）
 docs/project-templates/*.json                        # 可直接匯入的範例範本檔（行銷／教育訓練／財務會計各 2 個，1.46.0）
 docs/parallel-dev/                                   # 多對話平行開發提示詞（通用範本＋功能 A～D），見其 README
 renderer/vendor/pdfjs/pdf.min.mjs, pdf.worker.min.mjs, LICENSE # vendor 進來的 pdf.js 官方 build，第 8 節 PDF 預覽用

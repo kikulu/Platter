@@ -183,6 +183,9 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   listProjectTemplates: () => ipcRenderer.invoke('projectTemplates:list'),
   deleteProjectTemplate: (id) => ipcRenderer.invoke('projectTemplates:delete', id),
   importProjectTemplates: () => ipcRenderer.invoke('projectTemplates:import'),
+  importProjectTemplateFiles: (files) =>
+    ipcRenderer.invoke('projectTemplates:importFiles', files),
+  exportProjectTemplates: (ids) => ipcRenderer.invoke('projectTemplates:export', ids),
   createProjectFromTemplate: (payload) =>
     ipcRenderer.invoke('projects:createFromTemplate', payload),
   setWorkflowMeta: (projectId, meta) =>
