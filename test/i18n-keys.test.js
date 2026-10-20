@@ -90,7 +90,7 @@ test('每個頁面的視窗標題都跟著語言（<title data-i18n>）', () => 
 const CJK_ALLOWED = [
   { file: 'lib/reminders.js', pattern: /./ }, // 提醒通知有自己的三語文字表
   { file: 'lib/openspec.js', pattern: /建議變更名稱/ }, // 解析 AI 回覆的標記，需要認得三種語言的標籤
-  { file: 'renderer/project.js', pattern: /簡報製作/ }, // 內建標籤的三種寫法
+  { file: 'renderer/project/project-pitch.js', pattern: /簡報製作/ }, // 內建標籤的三種寫法
   { file: 'lib/builtinContent.js', pattern: /./ }, // 內建內容的語言對照
 ];
 
