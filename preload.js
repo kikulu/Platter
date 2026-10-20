@@ -182,6 +182,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   // 專案範本與階段流程（workflow）
   listProjectTemplates: () => ipcRenderer.invoke('projectTemplates:list'),
   deleteProjectTemplate: (id) => ipcRenderer.invoke('projectTemplates:delete', id),
+  importProjectTemplates: () => ipcRenderer.invoke('projectTemplates:import'),
   createProjectFromTemplate: (payload) =>
     ipcRenderer.invoke('projects:createFromTemplate', payload),
   setWorkflowMeta: (projectId, meta) =>

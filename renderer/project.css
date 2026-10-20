@@ -756,10 +756,19 @@ body {
   font-size: 12px;
   margin-bottom: 6px;
 }
+.tpl-info {
+  min-height: 18px;
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 6px;
+}
 #tpl-actions {
   display: flex;
   justify-content: flex-end;
   gap: 8px;
+}
+.tpl-actions-spacer {
+  flex: 1;
 }
 
 /* --- 階段流程分頁 --- */

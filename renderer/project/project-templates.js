@@ -19,6 +19,7 @@ const tplListEl = document.getElementById('tpl-list');
 const tplTopicEl = document.getElementById('tpl-topic');
 const tplNameEl = document.getElementById('tpl-name');
 const tplErrorEl = document.getElementById('tpl-error');
+const tplInfoEl = document.getElementById('tpl-info');
 
 function renderTemplateList() {
   tplListEl.innerHTML = '';
@@ -107,6 +108,7 @@ async function showTemplatePicker() {
   templatePickerEl.style.display = 'flex';
   setListToolbarActive('template');
   tplErrorEl.textContent = '';
+  tplInfoEl.textContent = '';
   templates = await window.workspaceAPI.listProjectTemplates();
   if (!templates.some((t) => t.id === selectedTemplateId)) {
     selectedTemplateId = templates.length ? templates[0].id : null;
@@ -118,6 +120,30 @@ async function showTemplatePicker() {
 document
   .getElementById('btn-new-from-template')
   .addEventListener('click', showTemplatePicker);
+
+// 匯入專案範本檔（格式見 docs/PROJECT_TEMPLATE_FORMAT.md）；驗證與寫入都在主行程
+document.getElementById('btn-tpl-import').addEventListener('click', async () => {
+  tplErrorEl.textContent = '';
+  tplInfoEl.textContent = '';
+  const res = await window.workspaceAPI.importProjectTemplates();
+  if (!res || (!res.ok && res.error === 'canceled')) return;
+  if (!res.ok) {
+    const key = {
+      'invalid-file': 'project.tplImportErrInvalid',
+      'too-large': 'project.tplImportErrTooLarge',
+      'no-valid-template': 'project.tplImportErrNone',
+    }[res.error];
+    tplErrorEl.textContent = window.i18n.t(key || 'project.tplImportErrInvalid');
+    return;
+  }
+  templates = await window.workspaceAPI.listProjectTemplates();
+  selectedTemplateId = res.firstId;
+  renderTemplateList();
+  tplInfoEl.textContent = window.i18n.t('project.tplImportDone', {
+    count: res.imported,
+    skipped: res.skipped.length,
+  });
+});
 
 document.getElementById('btn-tpl-cancel').addEventListener('click', () => {
   templatePickerEl.style.display = 'none';
