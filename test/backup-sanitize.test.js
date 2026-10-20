@@ -379,3 +379,25 @@ test('addAccount／updateLocalService／testLocalServiceConnection：主程序�
     error: 'INVALID_URL',
   });
 });
+
+test('settings:importBackup：舊備份（沒有 schemaVersions）匯入的專案／對話／知識庫項目由 migration 補齊欄位', async () => {
+  const backup = {
+    knowledge: { items: [{ id: 'kb_legacy', title: 't' }], groups: [{ id: 'grp_legacy' }] },
+    projects: [{ id: 'p_legacy', name: 'P', tasks: [{ id: 't1' }] }],
+    conversations: [{ id: 'conv_legacy', title: 'c' }],
+  };
+  const backupFile = path.join(tmpWork, 'legacy-backup.json');
+  fs.writeFileSync(backupFile, JSON.stringify(backup));
+  ui.openPaths = [backupFile];
+  assert.equal((await invoke('settings:importBackup')).ok, true);
+
+  const project = stores.loadProjects().find((p) => p.id === 'p_legacy');
+  assert.deepEqual(project.issues, []);
+  assert.deepEqual(project.linkedDocumentIds, []);
+  assert.deepEqual(project.tasks[0].timeEntries, []);
+  const item = stores.loadKnowledgeBase().items.find((i) => i.id === 'kb_legacy');
+  assert.deepEqual([item.checklist, item.roleIds, item.systemPrompt], [[], [], '']);
+  assert.deepEqual(stores.loadKnowledgeBase().groups.find((g) => g.id === 'grp_legacy').steps, []);
+  const conv = stores.loadConversations().find((c) => c.id === 'conv_legacy');
+  assert.deepEqual([conv.tags, conv.linkedDocumentIds], [[], []]);
+});
