@@ -26,6 +26,8 @@
   "tray.empty": "ナレッジベースにまだプロンプトがありません",
   "tray.noMatch": "一致するプロンプトが見つかりません",
   "tray.copied": "「{title}」をコピーしました",
+  "tray.exportShort": "会話を出力",
+  "tray.exportNoAccount": "エクスポートできるアクティブなアカウントがありません",
   "sidebar.knowledgeBase": "ナレッジベース",
   "sidebar.teamConsole": "バーチャルチーム",
   "sidebar.projectPlans": "プロジェクト計画",

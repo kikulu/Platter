@@ -53,11 +53,13 @@
     items.forEach((item) => listEl.appendChild(buildItemRow(item)));
   }
 
-  function showToast(text) {
+  function showToast(text, ms = 1600, isError = false) {
     toastEl.textContent = text;
+    toastEl.title = text; // 太長被截斷時，滑鼠停上去可看完整內容
+    toastEl.classList.toggle('error', isError);
     toastEl.classList.add('show');
     if (toastTimer) clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => toastEl.classList.remove('show'), 1600);
+    toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
   }
 
   function buildSimpleRow(title, sub, tooltip, onClick) {
@@ -235,6 +237,35 @@
   openKnowledgeBtn.addEventListener('click', () => {
     window.workspaceAPI.openKnowledgeWindow();
   });
+  // 匯出當前對話：一鍵以 Markdown 匯出主視窗目前作用中的帳號對話。沿用設定裡的儲存路徑／略過存檔對話框，
+  // 以及匯出對話框記住的「同時加入知識庫」偏好；要選格式或另存路徑請用主視窗側邊欄的匯出。
+  const exportBtn = document.getElementById('btn-tray-export');
+  exportBtn.addEventListener('click', async () => {
+    if (exportBtn.disabled) return;
+    exportBtn.disabled = true;
+    try {
+      const ui = await window.workspaceAPI.getUIState();
+      const result = await window.workspaceAPI.exportCurrentConversation('md', {
+        addToKnowledge: !!ui.autoAddToKnowledgeOnExport,
+      });
+      if (result.ok) {
+        const fileName = String(result.filePath).split(/[\\/]/).pop();
+        showToast(window.i18n.t('export.success', { path: fileName }), 4500);
+      } else if (result.error === 'CANCELLED') {
+        // 使用者自行取消存檔，不用提示
+      } else if (result.error === 'NO_ACTIVE_ACCOUNT') {
+        showToast(window.i18n.t('tray.exportNoAccount'), 3500, true);
+      } else if (result.error === 'EMPTY_RESULT' || result.error === 'NO_SELECTOR') {
+        // 完整說明太長，托盤只提示失敗；詳細診斷請用主視窗的匯出
+        showToast(`${window.i18n.t('export.fail')}: ${result.error}`, 4500, true);
+      } else {
+        showToast(`${window.i18n.t('export.fail')}: ${result.error || ''}`, 4500, true);
+      }
+    } finally {
+      exportBtn.disabled = false;
+    }
+  });
+
   // 內容工具快速連結（跟主視窗側邊欄「內容工具」群組的視窗入口一致）
   [
     ['btn-tray-knowledge', 'openKnowledgeWindow'],
