@@ -1137,7 +1137,11 @@ function openChildWindow({
   **（1.48.0）內容工具快速連結**：展開狀態底部（清單與「在知識庫視窗管理…」之間）新增一列 4 顆圖示按鈕——知識庫／
   文件庫／對話庫／日誌主控台，等同主視窗側邊欄「內容工具」群組的視窗入口，分別呼叫既有的 `openKnowledgeWindow()`／
   `openDocumentsWindow()`／`openConversationsWindow()`／`openLogWindow()`（不需新 IPC），標籤沿用 `sidebar.*` 語系鍵。
-  「匯出當前對話」不放進托盤：它需要主視窗目前的帳號視圖。
+  **（1.49.0）**同一列最左邊再加「📤 匯出對話」：一鍵以 Markdown 匯出主程序記錄的「目前作用中帳號」對話（呼叫既有的
+  `exportCurrentConversation('md', { addToKnowledge })`，`export:current` 本來就用 `state.activeAccountId`，不需要主視窗脈絡），
+  沿用設定的預設儲存路徑／略過存檔對話框，以及匯出對話框記住的 `autoAddToKnowledgeOnExport`；要選 JSON、另存路徑請用側邊欄的匯出。
+  結果顯示在托盤的提示列（成功顯示檔名、失敗顯示紅字；`NO_ACTIVE_ACCOUNT` 有專屬訊息；使用者取消存檔不提示），執行中按鈕停用避免連按。
+  新增語系鍵 `tray.exportShort`／`tray.exportNoAccount`。
   **（1.38.0）**清單分兩區顯示：**角色提示詞**（`item.roleIds` 非空——
   企業角色範本那批，見第 5 節知識庫資料結構）跟**其他**（任務型的
   一般提示詞），兩區各自依搜尋字串過濾，篩完整區沒有結果就整個標題

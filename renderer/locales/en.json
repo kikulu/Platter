@@ -26,6 +26,8 @@
   "tray.empty": "No prompts in the knowledge base yet",
   "tray.noMatch": "No matching prompts found",
   "tray.copied": "Copied \"{title}\"",
+  "tray.exportShort": "Export chat",
+  "tray.exportNoAccount": "No active account to export a conversation from",
   "sidebar.knowledgeBase": "Knowledge Base",
   "sidebar.teamConsole": "Virtual Team",
   "sidebar.projectPlans": "Project Plans",

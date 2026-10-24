@@ -193,6 +193,12 @@ body.expanded #expanded-view {
   padding: 0 8px;
   opacity: 0;
   transition: opacity 0.15s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#tray-toast.error {
+  color: #e5484d;
 }
 #tray-toast.show {
   opacity: 1;
