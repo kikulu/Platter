@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.48.0]
+
+右下角浮動托盤加入「內容工具」快速連結，並整理 git 歷史。
+
+### 托盤的內容工具快速連結
+
+- 托盤展開後，底部（提示詞清單與「在知識庫視窗管理…」之間）新增一列 4 顆圖示按鈕：📚 知識庫、🗃️ 文件庫、🗨️ 對話庫、🧾 日誌主控台，
+  等同主視窗側邊欄「內容工具」群組的視窗入口，點一下開啟對應視窗。
+- 直接呼叫既有的 `openKnowledgeWindow()`／`openDocumentsWindow()`／`openConversationsWindow()`／`openLogWindow()`，沒有新增 IPC 或語系鍵
+  （標籤沿用 `sidebar.knowledgeBase`／`documents`／`conversationLibrary`／`logConsole`）。
+- 「匯出當前對話」沒有放進托盤：它要用主視窗目前選中的帳號視圖，托盤視窗沒有這個脈絡。
+- 改動檔案：`renderer/tray.html`／`tray.css`／`tray.js`；`PROJECT_SPEC.md` §9.0 與三份 README 同步。
+
+### git 歷史整理
+
+- 全部 commit 與 tag 的作者統一為 `kikulu`；移除所有 commit 訊息結尾的 `Co-Authored-By`／`Claude-Session` trailer；刪除已併入的分支，只留 `master`。
+  這會改變受影響 commit 與 tag 的 hash（早於 `1.44.0` 的歷史不變），重新取得時需注意。
+
+### 測試與已知限制
+
+- 320 項測試仍全過；另用 Chromium＋假的 `workspaceAPI` 載入 `tray.html` 驗證：4 顆按鈕各自呼叫正確的開窗 API、沒有 renderer 錯誤、版面在 340×440 內不擠壓。
+- **尚未在真正的 Electron 視窗驗證**；托盤固定高度 440，新增一列後清單可視區略減（約 50px）。
+
 ## [1.47.0]
 
 專案範本匯入／匯出提到「專案計畫」這一層（專案清單左側），改善介面，並新增多檔批次匯入（檔案對話框多選＋整個視窗拖拉）。同時補完上一版遺留的「匯出範本」功能。

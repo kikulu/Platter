@@ -235,6 +235,15 @@
   openKnowledgeBtn.addEventListener('click', () => {
     window.workspaceAPI.openKnowledgeWindow();
   });
+  // 內容工具快速連結（跟主視窗側邊欄「內容工具」群組的視窗入口一致）
+  [
+    ['btn-tray-knowledge', 'openKnowledgeWindow'],
+    ['btn-tray-documents', 'openDocumentsWindow'],
+    ['btn-tray-conversations', 'openConversationsWindow'],
+    ['btn-tray-logs', 'openLogWindow'],
+  ].forEach(([id, api]) => {
+    document.getElementById(id).addEventListener('click', () => window.workspaceAPI[api]());
+  });
 
   // Esc 收起，跟其他視窗裡「全螢幕遮罩按 Esc 關閉」的習慣一致
   document.addEventListener('keydown', (e) => {
