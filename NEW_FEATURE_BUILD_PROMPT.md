@@ -86,7 +86,7 @@
   | `PROJECT_SPEC.md`                     | 目前為止的完整規格（唯一真相來源）                                                                              |
   | `BUILD_PLAN.md`                       | 原始 Stage 1～16（約到 `1.16.0`）的分階段施工藍圖，**之後的功能不會再往這裡加新 Stage**，僅供歷史參考           |
   | `CHANGELOG.md`                        | 逐版本紀錄「做了什麼」，**`1.17.0` 之後接續開發的第一站**                                                       |
-  | `ROADMAP.md`                          | 明確排除的功能／未來可能方向                                                                                    |
+  | `ROADMAP.md`                          | 明確排除的功能＋待辦檢核表＋版本檢核表（各版改動摘要在 `docs/ROADMAP_HISTORY.md`）                              |
   | `NEW_FEATURE_BUILD_PROMPT.md`（本檔） | 新功能開發提示詞模板                                                                                            |
   | `FIX_EXISTING_FEATURE_PROMPT.md`      | 既有功能修正提示詞模板                                                                                          |
   | `SPEC_ONLY_BUILD_PROMPT.md`           | 只附文件、不附原始碼時的提示詞模板                                                                              |

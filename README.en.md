@@ -356,7 +356,8 @@ actual login cookies/localStorage.
 | Document                                                           | What's in it                                                                                                                      |
 | ------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------- |
 | [CHANGELOG.md](./CHANGELOG.md)                                     | Version history — what was added each round                                                                                       |
-| [ROADMAP.md](./ROADMAP.md)                                         | Not-yet-done directions worth considering                                                                                         |
+| [docs/ROADMAP_HISTORY.md](./docs/ROADMAP_HISTORY.md)               | Per-version change summary (split out of ROADMAP)                                                             |
+| [ROADMAP.md](./ROADMAP.md)                                         | To-do checklist and released-version checklist                                                                                         |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | A full spec prompt, best suited for agents with filesystem tools (Claude Code / Cursor) to reproduce the whole project            |
 | [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | A staged build prompt sequence (Stage 1–16, up to ~1.16.0; later features are recorded only in CHANGELOG / PROJECT_SPEC), best suited for models without filesystem tools (Gemini / Grok / ChatGPT) building from scratch |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | Prompt template for adding a new feature once all existing phases are done                                                        |

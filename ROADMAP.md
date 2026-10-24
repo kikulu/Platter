@@ -1,7 +1,10 @@
 # Roadmap
 
-> 最後更新：`1.47.0`（2026-10-20）。更深入的優化與改版評估見
-> [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
+> 最後更新：`1.47.0`（2026-10-24）。這份只放「**還沒做的事**」與「**版本檢核表**」；
+> 每個版本改了什麼見 [`docs/ROADMAP_HISTORY.md`](./docs/ROADMAP_HISTORY.md)（摘要）與 [`CHANGELOG.md`](./CHANGELOG.md)（逐項細節）。
+> 更深入的優化與改版評估見 [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
+>
+> 用法：做完一項就把 `- [ ]` 改成 `- [x]`，並在 `docs/ROADMAP_HISTORY.md` 補一列版本摘要、在下方「版本檢核表」補一行。
 
 ## 明確排除的功能
 
@@ -14,108 +17,85 @@
 - 不會把 cookie / localStorage 等登入憑證放進任何備份 / 匯出檔案。
 - 不會寫自動繞過 X-Frame-Options 或類似安全性標頭的程式碼。
 
-## 下一步（依優先順序）
+## 待辦檢核表（依優先順序）
 
 ### P0：先補債，再加功能
 
-1. **實機驗證債務（最優先，仍未清）**：`1.17.0` 之後新增的功能（尤其是 `1.33.0` 的 `.docx`／`.pdf`
-   預覽編輯、`1.37.0`～`1.41.0` 的浮動托盤／專案階段提示詞／對話預覽／階段提示詞編輯／托盤快捷鍵與
-   最近使用）都只做過 `node --check`、單元測試與（部分）lint，**沒有在真正的 Electron 視窗環境操作過**
-   （開發環境沒有顯示器）。下一次可以跑 `npm install && npm start` 時，照 `BUILD_PLAN.md` 標示「待手動
-   驗證」的項目與各版 `CHANGELOG.md` 的「已知限制」逐項驗證，特別是：`sql.js` 在 main process 初始化
-   WASM、打包成品能否啟動、PDF 預覽的動態 `import()` + Web Worker、浮動托盤在背景／最小化時的顯示、
-   **全域快捷鍵（Windows／macOS／Linux X11／Wayland 各自的註冊與焦點行為）**、設定頁快捷鍵錄製、
-   Claude 實際 DOM 的巢狀去重效果。建議把這些整理成 `docs/MANUAL_QA.md` 逐項勾選。
-2. **依賴鎖定**：`1.41.0` 移除了過時的 `yarn.lock`，目前沒有任何 lockfile，CI 的 `npm install` 每次
-   解析最新符合範圍的版本。請在有網路的環境跑 `npm install`，提交 `package-lock.json`，並把 CI 改成
-   `npm ci`。同時確認 CI 在 `master` 上真的有跑起來（`1.40.1` 才補上 `master` 分支）。
-3. **跑一次 lint 與 format**：`1.41.0` 的開發環境無法安裝 ESLint／Prettier，新增的程式碼與文件沒有跑過
-   `npm run lint`、`npm run format:check`（CI 已加上 format 檢查，第一次可能會要求重新排版，請單獨 commit）。
-
-4. **資安修補（已於 `1.42.0` 完成大部分）**：2026-10-14 的資安檢查（[`docs/SECURITY_AUDIT_REPORT.md`](./docs/SECURITY_AUDIT_REPORT.md)）
-   發現 2 項高、5 項中、6 項低；除下列需要網路的項目外都已修補（[`docs/SECURITY_FIX_CHECKLIST.md`](./docs/SECURITY_FIX_CHECKLIST.md)）。
-   **仍待處理**：Electron 30 升級（H-2，要在有網路的環境升級並跑冒煙測試）、產生並提交 `package-lock.json` 後 CI 改 `npm ci`、
-   Actions 釘 commit SHA、評估替換或隔離 `pdf-lib`、`npm audit`、程式碼簽章；以及清單末尾的人工驗證項目。
-
-已完成（`1.47.0`）：專案範本檔匯入／匯出移到專案清單層級（左側工具列「專案範本」區）、一次匯入多個檔案（檔案對話框多選或整個視窗拖拉）、匯入結果面板、範本卡片匯出鈕（`projectTemplates:importFiles`／`projectTemplates:export`）。
-
-已完成（`1.46.0`）：專案範本檔匯入（`projectTemplates:import`）、格式說明 `docs/PROJECT_TEMPLATE_FORMAT.md`，以及 6 個行銷／教育訓練／財務會計範本檔（`docs/project-templates/`）。
-
-已完成（`1.45.0`）：`renderer/project.js` 拆成 `renderer/project/*.js`（14 支）；8 種資料檔加上 `schemaVersion` 與集中式 migration（`lib/migrations.js`）。
-
-已完成（`1.44.0`）：專案流程「派發」——把某一步交給指定帳號（指派負責人、複製完整提示詞、切換帳號，不自動貼上送出）。
-
-已完成（`1.43.0`）：內建角色／提示詞／套餐／專案範本與主程序文字三語系（繁中／英文／日文），切換語言時自動換未改動的內建項目。
-
-已完成（`1.42.0`）：資安修補 H-1／M-1～M-5／L-1～L-5、CI 最小權限與 Dependabot；`prettier`／ESLint 已對新增與修改的檔案跑過。
-
-已完成（`1.41.0`）：資料檔原子寫入並保留 `.bak`；`npm run check:docs` 文件／版本漂移檢查；CI 加上
-`format:check`；功能 A～D。
+- [ ] **實機驗證債務（最優先）**：`1.17.0` 之後的功能都只做過 `node --check`、單元測試，沒有在真正的 Electron 視窗操作過
+      （開發環境沒有顯示器）。可以跑 `npm install && npm start` 時，照 `BUILD_PLAN.md` 標示「待手動驗證」的項目與各版
+      `CHANGELOG.md`「已知限制」逐項驗證，並整理成 `docs/MANUAL_QA.md` 逐項勾選：
+  - [ ] `sql.js` 在 main process 初始化 WASM、打包成品能否啟動
+  - [ ] `.docx`／`.pdf` 預覽編輯（`1.33.0`），含 PDF 預覽的動態 `import()` + Web Worker
+  - [ ] 浮動托盤在背景／最小化時的顯示（`1.37.0`～`1.41.0`）
+  - [ ] 全域快捷鍵（Windows／macOS／Linux X11／Wayland 各自的註冊與焦點行為）、設定頁快捷鍵錄製
+  - [ ] 專案階段提示詞編輯、對話擷取預覽、Claude 實際 DOM 的巢狀去重效果
+  - [ ] 專案範本匯入／匯出：檔案對話框多選、從系統檔案管理員拖檔進視窗（`1.46.0`～`1.47.0`）
+- [ ] **依賴鎖定**：目前沒有任何 lockfile。在有網路的環境跑 `npm install`、提交 `package-lock.json`，CI 改 `npm ci`；
+      同時確認 CI 在 `master` 上真的有跑起來（`1.40.1` 才補上 `master` 分支）。
+- [ ] **補上受版控的 `eslint.config.js`**：`README` 與 `package.json` 都寫了 `npm run lint`，但 repo 沒有 ESLint 設定檔
+      （`eslint .` 在 ESLint 10 需要 flat config），所以 `1.47.0` 沒跑 lint。`renderer/project/*.js` 要設成 `sourceType: 'script'`，
+      各檔頂端的 `/* global */`／`/* exported */` 註解已備好。
+- [ ] **跑一次 `npm run format:check` 並單獨 commit**：既有檔案有不合格項（含 CRLF 換行相關），CI 已有 format 檢查。
+- [ ] **資安修補剩餘項目**（[`docs/SECURITY_AUDIT_REPORT.md`](./docs/SECURITY_AUDIT_REPORT.md)、[`docs/SECURITY_FIX_CHECKLIST.md`](./docs/SECURITY_FIX_CHECKLIST.md)）：
+  - [x] H-1、M-1～M-5、L-1～L-5（`1.42.0` 完成）
+  - [ ] Electron 30 升級（H-2，要在有網路的環境升級並跑冒煙測試）
+  - [ ] Actions 釘 commit SHA
+  - [ ] 評估替換或隔離 `pdf-lib`（L-6）
+  - [ ] `npm audit`
+  - [ ] 程式碼簽章
+  - [ ] 檢核清單末尾的人工驗證項目
 
 ### P1：下一批候選
 
-- **冒煙測試**：評估用 Playwright 的 Electron 支援＋`xvfb` 在 CI 啟動 App、開各子視窗、斷言沒有 renderer
-  錯誤（不能取代人工驗證，托盤顯示規則在 xvfb 下無法驗證）。
-- **內嵌第三方網站的安全加固（剩餘部分）**：`1.42.0` 已擋 `file:` 等非網頁協定的導覽與開窗；仍待補帳號視圖的
-  `sandbox` 與權限請求（攝影機、麥克風、通知等）限制（需逐平台實測登入流程）。
-- **Electron 升級**：`^30` 已超出官方支援範圍，建議在冒煙測試之後單獨一版升級。
-- **托盤延伸**：最近使用目前只記知識庫提示詞，可考慮把「專案階段提示詞」也納入；快捷鍵目前只有一組，
-  可評估「直接開啟知識庫視窗」之類的第二組。
-- **提示詞變數**：`{{主題}}` 之類具名變數，複製時填值（專案階段流程已有類似的自動帶入）。
+- [ ] **冒煙測試**：評估用 Playwright 的 Electron 支援＋`xvfb` 在 CI 啟動 App、開各子視窗、斷言沒有 renderer
+      錯誤（不能取代人工驗證，托盤顯示規則在 xvfb 下無法驗證）。
+- [ ] **內嵌第三方網站的安全加固（剩餘部分）**：`1.42.0` 已擋 `file:` 等非網頁協定的導覽與開窗；仍待補帳號視圖的
+      `sandbox` 與權限請求（攝影機、麥克風、通知等）限制（需逐平台實測登入流程）。
+- [ ] **Electron 升級**：`^30` 已超出官方支援範圍，建議在冒煙測試之後單獨一版升級。
+- [ ] **托盤延伸**：最近使用目前只記知識庫提示詞，可考慮納入「專案階段提示詞」；快捷鍵目前只有一組，
+      可評估「直接開啟知識庫視窗」之類的第二組。
+- [ ] **提示詞變數**：`{{主題}}` 之類具名變數，複製時填值（專案階段流程已有類似的自動帶入）。
 
 ### P2：值得評估的方向
 
-- **更多平台支援**：在 `PLATFORM_URLS` 與 `default-selectors.json` 增加項目即可，
-  UI 下拉選單同步增加選項。跟已完成的「本地端 AI 服務」不是同一件事——這一項指的是
-  新增更多**固定網址**的雲端平台。
-- **評估是否把其他模組的資料也搬進 SQLite**：目前只有日誌主控台（`logs.sqlite`）用
-  sql.js，帳號／知識庫／專案／文件庫／對話庫仍是 JSON 檔。如果資料量或查詢需求明顯
-  變複雜再跟進；但 sql.js 資料庫整個活在記憶體裡、每次存檔都要整份匯出重寫，資料量／
-  寫入頻率變大時應重新評估 `better-sqlite3`（原生模組，要處理 `electron-rebuild`／
-  `asarUnpack`），不要預設沿用 sql.js。完整取捨見 `PROJECT_SPEC.md` 第 9.7 節。
-  建議先訂出觸發條件（例如單一 JSON 檔超過數 MB、或全域搜尋延遲可感知）再動手。
-- **其餘大檔拆分**：`renderer/knowledge.js`（932 行）、`lib/utils.js`（837）、`renderer/settings.js`（756）、
-  `lib/windows.js`（733）、`lib/ipc/projects.js`（726）是下一批候選；`project.js` 已在 `1.45.0` 拆完，
-  做法（多支一般 `<script>` 共用全域詞法作用域）見 `CHANGELOG.md` `1.45.0`。
-- **補上 `eslint.config.js`**：`README` 與 `package.json` 都寫了 `npm run lint`，但這份 repo 目前沒有受版控的 ESLint 設定檔
-  （`eslint .` 在 ESLint 10 需要 flat config）。補上時 `renderer/project/*.js` 要設成 `sourceType: 'script'`，
-  各檔頂端的 `/* global */`／`/* exported */` 註解已備好。
-- **範本檔延伸**：範本匯出（把自訂範本存成 `.json` 分享）、範例範本的英文／日文版、把常用範例升級成內建範本。
-- **新資料種類／新欄位**：照 `lib/migrations.js` 檔頭的三步驟（補 migration 步驟、補測試、不改 loader）。
+- [ ] **更多平台支援**：在 `PLATFORM_URLS` 與 `default-selectors.json` 增加項目，UI 下拉選單同步增加。
+      （跟已完成的「本地端 AI 服務」不同：這一項是新增更多**固定網址**的雲端平台。）
+- [ ] **評估是否把其他模組的資料搬進 SQLite**：目前只有日誌主控台用 sql.js，其餘仍是 JSON 檔。
+      先訂出觸發條件（例如單一 JSON 檔超過數 MB、或全域搜尋延遲可感知）再動手；資料量變大時應重新評估
+      `better-sqlite3`（要處理 `electron-rebuild`／`asarUnpack`），不要預設沿用 sql.js。完整取捨見 `PROJECT_SPEC.md` 第 9.7 節。
+- [ ] **其餘大檔拆分**：`renderer/knowledge.js`（932 行）、`lib/utils.js`（837）、`renderer/settings.js`（756）、
+      `lib/windows.js`（733）、`lib/ipc/projects.js`（約 800，`1.47.0` 後更長）。做法（多支一般 `<script>` 共用全域詞法作用域）見 `CHANGELOG.md` `1.45.0`。
+- [ ] **範本檔延伸**：範例範本的英文／日文版、把常用範例升級成內建範本。
+      （範本匯出已在 `1.47.0` 完成。）
+- [ ] **新資料種類／新欄位**：照 `lib/migrations.js` 檔頭的三步驟（補 migration 步驟、補測試、不改 loader）。
 
-## 已完成（索引，細節見各版 `CHANGELOG.md` 與 `PROJECT_SPEC.md`）
+## 版本檢核表（已發布）
 
-| 版本               | 項目                                                                                                         |
-| ------------------ | ------------------------------------------------------------------------------------------------------------ |
-| `1.16.0`           | 帳號清單排序（拖曳排序），見 `PROJECT_SPEC.md` 第 3.2 節                                                     |
-| `1.17.0`           | `main.js` 模組化：拆成 `lib/**`（含 `lib/ipc/` 依領域分組），`main.js` 只剩約 70 行 App 生命週期（第 15 節） |
-| `1.18.0`           | 選擇器設定「測試擷取」預覽（第 10 節）                                                                       |
-| `1.19.0`           | 知識庫全文搜尋（標題／內容／標籤，與標籤篩選 AND；第 5.1 節）                                                |
-| `1.20.0`           | GitHub Actions CI（lint + 測試，Node 18／20）；整個專案套用過一次 Prettier                                   |
-| `1.30.0`           | OpenSpec 整合（第 7.7 節）                                                                                   |
-| `1.31.0`           | 本地端 AI 服務帳號類型（Ollama／LM Studio／SD WebUI／ComfyUI 等，自訂網址）                                  |
-| `1.32.0`           | 知識庫「簡報製作提示詞範本」                                                                                 |
-| `1.33.0`           | 文件庫 `.docx`／`.pdf` 預覽與基本編輯                                                                        |
-| `1.33.1`           | 打包體積優化（`app.asar` 36.6MB → 7.2MB）                                                                    |
-| `1.34.0`           | 「AI 短劇製作」專案範本                                                                                      |
-| `1.35.0`           | 專案「關聯文件」與「簡報橋接」（第 7.8 節）                                                                  |
-| `1.36.0`           | 「遊戲設計」專案範本；內建預設值覆蓋安裝補種修正；角色清單「基本／延展」分類                                 |
-| `1.37.0`～`1.38.0` | 求職與職涯提示詞與套餐；右下角浮動小托盤；托盤清單分「角色提示詞」「其他」兩區（第 9.0 節）                  |
-| `1.39.0`           | 對話擷取巢狀重複修正；托盤在背景時不再蓋住其他應用                                                           |
-| `1.40.0`           | 專案範本各階段「相關提示詞」與 11 組新內建提示詞；托盤「專案任務與階段提示詞」區塊                           |
-| `1.40.1`           | 文件與工程一致性整理（無功能變更），新增最佳化建議文件                                                       |
-| `1.41.0`           | 資料檔原子寫入＋`check:docs`；對話擷取預覽與重複偵測；階段提示詞編輯／從知識庫更新；托盤專案區塊模式、全域快捷鍵、最近使用 |
-| `1.42.0`           | 資安修補：導覽／開窗限制、IPC 來源檢查、備份匯入驗證、`.docx` 白名單淨化、CSP、擴充功能權限確認、CI 最小權限（沒有新功能） |
-| `1.43.0`           | 多語系補完：內建角色／提示詞／套餐／範本與主程序文字支援繁中、英文、日文，切換語言自動換未改動項目 |
-| `1.44.0`           | 專案流程「派發」：把步驟交給指定帳號（指派負責人、複製完整提示詞、切換帳號） |
-| `1.45.0`           | 內部整理：`project.js` 拆成 `renderer/project/*.js`；資料檔 `schemaVersion` 與集中式 migration（`lib/migrations.js`） |
-| `1.46.0`           | 專案範本檔匯入（`.json`，含驗證）、格式說明文件，6 個企業行銷／教育訓練／財務會計範本檔（`docs/project-templates/`） |
-| `1.47.0`           | 專案範本匯入／匯出提到專案清單層級；批次（多選＋拖拉）匯入、匯入結果面板；範本匯出（單一或全部自訂） |
+每行對應一個版本；摘要在 [`docs/ROADMAP_HISTORY.md`](./docs/ROADMAP_HISTORY.md)，細節在 [`CHANGELOG.md`](./CHANGELOG.md)。
 
-## 已完成的舊項目（原始記載，保留作為決策脈絡）
+- [x] `1.16.0`　帳號清單排序
+- [x] `1.17.0`　`main.js` 模組化：拆成 `lib/**`
+- [x] `1.18.0`　選擇器設定「測試擷取」預覽
+- [x] `1.19.0`　知識庫全文搜尋
+- [x] `1.20.0`　GitHub Actions CI
+- [x] `1.30.0`　OpenSpec 整合
+- [x] `1.31.0`　本地端 AI 服務帳號類型
+- [x] `1.32.0`　知識庫「簡報製作提示詞範本」
+- [x] `1.33.0`　文件庫 `.docx`／`.pdf` 預覽與基本編輯
+- [x] `1.33.1`　打包體積優化
+- [x] `1.34.0`　「AI 短劇製作」專案範本
+- [x] `1.35.0`　專案「關聯文件」與「簡報橋接」
+- [x] `1.36.0`　「遊戲設計」專案範本
+- [x] `1.37.0`～`1.38.0`　求職與職涯提示詞與套餐
+- [x] `1.39.0`　對話擷取巢狀重複修正
+- [x] `1.40.0`　專案範本各階段「相關提示詞」與 11 組新內建提示詞
+- [x] `1.40.1`　文件與工程一致性整理
+- [x] `1.41.0`　資料檔原子寫入＋`check:docs`
+- [x] `1.42.0`　資安修補（沒有新功能）
+- [x] `1.43.0`　多語系補完（繁中／英文／日文）
+- [x] `1.44.0`　專案流程「派發」：把步驟交給指定帳號
+- [x] `1.45.0`　內部整理：`project.js` 拆成 `renderer/project/*.js`
+- [x] `1.46.0`　專案範本檔匯入
+- [x] `1.47.0`　專案範本匯入／匯出提到專案清單層級
 
-- ~~GitHub Actions CI：push / PR 時自動跑 `npm run lint` + `npm test`（不含實際啟動
-  Electron App 互動的測試，CI 環境沒有顯示器，那部分永遠要靠 `npm start` 手動驗證）。~~
-  → 已在 `1.20.0` 完成，見 `.github/workflows/ci.yml`。`1.40.1` 補上 `master` 分支。
-- ~~`npm run format` 整批套用 Prettier~~ → 已在 `1.20.0` 完成；之後新增的程式碼請在
-  提交前跑 `npm run format:check`。
+> 下一版：從上面的待辦檢核表挑項目，完成後在此補一行 `- [x]`。

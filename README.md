@@ -314,7 +314,8 @@ extensions.json         # 已安裝的擴充功能清單
 | 文件                                                               | 內容                                                                                                  |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
 | [CHANGELOG.md](./CHANGELOG.md)                                     | 版本歷程，每次加了什麼功能                                                                            |
-| [ROADMAP.md](./ROADMAP.md)                                         | 還沒做、之後可能會做的方向                                                                            |
+| [docs/ROADMAP_HISTORY.md](./docs/ROADMAP_HISTORY.md)               | 各版本改動摘要索引（從 ROADMAP 拆出）                                                                 |
+| [ROADMAP.md](./ROADMAP.md)                                         | 還沒做、之後可能會做的方向（待辦檢核表與版本檢核表）                                                                            |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | 完整規格提示詞，適合給有檔案系統工具的 agent（Claude Code / Cursor）重現整個專案                      |
 | [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 分階段（Stage 1～16，約到 1.16.0；之後的功能只記在 CHANGELOG／PROJECT_SPEC）的建置提示詞，適合給 Gemini / Grok / ChatGPT 這類沒有檔案系統工具的模型從零重建 |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既有階段都做完之後，要加新功能時用的提示詞模板                                                        |

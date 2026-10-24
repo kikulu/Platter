@@ -356,7 +356,8 @@ Cookie・localStorage は**含まれません**。
 | ドキュメント                                                       | 内容                                                                                                                                |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------- |
 | [CHANGELOG.md](./CHANGELOG.md)                                     | 更新履歴——各回で追加された機能                                                                                                      |
-| [ROADMAP.md](./ROADMAP.md)                                         | まだ未着手の、今後検討する価値のある方向性                                                                                          |
+| [docs/ROADMAP_HISTORY.md](./docs/ROADMAP_HISTORY.md)               | バージョンごとの変更サマリ（ROADMAP から分離）                                           |
+| [ROADMAP.md](./ROADMAP.md)                                         | 未着手の項目チェックリストとリリース済みバージョンのチェックリスト                                                                                          |
 | [PROJECT_SPEC.md](./PROJECT_SPEC.md)                               | プロジェクト全体を再現するための完全な仕様プロンプト。ファイルシステム操作ツールを持つエージェント（Claude Code / Cursor）向け      |
 | [BUILD_PLAN.md](./BUILD_PLAN.md)                                   | 段階分けしたビルド用プロンプト集（Stage 1～16、約 1.16.0 まで。以降の機能は CHANGELOG／PROJECT_SPEC にのみ記録）。ファイルシステム操作ツールを持たないモデル（Gemini / Grok / ChatGPT）でゼロから構築する場合向け |
 | [NEW_FEATURE_BUILD_PROMPT.md](./NEW_FEATURE_BUILD_PROMPT.md)       | 既存の全段階が完了した後、新機能を追加する際に使うプロンプトテンプレート                                                            |

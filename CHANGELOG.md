@@ -51,6 +51,7 @@
 - `docs/PROJECT_TEMPLATE_FORMAT.md`：匯入方式改寫（工具列入口、多檔、拖拉、結果面板），新增匯出說明。
 - `PROJECT_SPEC.md` §7.6：IPC 清單加 `importFiles`／`export`，新增「專案範本匯入／匯出（1.47.0）」畫面段落。
 - `README.md`／`README.en.md`／`README.ja.md`：專案範本列補上匯入／匯出與拖拉匯入說明。
+- `ROADMAP.md` 拆成兩份：`ROADMAP.md` 只留「明確排除」、待辦檢核表（P0／P1／P2，`- [ ]`）與已發布版本檢核表（`- [x]`）；各版改動摘要與舊項目搬到新檔 `docs/ROADMAP_HISTORY.md`。
 - `ROADMAP.md`、`NEW_FEATURE_BUILD_PROMPT.md`、`FIX_EXISTING_FEATURE_PROMPT.md`：版本與功能方向同步到 1.47.0（ROADMAP 版本表 1.45.0／1.46.0 順序一併修正）。
 
 ### 測試
