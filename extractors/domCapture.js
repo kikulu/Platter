@@ -168,8 +168,26 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         const qt = q && (q.innerText || '').trim();
         if (qt) return qt;
       }
-      return (el.innerText || '').trim();
+      // innerText 在「沒有被渲染」的節點（帳號視圖被隱藏／未顯示、display:none 的祖先）會是空字串，
+      // 這時改讀 textContent，避免整頁被判成 EMPTY_RESULT
+      return String(el.innerText || el.textContent || '').trim();
     };
+
+    // 平台在訊息文字前面塞的角色標籤／思考時間（Grok 的「您」「Grok 運作了5s」、Gemini 的「你說了」）
+    const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
+    const THINK_LABEL = /^(運作了|已運作|思考了|已思考|Thought for|Worked for|Thinking)\s*[\d.]*\s*(s|秒|seconds?|分鐘|min)?$/i;
+    const stripLabels = (text) => {
+      const lines = text.split('\n');
+      let i = 0;
+      while (i < lines.length && i < 3 && (ROLE_LABEL.test(lines[i].trim()) || THINK_LABEL.test(lines[i].trim()))) i += 1;
+      let out = lines.slice(i).join('\n').trim();
+      const m = out.match(/^(你說了|You said)\s+(.+)$/s);
+      if (m) out = m[2].trim();
+      return out || text;
+    };
+    // 按鈕、表單、輸入框裡的節點一定不是對話訊息（Share／Upgrade／輸入框提示字等 UI 文字）
+    const INTERACTIVE = 'button, [role="button"], form, textarea, [contenteditable="true"]';
+    const inInteractive = (el) => typeof el.closest === 'function' && !!el.closest(INTERACTIVE);
 
     // 對一組選擇器做一次擷取（不含檔案收集）
     const extract = (cfg) => {
@@ -189,13 +207,13 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       // 回傳外層與內層節點，外層的 innerText 又包含內層全部文字，結果同一段
       // 內容被重複擷取、越疊越多。這裡只保留「最內層」符合的節點（內含其他
       // 符合節點的外層容器一律略過）。
-      const leafNodes = contentNodes.filter(
-        (el) => !contentNodes.some((other) => other !== el && el.contains(other))
-      );
+      const leafNodes = contentNodes
+        .filter((el) => !inInteractive(el))
+        .filter((el, _i, arr) => !arr.some((other) => other !== el && el.contains(other)));
       const items = leafNodes.map((el) => ({
         el,
         role: isUserMessage(el, hint) ? 'user' : 'assistant',
-        text: textOf(el),
+        text: stripLabels(textOf(el)),
       }));
       return { cfg, nodeCount: nodes.length, chromeSkipped, chromeFallback, items };
     };
@@ -297,11 +315,20 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       .filter(Boolean);
 
     // 去除「相鄰完全相同」的訊息（同一則訊息被多個節點包住時的保險）
-    const messages = rawMessages.filter(
-      (m, i) =>
-        i === 0 ||
-        !(m.role === rawMessages[i - 1].role && m.text === rawMessages[i - 1].text)
-    );
+    // 相鄰同角色、其中一則只是另一則加上短前綴（例如「你說了 …」）也視為同一則，留乾淨的那則
+    const messages = [];
+    rawMessages.forEach((m) => {
+      const prev = messages[messages.length - 1];
+      if (prev && prev.role === m.role && m.text && prev.text) {
+        if (prev.text === m.text) return;
+        if (prev.text.endsWith(m.text) && prev.text.length - m.text.length <= 12) {
+          messages[messages.length - 1] = m;
+          return;
+        }
+        if (m.text.endsWith(prev.text) && m.text.length - prev.text.length <= 12) return;
+      }
+      messages.push(m);
+    });
 
     // 不在任何訊息節點裡的檔案卡片（例如側邊的成品／附件面板）：只有設了 fileSelector 才收集
     let pageFiles = [];
