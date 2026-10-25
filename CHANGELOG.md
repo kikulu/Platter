@@ -1,5 +1,16 @@
 # Changelog
 
+## [1.51.1]
+
+依使用者貼來的 Claude／Grok／Gemini 匯出檔做的擷取清理，並針對 ChatGPT 的 EMPTY_RESULT 加一道保險。
+
+- **ChatGPT EMPTY_RESULT（推測，未實測）**：選擇器 `[data-message-author-role]` 與第三方腳本的 2026-07 驗證一致，沒有失效；較可能是帳號視圖當下沒被渲染（隱藏／未顯示）時
+  `innerText` 回空字串。現在 `innerText` 為空會改讀 `textContent`。若仍 EMPTY_RESULT，請在該對話頁按「設定 → 選擇器設定 → 診斷頁面結構」貼回報告。
+- **Grok／Gemini 前綴**：去掉訊息開頭的角色標籤（「您」「Grok」「你說了」「You said」）與「運作了5s」這類思考時間行；相鄰同角色且只差短前綴的重複訊息只保留乾淨那則（Gemini 的「你說了 …」重複）。
+- **Claude 匯出混入 UI 文字**（Share／Upgrade／Write a message…／輸入框與頁尾）：按鈕、表單、輸入框、`contenteditable` 裡的節點一律不算訊息。
+  Claude 的 AI 回覆仍可能只抓到思考摘要，成因需要診斷報告才能確定。
+- 測試：`test/domCapture.test.js` 新增 4 項（共 19 項）。
+
 ## [1.51.0]
 
 修正 1.50.0 在三個平台的擷取失敗：ChatGPT 匯出回 `EMPTY_RESULT`、Claude 抓不到 AI 回覆、Gemini 只抓到第一句使用者訊息。

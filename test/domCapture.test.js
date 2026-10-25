@@ -194,9 +194,9 @@ test('useFallbacks:false 時不試備用選擇器', async () => {
   assert.equal(result.messages.length, 1);
 });
 
-test('訊息包在 header／form 內時不再被當成頁面外殼排除', async () => {
+test('訊息包在 header／footer 內時不再被當成頁面外殼排除', async () => {
   const msg = makeNode('包在 header 裡的訊息', [], {
-    closest: (sel) => (/header|form|footer/.test(sel) ? makeNode('') : null),
+    closest: (sel) => (/header|footer/.test(sel) && !/button/.test(sel) ? makeNode("") : null),
   });
   const result = await runCapture([msg]);
   assert.equal(result.ok, true);
@@ -258,4 +258,36 @@ test('domDiagnose.js 可載入並匯出 diagnosePage', () => {
   vm.createContext(sandbox);
   vm.runInContext(src, sandbox);
   assert.equal(vm.runInContext('typeof diagnosePage', sandbox), 'function');
+});
+
+// ---- 1.51.1 ----
+
+test('innerText 為空（視圖未渲染）時改讀 textContent，不會整頁 EMPTY_RESULT', async () => {
+  const hidden = makeNode('', [], { textContent: '隱藏視圖裡的訊息' });
+  const result = await runCapture([hidden]);
+  assert.equal(result.ok, true);
+  assert.equal(result.messages[0].text, '隱藏視圖裡的訊息');
+});
+
+test('去掉 Grok／Gemini 的角色標籤與運作時間前綴', async () => {
+  const u = makeNode('您\n分析');
+  const a = makeNode('Grok\n運作了5s\n\n以下是分析結果');
+  const g = makeNode('你說了 替簡報寫備忘稿');
+  const result = await runCapture([u, a, g], { cfg: { turn: 'x', userHint: '' } });
+  assert.deepEqual(result.messages.map((m) => m.text), ['分析', '以下是分析結果', '替簡報寫備忘稿']);
+});
+
+test('相鄰同角色且只差短前綴的重複訊息只留乾淨那則', async () => {
+  const withPrefix = makeNode('Gemini 說明 問題內容');
+  const clean = makeNode('問題內容');
+  const result = await runCapture([withPrefix, clean]);
+  assert.equal(result.messages.length, 1);
+  assert.equal(result.messages[0].text, '問題內容');
+});
+
+test('按鈕／表單／輸入框裡的節點不算訊息', async () => {
+  const btn = makeNode('Share', [], { closest: (sel) => (/button/.test(sel) ? makeNode('') : null) });
+  const real = makeNode('真正的訊息');
+  const result = await runCapture([btn, real]);
+  assert.deepEqual(result.messages.map((m) => m.text), ['真正的訊息']);
 });
