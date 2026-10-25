@@ -1,5 +1,48 @@
 # Changelog
 
+## [1.50.0]
+
+修正 Claude 匯出對話一直抓不到完整內容的問題，並讓對話過程中產生／上傳的檔案可以一起下載。
+
+### 匯出內容不完整的原因與修正
+
+- **原因**：Claude 的預設選擇器 `[data-testid="conversation-turn"]` 在現在的 claude.ai 已不存在，AI 回覆實際在 `.font-claude-response`，
+  所以只抓得到使用者訊息；加上選擇器若被改得太寬，會把側邊欄、按鈕等整頁 UI 文字當成一則則「訊息」（匯出檔裡出現 Share／Upgrade／最近對話即是如此）。
+- 新預設：`[data-testid="user-message"], .font-claude-response`。`loadSelectors()` 會把「跟舊預設完全一樣」的值自動升級（使用者自訂的不碰）；
+  若你的選擇器是自己改過的，請到「設定 → 選擇器設定」按「重設為預設」或自行改成上面的值。
+- `extractors/domCapture.js` 的 `capturePlatformConversation()` 改為 **async**（`executeJavaScript` 會等 Promise）：
+  - **載入完整歷史**：擷取前先往上捲動訊息容器，等舊訊息載入，訊息數與捲動高度連續兩輪不變即停（上限 60 輪／20 秒），再還原捲動位置。
+  - **排除頁面外殼**：`nav／aside／header／footer／form／dialog` 與對應 ARIA role 裡的符合節點不算訊息；找捲動容器也不會再被側邊欄的節點帶偏。
+  - 擷取結果的 `debug` 新增 `chromeSkipped`（略過的外殼節點數）、`scrollRounds`、`attachmentCount`，主控台日誌同步輸出。
+
+### 對話中的檔案一起下載
+
+- 擷取時收集每則訊息的檔案（`attachments`）：下載連結（`download` 屬性、常見副檔名、`/files/` 路徑、`blob:`）、夠大且不像頭像／圖示的圖片、影音來源，
+  以及新的選擇器欄位 **`fileSelector`**（選填，設定頁新增「檔案／附件元素 selector」）所指的檔案卡片——沒有網址的卡片只記名稱；不屬於任何訊息的卡片放 `pageFiles`。
+- 新增 `lib/attachments.js`（純邏輯，io 可注入，有測試）：
+  - **安全**：只接受 http／https／blob／data；http(s) 只下載同源或公開 https 主機，**不下載 localhost／私有網段／連結本機位址**（網址來自平台頁面，內容不可信）；
+    blob 限同源；單檔 100 MB、總量 500 MB、100 個檔案；檔名清理路徑分隔符、控制字元、Windows 保留字，資料夾內自動去重；同網址只下載一次。
+  - http(s) 用該帳號自己的 session 下載（帶登入狀態、邊讀邊檢查大小）；`blob:` 回頁面內讀取。
+- 輸出：檔案存到匯出檔旁邊的 `<檔名>_files/` 資料夾。Markdown 在該訊息下加 `📎 [檔名](./<檔名>_files/…)`（圖片用 `![]()`），沒下載到的只列名稱；
+  JSON 的附件帶 `status`（saved／failed／name-only／skipped）與 `localName`。存進知識庫的 Markdown 不帶相對連結。下載失敗不影響對話本身匯出。
+- 匯出對話框新增「同時下載對話中的檔案」勾選（偏好 `ui.exportDownloadFiles`，預設開，IPC `settings:setExportDownloadFiles`）；匯出完成的提示會列出下載、失敗、略過與只有名稱的數量。
+  托盤的一鍵匯出沿用同一個偏好，成功提示附下載數量。
+- 語系：新增 `settings.selectors.fileSelector／fileSelectorHint`、`export.downloadFiles／filesSaved／filesFailed／filesSkipped／filesNameOnly`、
+  `main.export.pageFilesHeading`、`main.capture.log.exportFiles`（三語系各 722 個鍵）。
+
+### 測試與驗證
+
+- 新增 `test/attachments.test.js`（10 項：私有主機／網址分類、檔名清理、Content-Disposition、下載去重／封鎖／失敗／上限、`toMarkdown` 附件連結、
+  匯出整合含資料夾與 JSON、關閉下載、舊預設選擇器升級）；`test/domCapture.test.js` 改為 async 並新增 4 項（外殼排除、檔案收集、`collectFiles:false`、捲動載入）。共 334 項測試。
+- 另在真實 Chromium 以模擬「往上捲才載入舊訊息」的頁面驗證：擷取到完整 18 則、側邊欄沒混入、圖片附件被收集（過程中修掉「第一個符合節點在側邊欄時找錯捲動容器」的 bug）。
+
+### 已知限制
+
+- **尚未在真實登入的各平台驗證**：Claude 的附件／成品卡片（例如對話中的 .docx 卡片）多半沒有可直接下載的網址（成品由頁面內的按鈕產生），目前只會列出名稱；
+  ChatGPT 產生的檔案、Gemini／Grok 的圖片也只有通用規則。請實測後把確定可用的 `fileSelector` 填進選擇器設定（已列入 ROADMAP P1）。
+- `.font-claude-response` 與 `user-message` 是依目前 claude.ai 外部資料整理的，平台改版時要再調整。
+- 尚未在真正的 Electron 視窗驗證下載（`session.fetch`、`blob:` 讀取）。
+
 ## [1.49.0]
 
 右下角浮動托盤的快速連結列加入「匯出對話」。

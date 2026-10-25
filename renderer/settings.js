@@ -201,6 +201,7 @@
   const selectorTabs = document.getElementById('selector-tabs');
   const selectorTurnInput = document.getElementById('selector-turn');
   const selectorUserHintInput = document.getElementById('selector-user-hint');
+  const selectorFileInput = document.getElementById('selector-file');
 
   const selectorTestResultEl = document.getElementById('selector-test-result');
 
@@ -219,6 +220,7 @@
     const sel = allSelectors[platform] || { turn: '', userHint: '' };
     selectorTurnInput.value = sel.turn || '';
     selectorUserHintInput.value = sel.userHint || '';
+    selectorFileInput.value = sel.fileSelector || '';
   }
 
   selectorTabs.querySelectorAll('button').forEach((btn) => {
@@ -244,6 +246,7 @@
     allSelectors = await window.workspaceAPI.saveSelector(currentPlatform, {
       turn: selectorTurnInput.value.trim(),
       userHint: selectorUserHintInput.value.trim(),
+      fileSelector: selectorFileInput.value.trim(),
     });
     alert(window.i18n.t('settings.selectors.saved'));
   });
@@ -337,6 +340,7 @@
     const selector = {
       turn: selectorTurnInput.value.trim(),
       userHint: selectorUserHintInput.value.trim(),
+      fileSelector: selectorFileInput.value.trim(),
     };
 
     try {

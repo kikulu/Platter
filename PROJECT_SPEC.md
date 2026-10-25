@@ -1394,7 +1394,7 @@ Enter 跳到選中的項目，Esc 或點背景關閉。比對範圍跟各自視�
 ## 10. 選擇器設定與滑鼠選取工具
 
 抓取對話用的 CSS selector 不寫死在程式碼裡，存成一份可編輯的設定
-（`selectors.json`，結構是 `{ claude: {turn, userHint}, chatgpt: {...}, ... }`，
+（`selectors.json`，結構是 `{ claude: {turn, userHint, fileSelector}, chatgpt: {...}, ... }`（`fileSelector` 為 1.50.0 新增、選填），
 第一次啟動從 `extractors/default-selectors.json` 複製出廠預設值）。
 **（1.36.0 修正）**：跟角色一樣曾經有覆蓋安裝補種的 bug——舊版只在
 `selectors.json` 完全不存在時套用預設值，一旦存過檔，往後升級新增的
@@ -1490,6 +1490,29 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   取到外層與內層節點，外層 `innerText` 含內層全文，導致內容重複疊加。現在
   先過濾掉「內含其他符合節點的外層」，只保留最內層節點，並合併相鄰且角色、
   文字完全相同的訊息（見 `test/domCapture.test.js`）。
+- **（1.50.0）完整內容與檔案**：
+  - 預設選擇器修正：Claude 的 AI 回覆在現在的 claude.ai 是 `.font-claude-response`（舊預設的
+    `[data-testid="conversation-turn"]` 已不存在，只會抓到使用者訊息，若使用者又改成太寬的 selector 就會把側邊欄等 UI 文字
+    當成訊息）。新預設 `[data-testid="user-message"], .font-claude-response`；`loadSelectors()` 會把「跟舊預設完全一樣」的值
+    升級（`LEGACY_DEFAULT_TURNS`），使用者自訂的不碰。
+  - `capturePlatformConversation(platform, selectorConfig, { loadAll, collectFiles })` 改為 **async**：擷取前先往上捲動訊息
+    容器（以第一個非外殼的符合節點往上找 `overflow-y: auto|scroll` 的祖先），每輪等 400 ms，訊息數與捲動高度連續兩輪不變即停
+    （上限 60 輪／20 秒），擷取完還原離底部的距離，讓「往上捲才載入」的舊訊息也被抓到。
+  - 排除「頁面外殼」裡的符合節點（`nav, aside, header, footer, form, dialog` 與對應 ARIA role），`debug.chromeSkipped` 回報數量。
+  - 收集檔案（`message.attachments = [{ url|null, name, kind: link|image|card|media }]`）：帶 `download` 屬性、常見副檔名、
+    `/files/` 之類路徑或 `blob:` 的連結；寬高 ≥ 80 且不像頭像／圖示的 `<img>`；`<video>`／`<audio>` 來源；以及選擇器設定新增的
+    **`fileSelector`**（選填）所指的檔案卡片（沒有網址的只記名稱）。不在任何訊息裡的卡片放 `result.pageFiles`。
+  - 下載由主行程做（`lib/attachments.js`，純邏輯、io 可注入）：**只接受 http／https／blob／data**；http(s) 只下載「跟頁面同源」
+    或「公開 https 主機」，一律不下載 localhost／私有網段／連結本機位址（網址來自平台頁面 DOM，不可信；本地端 AI 服務是同源所以
+    不受限）；單檔 100 MB、總量 500 MB、100 個檔案；檔名清理路徑分隔符／控制字元／Windows 保留字並在資料夾內去重；同網址只下載
+    一次；有任何檔案成功才建立資料夾。http(s) 用該帳號自己的 `session.fetch()`（帶登入 cookie，邊讀邊檢查大小）、`blob:` 回頁面內
+    `fetch` 轉 base64。
+  - 輸出：檔案存到匯出檔旁邊的 **`<檔名>_files/`**；Markdown 在該訊息下加 `📎 [檔名](./<檔名>_files/…)`（圖片用 `![]()`，
+    路徑已 URL 編碼），沒下載到的只列名稱；JSON 的附件帶 `status`（saved／failed／name-only／skipped）與 `localName`。存進知識庫／
+    對話庫的 Markdown 不帶相對連結。下載失敗不影響對話本身的匯出，`exportCurrentConversation` 回傳 `files: { saved, failed,
+    nameOnly, skipped, dir }`。
+  - 匯出對話框新增「同時下載對話中的檔案」勾選（偏好 `ui.exportDownloadFiles`，預設開，`settings:setExportDownloadFiles`）；
+    托盤的一鍵匯出沿用這個偏好。
 
 **匯出選項對話框**（主視窗側邊欄「匯出當前對話」按鈕）：點下去先跳一個
 選項對話框，不是直接匯出。**（1.37.0 修正「點了沒反應」）**：這個對話框
@@ -1502,7 +1525,7 @@ Markdown/JSON 格式、可以按「另存到其他
 選，不該被全域設定蓋過去）、可以勾選「同時加入知識庫」（這個勾選狀態
 會記住，下次打開對話框預設沿用上次選的值）。
 
-- `exportCurrentConversation(format, { forceChoosePath, addToKnowledge })`
+- `exportCurrentConversation(format, { forceChoosePath, addToKnowledge, downloadFiles })`
   （`lib/conversationCapture.js`）：`forceChoosePath` 為 true 時，不管
   `state.appState.ui.skipSaveDialog` 是不是開著，都照樣跳
   `dialog.showSaveDialog()`；`addToKnowledge` 為 true 時，匯出檔案成功
@@ -1628,6 +1651,7 @@ lib/migrations.js        # 資料檔 schema 版本與集中式 migration（第 1
 lib/stores.js            # 資料層：app-state/knowledge-base/selectors/projects/documents/conversations 的 loadX()/saveX()
 lib/windows.js           # 視窗與帳號 WebContentsView 管理：主視窗、各子視窗、openChildWindow helper
 lib/conversationCapture.js # 對話擷取/匯出（executeJavaScript 注入 extractors/domCapture.js）、選取器工具
+lib/attachments.js      # 匯出對話時一起下載檔案：網址安全檢查、檔名清理、下載限制（第 12 節，1.50.0；純邏輯）
 lib/reminders.js         # 任務到期日提醒：到期摘要計算、每小時排程、原生系統通知
 lib/ipc/index.js         # 匯總註冊所有 IPC handlers
 lib/ipc/accounts.js      # accounts:* / roles:* / ui:* IPC

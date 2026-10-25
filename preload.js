@@ -47,7 +47,11 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
       format,
       forceChoosePath: !!options.forceChoosePath,
       addToKnowledge: !!options.addToKnowledge,
+      downloadFiles: options.downloadFiles !== false,
     }),
+
+  setExportDownloadFiles: (enabled) =>
+    ipcRenderer.invoke('settings:setExportDownloadFiles', enabled),
 
   // 知識庫：提示詞項目
   listKnowledge: () => ipcRenderer.invoke('knowledge:list'),

@@ -220,6 +220,16 @@
         >
         <input type="text" id="selector-user-hint" />
       </div>
+      <div class="field" style="margin-bottom: 10px">
+        <label class="label" data-i18n="settings.selectors.fileSelector"
+          >檔案／附件元素 selector（選填）</label
+        >
+        <input type="text" id="selector-file" />
+        <div class="settings-hint" data-i18n="settings.selectors.fileSelectorHint">
+          匯出時會自動收集訊息裡的下載連結與圖片；若平台的檔案卡片（例如附件、成品）抓不到，可在這裡填入該卡片元素的
+          CSS selector。沒有網址的卡片只會列出名稱。
+        </div>
+      </div>
 
       <div class="row" style="margin-bottom: 10px">
         <button id="btn-pick-user" data-i18n="settings.selectors.pickUser">
