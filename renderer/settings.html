@@ -244,6 +244,27 @@
         <button id="btn-test-capture" data-i18n="settings.selectors.testCapture">
           測試擷取
         </button>
+        <button
+          id="btn-diagnose"
+          data-i18n="settings.selectors.diagnose"
+          data-i18n-title="settings.selectors.diagnoseHint"
+        >
+          診斷頁面結構
+        </button>
+      </div>
+      <div id="selector-diagnose-box" style="display: none; margin-bottom: 10px">
+        <div class="settings-hint" id="selector-diagnose-status"></div>
+        <textarea
+          id="selector-diagnose-report"
+          readonly
+          rows="12"
+          style="width: 100%; font-family: monospace; font-size: 11px"
+        ></textarea>
+        <div class="row" style="margin-top: 6px">
+          <button id="btn-diagnose-copy" data-i18n="settings.selectors.diagnoseCopy">
+            複製報告
+          </button>
+        </div>
       </div>
       <div
         id="selector-test-result"

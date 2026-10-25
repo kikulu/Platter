@@ -54,7 +54,7 @@
 ```
 你是要幫「Platter（AI Workspace Aggregator）」這個 Electron 專案修正一個
 既有功能的問題，不是要加新功能。這個專案的規格記載在 PROJECT_SPEC.md，
-目前版本是 1.50.0。原始建置歷程記載在 BUILD_PLAN.md（Stage 1～16，約
+目前版本是 1.51.0。原始建置歷程記載在 BUILD_PLAN.md（Stage 1～16，約
 對應到 1.16.0，之後的功能都只記在 CHANGELOG.md／PROJECT_SPEC.md，沒有
 再往 BUILD_PLAN.md 加新 Stage，細節見 NEW_FEATURE_BUILD_PROMPT.md 的
 「專案現況」段落）。**1.17.0 之後新增的多數功能都只做過語法檢查、

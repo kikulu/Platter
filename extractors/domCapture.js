@@ -17,9 +17,19 @@
  *   - 同時收集每則訊息裡的「檔案」（options.collectFiles，預設開）：可下載的連結（download 屬性、
  *     常見副檔名或 /files/ 之類路徑）、較大的圖片、影音來源，以及使用者在 selector 設定裡填的
  *     fileSelector 所指的元素（沒有網址的只記名稱）。只回報網址與名稱，下載由主行程負責。
+ *
+ * 1.51.0 起（自我修復）：
+ *   - selectorConfig.fallbacks（呼叫端從 extractors/capture-fallbacks.json 帶入的備用選擇器清單，
+ *     這個檔案本身仍不內建任何 selector）：設定的選擇器擷取不到、或只抓到單一角色（沒有 AI 回覆）時，
+ *     依序試備用選擇器，挑「同時有使用者與 AI 訊息、且訊息最多」的結果；debug.candidatesTried 回報每組的命中數。
+ *   - 「頁面外殼」排除放寬：只排除 nav／aside／dialog 與對應 ARIA role（不再排除 header／footer／form，
+ *     很多平台的訊息會包在這些元素裡）；外殼若包著 main 也不算外殼；排除後一個都不剩就退回不排除。
+ *   - userHint 支援 "has:<selector>"（節點裡有符合 selector 的子元素就是使用者訊息）；
+ *     "屬性=值" 的寫法不再被 data-message-author-role 搶先比對。
+ *   - Gemini 的 user-query 優先讀 .query-text（避免讀到隱藏的「You said」前綴）。
  */
 async function capturePlatformConversation(platform, selectorConfig, options) {
-  const opts = Object.assign({ loadAll: true, collectFiles: true }, options || {});
+  const opts = Object.assign({ loadAll: true, collectFiles: true, useFallbacks: true }, options || {});
   try {
     if (!selectorConfig || !selectorConfig.turn) {
       return {
@@ -37,20 +47,47 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       };
     }
 
-    const query = () => Array.from(document.querySelectorAll(selectorConfig.turn));
-    // 排除「頁面外殼」：側邊欄、導覽列、頁首頁尾、輸入表單、對話框裡的符合節點
-    const CHROME_SELECTOR =
-      'nav, aside, header, footer, form, dialog, [role="navigation"], [role="complementary"], [role="dialog"], [role="banner"]';
-    const inChrome = (el) => typeof el.closest === 'function' && !!el.closest(CHROME_SELECTOR);
-    let nodes = query();
-    const userHint = (selectorConfig.userHint || '').trim();
     const fileSelector = (selectorConfig.fileSelector || '').trim();
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+    const candidates = [selectorConfig];
+    if (opts.useFallbacks && Array.isArray(selectorConfig.fallbacks)) {
+      selectorConfig.fallbacks.forEach((c) => {
+        if (c && typeof c.turn === 'string' && c.turn.trim() && c.turn !== selectorConfig.turn) {
+          candidates.push({ turn: c.turn, userHint: c.userHint || '' });
+        }
+      });
+    }
+
+    const queryOf = (cfg) => {
+      try {
+        return Array.from(document.querySelectorAll(cfg.turn));
+      } catch (err) {
+        return []; // selector 語法錯誤：當作沒有符合
+      }
+    };
+
+    // 「頁面外殼」：側邊欄、導覽列、對話框。外殼若包著 main（整頁被一層包起來）就不算。
+    const CHROME_SELECTOR =
+      'nav, aside, dialog, [role="navigation"], [role="complementary"], [role="dialog"]';
+    const inChrome = (el) => {
+      if (typeof el.closest !== 'function') return false;
+      const c = el.closest(CHROME_SELECTOR);
+      if (!c) return false;
+      if (typeof c.querySelector === 'function' && c.querySelector('main, [role="main"]')) return false;
+      return true;
+    };
 
     // ---- 1. 載入完整歷史：往上捲到頂，等新訊息載入，直到數量與捲動高度連續兩輪沒變 ----
     let scrollRounds = 0;
-    // 用第一個「真的訊息」節點找捲動容器（側邊欄裡的符合節點不能拿來當基準）
-    const anchor = nodes.find((el) => !inChrome(el)) || null;
+    let anchor = null;
+    let anchorCfg = null;
+    for (const cfg of candidates) {
+      anchor = queryOf(cfg).find((el) => !inChrome(el)) || null;
+      if (anchor) {
+        anchorCfg = cfg;
+        break;
+      }
+    }
     if (
       opts.loadAll &&
       anchor &&
@@ -75,26 +112,37 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         scroller.scrollTop = 0;
         await sleep(400);
         scrollRounds += 1;
-        const sig = query().length + ':' + scroller.scrollHeight;
+        const sig = queryOf(anchorCfg).length + ':' + scroller.scrollHeight;
         stable = sig === last ? stable + 1 : 0;
         last = sig;
         if (stable >= 2) break;
       }
       scroller.scrollTop = Math.max(0, scroller.scrollHeight - scroller.clientHeight - fromBottom);
-      nodes = query();
     }
 
-    const isUserMessage = function (el) {
+    // ---- 2. 判斷訊息角色與文字 ----
+    const isUserMessage = function (el, userHint) {
       if (!userHint) return false;
 
-      // 1) 優先比對 data-message-author-role 屬性值
+      // 0) "has:<selector>"：節點裡有符合的子元素就是使用者訊息（回合容器型的 DOM）
+      if (userHint.startsWith('has:')) {
+        try {
+          return !!(el.querySelector && el.querySelector(userHint.slice(4)));
+        } catch (err) {
+          return false;
+        }
+      }
+
+      const hasEquals = userHint.includes('=');
+
+      // 1) 優先比對 data-message-author-role 屬性值（hint 是單純的角色字，例如 "user"）
       const roleAttr = el.getAttribute && el.getAttribute('data-message-author-role');
-      if (roleAttr) {
+      if (roleAttr && !hasEquals) {
         return roleAttr.toLowerCase() === userHint.toLowerCase();
       }
 
       // 2) 比對其他常見屬性是否包含 userHint（例如 "data-testid=user-message" 這種寫法）
-      if (userHint.includes('=')) {
+      if (hasEquals) {
         const [attrName, attrValue] = userHint.split('=').map((s) => s.trim());
         const val = el.getAttribute && el.getAttribute(attrName);
         if (val) return val.toLowerCase().includes(attrValue.toLowerCase());
@@ -113,25 +161,63 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       return false;
     };
 
-    let chromeSkipped = 0;
-    const contentNodes = nodes.filter((el) => {
-      if (inChrome(el)) {
-        chromeSkipped += 1;
-        return false;
+    const textOf = (el) => {
+      // Gemini 的 user-query 含隱藏的「You said」前綴，優先讀實際的提問文字
+      if (el.tagName === 'USER-QUERY' && typeof el.querySelector === 'function') {
+        const q = el.querySelector('.query-text');
+        const qt = q && (q.innerText || '').trim();
+        if (qt) return qt;
       }
-      return true;
-    });
+      return (el.innerText || '').trim();
+    };
 
-    // 去除「巢狀重複」：selector 是聯集（例如 claude 的 user-message +
-    // font-claude-response）或外層容器也剛好符合時，querySelectorAll 會同時
-    // 回傳外層與內層節點，外層的 innerText 又包含內層全部文字，結果同一段
-    // 內容被重複擷取、越疊越多。這裡只保留「最內層」符合的節點（內含其他
-    // 符合節點的外層容器一律略過）。
-    const leafNodes = contentNodes.filter(
-      (el) => !contentNodes.some((other) => other !== el && el.contains(other))
-    );
+    // 對一組選擇器做一次擷取（不含檔案收集）
+    const extract = (cfg) => {
+      const hint = (cfg.userHint || '').trim();
+      const nodes = queryOf(cfg);
+      let contentNodes = nodes.filter((el) => !inChrome(el));
+      let chromeSkipped = nodes.length - contentNodes.length;
+      let chromeFallback = false;
+      // 排除後一個都不剩 → 外殼規則可能誤傷，退回不排除
+      if (contentNodes.length === 0 && nodes.length > 0) {
+        contentNodes = nodes;
+        chromeSkipped = 0;
+        chromeFallback = true;
+      }
+      // 去除「巢狀重複」：selector 是聯集（例如 claude 的 user-message +
+      // font-claude-response）或外層容器也剛好符合時，querySelectorAll 會同時
+      // 回傳外層與內層節點，外層的 innerText 又包含內層全部文字，結果同一段
+      // 內容被重複擷取、越疊越多。這裡只保留「最內層」符合的節點（內含其他
+      // 符合節點的外層容器一律略過）。
+      const leafNodes = contentNodes.filter(
+        (el) => !contentNodes.some((other) => other !== el && el.contains(other))
+      );
+      const items = leafNodes.map((el) => ({
+        el,
+        role: isUserMessage(el, hint) ? 'user' : 'assistant',
+        text: textOf(el),
+      }));
+      return { cfg, nodeCount: nodes.length, chromeSkipped, chromeFallback, items };
+    };
+    const hasBoth = (items) =>
+      items.some((x) => x.role === 'user') && items.some((x) => x.role === 'assistant');
+    const scoreOf = (r) => (hasBoth(r.items) ? 1000000 : 0) + r.items.length;
 
-    // ---- 2. 檔案收集 ----
+    // ---- 3. 選擇器：設定的先試；沒有同時抓到兩種角色就試備用，挑最好的 ----
+    const tried = [];
+    let best = null;
+    let bestIndex = 0;
+    for (let i = 0; i < candidates.length; i += 1) {
+      const r = extract(candidates[i]);
+      tried.push({ turn: candidates[i].turn, nodes: r.nodeCount, messages: r.items.length, both: hasBoth(r.items) });
+      if (!best || scoreOf(r) > scoreOf(best)) {
+        best = r;
+        bestIndex = i;
+      }
+      if (i === 0 && hasBoth(r.items)) break; // 設定的選擇器沒問題，不用再試
+    }
+
+    // ---- 4. 檔案收集 ----
     const FILE_EXT =
       /\.(pdf|docx?|xlsx?|pptx?|csv|tsv|txt|md|json|xml|zip|rar|7z|tar|gz|png|jpe?g|gif|webp|svg|bmp|mp3|wav|m4a|mp4|mov|webm|py|js|ts|html?|css|ipynb|epub)$/i;
     const FILE_PATH = /\/(files?|attachments?|downloads?|uploads?|backend-api\/files)(\/|$)/i;
@@ -200,12 +286,11 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       return out;
     };
 
-    const rawMessages = leafNodes
-      .map((el) => {
-        const text = (el.innerText || '').trim();
-        const attachments = opts.collectFiles ? collectFiles(el) : [];
-        if (!text && attachments.length === 0) return null;
-        const m = { role: isUserMessage(el) ? 'user' : 'assistant', text };
+    const rawMessages = best.items
+      .map((x) => {
+        const attachments = opts.collectFiles ? collectFiles(x.el) : [];
+        if (!x.text && attachments.length === 0) return null;
+        const m = { role: x.role, text: x.text };
         if (attachments.length) m.attachments = attachments;
         return m;
       })
@@ -234,11 +319,14 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       pageFiles,
       capturedAt: new Date().toISOString(),
       debug: {
-        selectorUsed: selectorConfig.turn,
-        matchedNodeCount: nodes.length,
+        selectorUsed: best.cfg.turn,
+        matchedNodeCount: best.nodeCount,
         nonEmptyMessageCount: messages.length,
-        chromeSkipped,
+        chromeSkipped: best.chromeSkipped,
+        chromeFallback: best.chromeFallback,
         scrollRounds,
+        candidateIndex: bestIndex,
+        candidatesTried: tried,
         attachmentCount:
           messages.reduce((n, m) => n + (m.attachments ? m.attachments.length : 0), 0) +
           pageFiles.length,
