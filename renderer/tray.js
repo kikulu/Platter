@@ -247,10 +247,13 @@
       const ui = await window.workspaceAPI.getUIState();
       const result = await window.workspaceAPI.exportCurrentConversation('md', {
         addToKnowledge: !!ui.autoAddToKnowledgeOnExport,
+        downloadFiles: ui.exportDownloadFiles !== false,
       });
       if (result.ok) {
         const fileName = String(result.filePath).split(/[\\/]/).pop();
-        showToast(window.i18n.t('export.success', { path: fileName }), 4500);
+        const f = result.files;
+        const extra = f && f.saved ? ' · ' + window.i18n.t('export.filesSaved', { saved: f.saved, dir: f.dir }) : '';
+        showToast(window.i18n.t('export.success', { path: fileName }) + extra, 5500);
       } else if (result.error === 'CANCELLED') {
         // 使用者自行取消存檔，不用提示
       } else if (result.error === 'NO_ACTIVE_ACCOUNT') {

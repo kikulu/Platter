@@ -110,7 +110,7 @@ npm start
 2. Click any account in the sidebar list to switch to it; repeat step 1
    to add more.
 3. To export a conversation: switch to that account, click "Export
-   Conversation," and choose Markdown or JSON. The first time you use
+   Conversation," and choose Markdown or JSON. Before exporting, Platter scrolls up to load the full history, and "Also download files in the conversation" saves attachments, images and linked files into a `<name>_files` folder next to the export (Markdown gets relative links; file cards without a URL are listed by name — set a file element selector under Settings → Selector Settings if needed). The first time you use
    this, it's worth calibrating the element picker under "Settings →
    Selector Settings" first (see below) — otherwise it may not find any
    content.

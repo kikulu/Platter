@@ -101,6 +101,7 @@
   const exportOverlay = document.getElementById('export-options-overlay');
   const exportPathHint = document.getElementById('export-path-hint');
   const exportAddKnowledgeCheckbox = document.getElementById('export-add-knowledge');
+  const exportDownloadFilesCheckbox = document.getElementById('export-download-files');
   let exportForceChoosePath = false;
 
   function updateExportPathHint(savePathConfig) {
@@ -125,6 +126,7 @@
       window.workspaceAPI.getUIState(),
     ]);
     exportAddKnowledgeCheckbox.checked = !!ui.autoAddToKnowledgeOnExport;
+    exportDownloadFilesCheckbox.checked = ui.exportDownloadFiles !== false;
     updateExportPathHint(savePathConfig);
     exportOverlay.classList.add('open');
   }
@@ -154,14 +156,25 @@
     const addToKnowledge = exportAddKnowledgeCheckbox.checked;
     // 「同時加入知識庫」是持久化偏好，這次選的值就是下次對話框打開時的預設值
     window.workspaceAPI.setAutoAddToKnowledgeOnExport(addToKnowledge);
+    const downloadFiles = exportDownloadFilesCheckbox.checked;
+    window.workspaceAPI.setExportDownloadFiles(downloadFiles);
     closeExportDialog();
 
     const result = await window.workspaceAPI.exportCurrentConversation(format, {
       forceChoosePath: exportForceChoosePath,
       addToKnowledge,
+      downloadFiles,
     });
     if (result.ok) {
-      alert(window.i18n.t('export.success', { path: result.filePath }));
+      const lines = [window.i18n.t('export.success', { path: result.filePath })];
+      const f = result.files;
+      if (f) {
+        if (f.saved) lines.push(window.i18n.t('export.filesSaved', { saved: f.saved, dir: f.dir }));
+        if (f.failed) lines.push(window.i18n.t('export.filesFailed', { failed: f.failed }));
+        if (f.skipped) lines.push(window.i18n.t('export.filesSkipped', { skipped: f.skipped }));
+        if (f.nameOnly) lines.push(window.i18n.t('export.filesNameOnly', { count: f.nameOnly }));
+      }
+      alert(lines.join('\n'));
     } else if (result.error === 'CANCELLED') {
       // 使用者自行取消，不用提示
     } else if (result.error === 'EMPTY_RESULT' || result.error === 'NO_SELECTOR') {

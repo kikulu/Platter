@@ -1,18 +1,22 @@
 {
   "claude": {
-    "turn": "[data-testid=\"user-message\"], [data-testid=\"conversation-turn\"]",
-    "userHint": "data-testid=user-message"
+    "turn": "[data-testid=\"user-message\"], .font-claude-response",
+    "userHint": "data-testid=user-message",
+    "fileSelector": ""
   },
   "chatgpt": {
     "turn": "[data-message-author-role]",
-    "userHint": "user"
+    "userHint": "user",
+    "fileSelector": ""
   },
   "gemini": {
     "turn": "user-query, model-response",
-    "userHint": "user-query"
+    "userHint": "user-query",
+    "fileSelector": ""
   },
   "grok": {
     "turn": "[data-testid=\"conversation-turn\"]",
-    "userHint": "user"
+    "userHint": "user",
+    "fileSelector": ""
   }
 }
