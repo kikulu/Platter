@@ -326,6 +326,37 @@
     }
   }
 
+  // 診斷頁面結構：產生只含結構資訊（不含對話文字）的報告，自動複製，方便貼給開發者調整選擇器
+  const diagnoseBox = document.getElementById('selector-diagnose-box');
+  const diagnoseStatus = document.getElementById('selector-diagnose-status');
+  const diagnoseReport = document.getElementById('selector-diagnose-report');
+  async function copyDiagnoseReport() {
+    try {
+      await navigator.clipboard.writeText(diagnoseReport.value);
+      diagnoseStatus.textContent = window.i18n.t('settings.selectors.diagnoseCopied');
+    } catch (err) {
+      diagnoseReport.select(); // 剪貼簿不可用時至少幫忙選取，讓使用者自己按 Ctrl+C
+    }
+  }
+  document.getElementById('btn-diagnose').addEventListener('click', async () => {
+    diagnoseBox.style.display = 'block';
+    diagnoseReport.value = '';
+    diagnoseStatus.textContent = window.i18n.t('settings.selectors.diagnosing');
+    const res = await window.workspaceAPI.diagnoseCapture(currentPlatform);
+    if (!res || !res.ok) {
+      diagnoseStatus.textContent = window.i18n.t(
+        res && res.error === 'NO_ACCOUNT_FOR_PLATFORM'
+          ? 'settings.selectors.testNoAccount'
+          : 'settings.selectors.diagnoseFailed'
+      );
+      return;
+    }
+    diagnoseReport.value = res.report;
+    diagnoseStatus.textContent = window.i18n.t('settings.selectors.diagnoseReady');
+    await copyDiagnoseReport();
+  });
+  document.getElementById('btn-diagnose-copy').addEventListener('click', copyDiagnoseReport);
+
   document.getElementById('btn-test-capture').addEventListener('click', async () => {
     if (testCaptureInFlight) return;
     testCaptureInFlight = true;

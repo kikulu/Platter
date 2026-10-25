@@ -128,6 +128,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   pickAiSample: () => ipcRenderer.invoke('settings:pickAiSample'),
   deriveSelector: (userSample, aiSample) =>
     ipcRenderer.invoke('settings:deriveSelector', { userSample, aiSample }),
+  diagnoseCapture: (platform) => ipcRenderer.invoke('settings:diagnoseCapture', platform),
   testCaptureSelector: (platform, selector) =>
     ipcRenderer.invoke('settings:testCaptureSelector', { platform, selector }),
 

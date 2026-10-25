@@ -1,0 +1,24 @@
+{
+  "_comment": "各平台的備用訊息選擇器（1.51.0）：設定的選擇器擷取不到、或只抓到單一角色時，extractors/domCapture.js 會依序嘗試這些並挑最好的結果。格式同選擇器設定的 turn／userHint；userHint 可寫 has:<selector>。平台改版時優先在這裡補新的寫法。",
+  "claude": [
+    { "turn": "[data-testid=\"user-message\"], [data-testid=\"assistant-message\"]", "userHint": "data-testid=user-message" },
+    { "turn": "[data-testid=\"user-message\"], div[data-is-streaming]", "userHint": "data-testid=user-message" },
+    { "turn": "[data-testid=\"user-message\"], .font-claude-message", "userHint": "data-testid=user-message" },
+    { "turn": "div[data-test-render-count]", "userHint": "has:[data-testid=\"user-message\"]" },
+    { "turn": "[data-testid=\"user-message\"], .standard-markdown, .progressive-markdown", "userHint": "data-testid=user-message" }
+  ],
+  "chatgpt": [
+    { "turn": "article[data-turn]", "userHint": "data-turn=user" },
+    { "turn": "[data-testid^=\"conversation-turn-\"]", "userHint": "has:[data-message-author-role=\"user\"]" },
+    { "turn": "[data-message-author-role=\"user\"], .markdown", "userHint": "data-message-author-role=user" }
+  ],
+  "gemini": [
+    { "turn": ".query-text, model-response message-content", "userHint": "query-text" },
+    { "turn": "user-query, message-content", "userHint": "user-query" },
+    { "turn": ".user-query-bubble-with-background, .model-response-text", "userHint": "user-query-bubble-with-background" }
+  ],
+  "generic": [
+    { "turn": "[data-message-author-role]", "userHint": "user" },
+    { "turn": "[data-testid*=\"user-message\"], [data-testid*=\"assistant-message\"]", "userHint": "data-testid=user-message" }
+  ]
+}

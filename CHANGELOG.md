@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.51.0]
+
+修正 1.50.0 在三個平台的擷取失敗：ChatGPT 匯出回 `EMPTY_RESULT`、Claude 抓不到 AI 回覆、Gemini 只抓到第一句使用者訊息。
+
+> **誠實說明**：開發環境無法登入真實平台，無法直接看到各平台目前的 DOM，所以這版是「讓擷取能自己找出可用的寫法」＋「出問題時能產生診斷報告」，
+> 並**未**在真實頁面上驗證。若仍抓不到，請到「設定 → 選擇器設定」按「診斷頁面結構」，把報告（只含結構，不含對話文字）貼回來，就能精準調整。
+
+### 可能原因與修正
+
+- 1.50.0 的「頁面外殼排除」太激進：`header／footer／form` 也被排除，而部分平台的訊息就包在這些元素裡，整個被濾光（ChatGPT 的 EMPTY_RESULT）。
+  現在只排除 `nav／aside／dialog` 與對應 ARIA role；外殼若包著 `main` 不算外殼；排除後一個都不剩就退回不排除。
+- 平台改版造成選擇器只命中單一角色（Claude 只有使用者、Gemini 只有使用者）。新增 `extractors/capture-fallbacks.json`（各平台備用選擇器；平台改版時優先改這裡）：
+  設定的選擇器擷取不到、或沒有同時抓到使用者與 AI 時，依序試備用選擇器，挑「兩種角色都有、訊息最多」的結果；`debug.candidatesTried` 記錄每組命中數，失敗日誌也會附上。
+- `userHint` 新增 `has:<selector>`（節點內含符合子元素即為使用者訊息）；`屬性=值` 的寫法不再被 `data-message-author-role` 搶先比對。
+- Gemini：`user-query` 優先讀 `.query-text`，避開隱藏的「You said」前綴。
+
+### 診斷
+
+- 新增 `extractors/domDiagnose.js` 與 IPC `settings:diagnoseCapture`（preload `diagnoseCapture(platform)`）：對目前開著的該平台帳號產生報告——各候選選擇器命中數、
+  頁面結構計數、`data-testid`／`role`／`data-turn` 值、自訂元素、class 名稱、前幾個命中節點的祖先鏈與文字長度（**不含對話文字**）。
+- 設定頁選擇器區新增「診斷頁面結構」按鈕：結果顯示在文字框並自動複製到剪貼簿。
+- 語系：新增 `settings.selectors.diagnose／diagnoseHint／diagnosing／diagnoseReady／diagnoseCopied／diagnoseFailed／diagnoseCopy`（三語）。
+- 測試：`test/domCapture.test.js` 新增 8 項（備用選擇器、`useFallbacks:false`、header／form 內訊息、外殼全濾退回、`has:`、Gemini `.query-text`、備用檔格式、診斷腳本可載入）。
+
 ## [1.50.0]
 
 修正 Claude 匯出對話一直抓不到完整內容的問題，並讓對話過程中產生／上傳的檔案可以一起下載。

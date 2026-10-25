@@ -1490,6 +1490,10 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   取到外層與內層節點，外層 `innerText` 含內層全文，導致內容重複疊加。現在
   先過濾掉「內含其他符合節點的外層」，只保留最內層節點，並合併相鄰且角色、
   文字完全相同的訊息（見 `test/domCapture.test.js`）。
+- **（1.51.0）自我修復與診斷**：`extractors/capture-fallbacks.json` 提供各平台備用選擇器，`captureCurrentConversation` 經
+  `loadCaptureFallbacks()` 以 `selectorConfig.fallbacks` 傳入 `domCapture.js`；設定的選擇器缺角色時依序嘗試並挑最佳結果
+  （`debug.candidatesTried`）。頁面外殼只排除 `nav／aside／dialog`（含 ARIA role），全被排除時退回不排除；`userHint` 支援 `has:<selector>`；
+  Gemini 讀 `.query-text`。`extractors/domDiagnose.js` + `settings:diagnoseCapture` 產生只含結構的診斷報告（設定頁「診斷頁面結構」）。
 - **（1.50.0）完整內容與檔案**：
   - 預設選擇器修正：Claude 的 AI 回覆在現在的 claude.ai 是 `.font-claude-response`（舊預設的
     `[data-testid="conversation-turn"]` 已不存在，只會抓到使用者訊息，若使用者又改成太寬的 selector 就會把側邊欄等 UI 文字
@@ -1673,6 +1677,8 @@ CHANGELOG.md / ROADMAP.md / README.md / PROJECT_SPEC.md / BUILD_PLAN.md
 assets/ICON_PROMPTS.md
 assets/icons/README.md（+ 之後補上的 icon.ico/.icns/.png）
 extractors/domCapture.js
+extractors/domDiagnose.js               # 診斷頁面結構報告（1.51.0；只含結構，不含對話文字）
+extractors/capture-fallbacks.json       # 各平台備用訊息選擇器（1.51.0；平台改版時優先改這裡）
 extractors/selectorPicker.js
 extractors/default-selectors.json
 extractors/default-knowledge-base.json  # 內建的85組提示詞範本（一般69組＋企業角色範本16組，含 1.40.0 新增的 11 組階段輔助提示詞 kb-default-075～085）＋9組分階段套餐範本（groups）

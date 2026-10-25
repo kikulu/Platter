@@ -157,3 +157,105 @@ test('loadAll：往上捲動直到訊息數與高度穩定，擷取後還原位�
   // 原本離底部 2000-900-500=600，載入後 scrollHeight=4000 → 還原到 4000-500-600=2900
   assert.equal(scroller.scrollTop, 2900);
 });
+
+// ---- 1.51.0：自我修復（備用選擇器、放寬外殼排除、has: 提示、Gemini .query-text） ----
+
+function userNode(text, extra = {}) {
+  return makeNode(text, [], { getAttribute: (n) => (n === 'data-who' ? 'user' : null), ...extra });
+}
+
+test('設定的選擇器只抓到使用者訊息時，改用備用選擇器取得 AI 回覆', async () => {
+  const u1 = userNode('問題一');
+  const u2 = userNode('問題二');
+  const a1 = makeNode('回答一');
+  const a2 = makeNode('回答二');
+  const byTurn = {
+    '.u': [u1, u2],
+    '.u, .a': [u1, a1, u2, a2],
+  };
+  const result = await runCapture([], {
+    cfg: { turn: '.u', userHint: 'data-who=user', fallbacks: [{ turn: '.u, .a', userHint: 'data-who=user' }] },
+    doc: { querySelectorAll: (sel) => byTurn[sel] || [] },
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant', 'user', 'assistant']);
+  assert.equal(result.debug.selectorUsed, '.u, .a');
+  assert.ok(result.debug.candidatesTried.length >= 2);
+});
+
+test('useFallbacks:false 時不試備用選擇器', async () => {
+  const u1 = userNode('問題一');
+  const a1 = makeNode('回答一');
+  const result = await runCapture([], {
+    cfg: { turn: '.u', userHint: 'data-who=user', fallbacks: [{ turn: '.u, .a', userHint: 'data-who=user' }] },
+    options: { loadAll: false, useFallbacks: false },
+    doc: { querySelectorAll: (sel) => (sel === '.u' ? [u1] : sel === '.u, .a' ? [u1, a1] : []) },
+  });
+  assert.equal(result.messages.length, 1);
+});
+
+test('訊息包在 header／form 內時不再被當成頁面外殼排除', async () => {
+  const msg = makeNode('包在 header 裡的訊息', [], {
+    closest: (sel) => (/header|form|footer/.test(sel) ? makeNode('') : null),
+  });
+  const result = await runCapture([msg]);
+  assert.equal(result.ok, true);
+  assert.equal(result.messages.length, 1);
+});
+
+test('排除外殼後一個都不剩時，退回不排除', async () => {
+  const shell = makeNode('只有外殼裡的文字');
+  const nav = makeNode('', [shell]);
+  shell.closest = (sel) => (/nav/.test(sel) ? nav : null);
+  const result = await runCapture([shell]);
+  assert.equal(result.ok, true);
+  assert.equal(result.messages.length, 1);
+});
+
+test('userHint 的 has:<selector>：內含符合子元素的節點判為使用者訊息', async () => {
+  const inner = makeNode('裡面的使用者標記');
+  const userTurn = makeNode('使用者說的話', [], {
+    querySelector: (sel) => (sel === '[data-role="u"]' ? inner : null),
+  });
+  const aiTurn = makeNode('AI 說的話', [], { querySelector: () => null });
+  const result = await runCapture([userTurn, aiTurn], {
+    cfg: { turn: '.t', userHint: 'has:[data-role="u"]' },
+  });
+  assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant']);
+});
+
+test('Gemini：user-query 優先讀 .query-text，不帶隱藏的 You said 前綴', async () => {
+  const line = makeNode('真正的問題');
+  const q = makeNode('You said 真正的問題', [], {
+    tagName: 'USER-QUERY',
+    querySelector: (sel) => (sel === '.query-text' ? line : null),
+  });
+  const a = makeNode('Gemini 的回答');
+  const result = await runCapture([q, a], {
+    cfg: { turn: 'user-query, model-response', userHint: 'user-query' },
+  });
+  assert.equal(result.messages[0].text, '真正的問題');
+  assert.equal(result.messages[0].role, 'user');
+});
+
+test('capture-fallbacks.json 格式正確：每個平台都有 turn 與 userHint', () => {
+  const data = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'extractors', 'capture-fallbacks.json'), 'utf-8')
+  );
+  for (const key of ['claude', 'chatgpt', 'gemini', 'generic']) {
+    assert.ok(Array.isArray(data[key]) && data[key].length > 0, key);
+    for (const c of data[key]) {
+      assert.equal(typeof c.turn, 'string');
+      assert.ok(c.turn.trim());
+      assert.equal(typeof c.userHint, 'string');
+    }
+  }
+});
+
+test('domDiagnose.js 可載入並匯出 diagnosePage', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'extractors', 'domDiagnose.js'), 'utf-8');
+  const sandbox = {};
+  vm.createContext(sandbox);
+  vm.runInContext(src, sandbox);
+  assert.equal(vm.runInContext('typeof diagnosePage', sandbox), 'function');
+});
