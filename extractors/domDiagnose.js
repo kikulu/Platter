@@ -44,7 +44,7 @@ async function diagnosePage(platform, selectorConfig) {
     // 1. 用目前設定實際跑一次（不捲動、不收集檔案），看每組候選的命中數
     const res = await capturePlatformConversation(platform, selectorConfig, {
       loadAll: false,
-      collectFiles: false,
+      collectFiles: true,
     });
     out('## 擷取結果');
     out(`ok: ${res.ok}  error: ${res.error || 'none'}  messages: ${res.messages.length}`);
@@ -91,6 +91,27 @@ async function diagnosePage(platform, selectorConfig) {
     });
     out(`custom elements (name matches message/response/query/turn/chat…): ${top(tags, 20).join(', ') || '(none)'}`);
     out(`classes (name matches message/response/turn/markdown/…; top 30): ${top(classes, 30).join(', ') || '(none)'}`);
+    out('');
+
+    // 2.5 檔案相關（1.52.0）：要點擊才會下載的檔案偵測結果與頁面上的下載相關元素（只列標籤／class／副檔名，不列檔名與內容）
+    out('## 檔案');
+    const dlRe = /download|下載|下载|ダウンロード/i;
+    const dlButtons = Array.from(document.querySelectorAll('button, [role="button"], [role="menuitem"], a')).filter((b) =>
+      dlRe.test(String(b.getAttribute('aria-label') || b.innerText || '').slice(0, 40))
+    ).length;
+    out(
+      `a[href^=sandbox:]=${count('a[href^="sandbox:"]')}  a[download]=${count('a[download]')}  blob links=${count('a[href^="blob:"]')}  ` +
+        `下載相關按鈕=${dlButtons}  偵測到的點擊式檔案=${count('[data-platter-file]')}`
+    );
+    const extOf = (n) => (String(n).match(/\.([A-Za-z0-9]{1,8})$/) || [])[1] || '?';
+    const perMsg = (res.messages || []).flatMap((m) => m.attachments || []);
+    out(`attachments in messages: ${perMsg.length}  (${top(perMsg.reduce((mp, a) => (bump(mp, `${a.kind}:${extOf(a.name)}`), mp), new Map()), 12).join(', ') || 'none'})`);
+    Array.from(document.querySelectorAll('[data-platter-file]'))
+      .slice(0, 8)
+      .forEach((el, i) => {
+        const cls = typeof el.className === 'string' ? el.className.trim().split(/\s+/).slice(0, 3).join('.').slice(0, 60) : '';
+        out(`  ${i + 1}. <${el.tagName.toLowerCase()}> .${cls}  text length=${String(el.innerText || '').trim().length}  parent=<${el.parentElement ? el.parentElement.tagName.toLowerCase() : '-'}>`);
+      });
     out('');
 
     // 3. 設定的選擇器命中的前幾個節點：祖先鏈、是否被視為外殼、文字長度（不輸出內容）

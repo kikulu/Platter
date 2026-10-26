@@ -371,3 +371,45 @@ test('ChatGPT 新版：group/user-message 的最內層節點沒有文字時，�
   assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant']);
   assert.equal(result.debug.selectorUsed, b.turn);
 });
+
+// ---- 1.52.0：要點擊才會下載的檔案（sandbox: 連結、Claude 成品卡片） ----
+
+function clickEl({ tag = 'button', text = '', href = null, aria = null } = {}) {
+  const attrs = {};
+  const el = makeNode(text, [], {
+    tagName: tag.toUpperCase(),
+    getAttribute: (n) => (n === 'href' ? href : n === 'aria-label' ? aria : attrs[n] ?? null),
+    hasAttribute: (n) => n in attrs,
+    setAttribute: (n, v) => {
+      attrs[n] = v;
+    },
+    closest: () => null,
+    querySelector: () => null,
+  });
+  return el;
+}
+
+test('收集要點擊才會下載的檔案：sandbox: 連結、含檔名的按鈕、Claude 類型標籤卡片，並標上 data-platter-file', async () => {
+  const sandbox = clickEl({ tag: 'a', text: '下載報告', href: 'sandbox:/mnt/data/report.pdf' });
+  const named = clickEl({ text: 'notes.md' });
+  const card = clickEl({ text: '投標摘要\n·DOCX' });
+  const bare = clickEl({ text: 'ZIP' });
+  const plain = clickEl({ text: '複製' });
+  const msg = makeNode('這是檔案', [], {
+    querySelectorAll: (sel) => (/button/.test(sel) ? [sandbox, named, card, bare, plain] : []),
+  });
+  const result = await runCapture([msg], { options: { loadAll: false } });
+  const atts = result.messages[0].attachments;
+  assert.deepEqual(
+    atts.map((a) => [a.name, a.kind, a.url]),
+    [
+      ['report.pdf', 'click', null],
+      ['notes.md', 'click', null],
+      ['投標摘要.docx', 'click', null],
+      ['file.zip', 'click', null],
+    ]
+  );
+  assert.deepEqual(atts.map((a) => a.trigger), ['1', '2', '3', '4']);
+  assert.equal(named.getAttribute('data-platter-file'), '2');
+  assert.equal(plain.hasAttribute('data-platter-file'), false);
+});

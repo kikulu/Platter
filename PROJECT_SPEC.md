@@ -1490,6 +1490,10 @@ UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊
   取到外層與內層節點，外層 `innerText` 含內層全文，導致內容重複疊加。現在
   先過濾掉「內含其他符合節點的外層」，只保留最內層節點，並合併相鄰且角色、
   文字完全相同的訊息（見 `test/domCapture.test.js`）。
+- **（1.52.0）點擊式檔案下載**：`domCapture.js` 的 `collectFiles` 另外偵測沒有直接網址的檔案——`sandbox:` 連結、文字或 aria-label 含檔名（副檔名白名單）的按鈕、
+  Claude 成品卡片（文字以類型標籤結尾，如「Document ·MD」「ZIP」）——標上 `data-platter-file="<序號>"`，附件為 `{url:null, kind:'click', trigger}`；每次擷取先清掉舊標記。
+  `lib/conversationCapture.js` 的 `clickDownload()` 在 `downloadConversationFiles` 內對 `name-only` 的 trigger 附件（最多 30 個、循序）：先點元素本身，2 秒內沒開始下載再找預覽面板／選單裡
+  「下載」按鈕（`CLICK_STEP2`），用 `wc.session` 的 `will-download` 接住、`setSavePath` 到 `<檔名>_files/`；單檔上限同 `ATTACHMENT_LIMITS.fileBytes`，逾時 20 秒（開始下載後 120 秒）。
 - **（1.51.0）自我修復與診斷**：`extractors/capture-fallbacks.json` 提供各平台備用選擇器，`captureCurrentConversation` 經
   `loadCaptureFallbacks()` 以 `selectorConfig.fallbacks` 傳入 `domCapture.js`；設定的選擇器缺角色時依序嘗試並挑最佳結果
   （`debug.candidatesTried`）。頁面外殼只排除 `nav／aside／dialog`（含 ARIA role），全被排除時退回不排除；`userHint` 支援 `has:<selector>`；
