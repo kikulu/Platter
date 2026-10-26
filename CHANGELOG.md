@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.51.6]
+
+依第二份 ChatGPT 診斷報告（有內容的對話頁）補強 1.51.5。
+
+- 報告：`group/user-message ×6`、`text-user-message ×3`、`MarkdownRoot ×3`——每則使用者訊息的 `group/user-message` 出現兩次（巢狀），
+  去巢狀時只留最內層，若最內層只是按鈕列／沒有文字，使用者訊息就會消失。
+- `extractors/capture-fallbacks.json` 的 chatgpt 備用再加兩組：`[class~="text-user-message"], [class*="MarkdownRoot"]` 與
+  `[class~="bg-user-message"], [class*="MarkdownRoot"]`；沿用「兩種角色都有、文字較多者勝」的選擇規則，三組裡抓得到文字的會被採用。
+- 測試新增 1 項（共 25 項）。**未實測**：仍是依 class 名稱推定，若匯出內容不對，請再貼診斷報告（這次候選清單會列出新三組的命中數，能看出哪組有效）。
+
 ## [1.51.5]
 
 依使用者貼來的 ChatGPT 診斷報告修正 EMPTY_RESULT。
