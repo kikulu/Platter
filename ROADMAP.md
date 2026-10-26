@@ -1,6 +1,6 @@
 # Roadmap
 
-> 最後更新：`1.51.5`（2026-10-26）。這份只放「**還沒做的事**」與「**版本檢核表**」；
+> 最後更新：`1.51.6`（2026-10-26）。這份只放「**還沒做的事**」與「**版本檢核表**」；
 > 每個版本改了什麼見 [`docs/ROADMAP_HISTORY.md`](./docs/ROADMAP_HISTORY.md)（摘要）與 [`CHANGELOG.md`](./CHANGELOG.md)（逐項細節）。
 > 更深入的優化與改版評估見 [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
 >
@@ -109,5 +109,6 @@
 - [x] `1.51.3`　擷取失敗（零命中）時日誌自動附網址、頁面探針與結構診斷報告
 - [x] `1.51.4`　診斷報告與頁面探針寫進持久化日誌（日誌匯出檔帶得出）
 - [x] `1.51.5`　ChatGPT 新版 DOM（class 為主）的備用選擇器
+- [x] `1.51.6`　ChatGPT 備用候選補 `text-user-message`／`bg-user-message` 兩組
 
 > 下一版：從上面的待辦檢核表挑項目，完成後在此補一行 `- [x]`。

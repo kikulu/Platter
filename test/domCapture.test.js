@@ -354,3 +354,20 @@ test('ChatGPT 新版：用 group/user-message 與 MarkdownRoot 備用候選抓�
   assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant']);
   assert.equal(result.debug.selectorUsed, fb.turn);
 });
+
+test('ChatGPT 新版：group/user-message 的最內層節點沒有文字時，改用 text-user-message 候選', async () => {
+  const fbs = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'extractors', 'capture-fallbacks.json'), 'utf-8')
+  ).chatgpt;
+  const [a, b] = fbs;
+  const emptyInner = makeNode('', [], { classList: { contains: (c) => c === 'group/user-message' } });
+  const text = makeNode('使用者的問題', [], { classList: { contains: (c) => c === 'text-user-message' } });
+  const ai = makeNode('AI 的回答內容');
+  const byTurn = { [a.turn]: [emptyInner, ai], [b.turn]: [text, ai] };
+  const result = await runCapture([], {
+    cfg: { turn: '[data-message-author-role]', userHint: 'user', fallbacks: fbs },
+    doc: { querySelectorAll: (sel) => byTurn[sel] || [] },
+  });
+  assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant']);
+  assert.equal(result.debug.selectorUsed, b.turn);
+});

@@ -43,6 +43,7 @@
 | `1.51.3` | 擷取零命中（EMPTY_RESULT）時，主控台日誌自動附頁面網址、pageProbe 與完整結構診斷報告（不含對話文字），不必另外操作 |
 | `1.51.4` | 1.51.3 的診斷只印在主控台，日誌匯出檔看不到：改成網址、pageProbe 併入錯誤日誌訊息，自動診斷報告以 `conversation:diagnose` 範圍寫進持久化日誌 |
 | `1.51.5` | 依診斷報告修 ChatGPT EMPTY_RESULT：新版頁面已沒有 `data-message-author-role`／`article`／`conversation-turn`，備用候選改用 `group/user-message`（使用者）與 `MarkdownRoot`（AI）class |
+| `1.51.6` | 依第二份 ChatGPT 診斷報告：`group/user-message` 每則使用者訊息出現兩次（巢狀），最內層可能沒文字，另補 `text-user-message`、`bg-user-message` 兩組備用候選 |
 
 ## 1.41.0 以後各版補充說明
 

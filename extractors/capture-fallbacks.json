@@ -9,6 +9,8 @@
   ],
   "chatgpt": [
     { "turn": "[class~=\"group/user-message\"], [class*=\"MarkdownRoot\"]", "userHint": "group/user-message" },
+    { "turn": "[class~=\"text-user-message\"], [class*=\"MarkdownRoot\"]", "userHint": "text-user-message" },
+    { "turn": "[class~=\"bg-user-message\"], [class*=\"MarkdownRoot\"]", "userHint": "bg-user-message" },
     { "turn": "article[data-turn]", "userHint": "data-turn=user" },
     { "turn": "[data-testid^=\"conversation-turn-\"]", "userHint": "has:[data-message-author-role=\"user\"]" },
     { "turn": "[data-message-author-role=\"user\"], .markdown", "userHint": "data-message-author-role=user" }
