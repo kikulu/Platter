@@ -186,7 +186,12 @@
               nonEmpty: debug.nonEmptyMessageCount,
             })
           : '';
-      alert(`${window.i18n.t('export.selectorHint')}${detail ? '\n\n' + detail : ''}`);
+      // 技術細節（頁面網址、探針、各候選選擇器命中數）一併顯示，方便貼回來判斷原因
+      const tech = debug
+        ? '\n\n' +
+          JSON.stringify({ url: debug.pageUrl, probe: debug.pageProbe, tried: debug.candidatesTried }).slice(0, 900)
+        : '';
+      alert(`${window.i18n.t('export.selectorHint')}${detail ? '\n\n' + detail : ''}${tech}`);
     } else {
       alert(`${window.i18n.t('export.fail')}: ${result.error || ''}`);
     }

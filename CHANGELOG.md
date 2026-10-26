@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.51.2]
+
+依使用者貼來的 Claude 匯出檔（只有「Ran 18 commands」這類步驟標題、沒有 AI 正文）與 ChatGPT 仍然 EMPTY_RESULT 的回報調整。**未在真實頁面驗證。**
+
+- **Claude 只抓到步驟標題**：1.51.1 之前，設定的選擇器只要兩種角色都有就不再試備用。現在每組候選都會算文字量，備用選擇器抓到的文字
+  **≥ 設定選擇器的 1.3 倍**才改用（差不多就沿用設定的，不亂換）；`debug.candidatesTried` 每組多一個 `chars`。
+- 零寬字元（`U+200B` 等）不算文字，空白節點不再變成空訊息；「9 minutes ago」、「Claude／ChatGPT… can make mistakes」、「You are out of free messages…」不算訊息。
+- **ChatGPT EMPTY_RESULT**：結果的 `debug.pageProbe`（頁面標題、body 文字長度、`main`／`article`／`[data-message-author-role]`／`iframe` 數量）
+  與頁面網址、各候選命中數，會一併顯示在匯出失敗的提示裡，貼回來就能判斷是「選擇器不對」、「頁面沒渲染」還是「不在對話頁」。
+- **`config.yaml` 遺失**：Platter 程式碼內沒有任何地方讀取 `config.yaml`（只有 OpenSpec 匯出文件提到 `openspec/config.yaml`），需要完整的錯誤訊息與出現時機才能判斷。
+- 測試：`test/domCapture.test.js` 新增 4 項（共 23 項）。
+
 ## [1.51.1]
 
 依使用者貼來的 Claude／Grok／Gemini 匯出檔做的擷取清理，並針對 ChatGPT 的 EMPTY_RESULT 加一道保險。
