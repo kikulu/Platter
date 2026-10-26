@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.51.3]
+
+ChatGPT 的日誌顯示所有候選選擇器命中 0 個節點（`article[data-turn]`、`conversation-turn-`、`[data-message-author-role]` 全部 0），
+表示問題不在選擇器的寫法，而是該視圖當下的頁面根本沒有這些元素（不在對話頁、頁面未載入／被驗證頁擋住，或 DOM 結構完全不同）。**原因仍未確認。**
+
+- 擷取日誌行新增 `url=`（頁面網址）與失敗時的 `probe=`（`bodyTextLength`／`main`／`article`／`roleNodes`／`iframes` 數量）。
+- 零命中的 EMPTY_RESULT 會**自動**再跑一次結構診斷並寫進主控台日誌（`[conversation:diagnose]`，只含結構資訊、不含對話文字）。
+  把這段貼回來即可，不必另外按診斷按鈕。診斷邏輯抽成 `runDiagnose()`，設定頁的按鈕共用。
+- Claude 的日誌顯示 `candidate=1`、有抓到訊息（選用 `user-message` + `assistant-message`），代表 1.51.2 的「文字較完整的候選優先」生效。
+
 ## [1.51.2]
 
 依使用者貼來的 Claude 匯出檔（只有「Ran 18 commands」這類步驟標題、沒有 AI 正文）與 ChatGPT 仍然 EMPTY_RESULT 的回報調整。**未在真實頁面驗證。**
