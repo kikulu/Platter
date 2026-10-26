@@ -291,3 +291,49 @@ test('按鈕／表單／輸入框裡的節點不算訊息', async () => {
   const result = await runCapture([btn, real]);
   assert.deepEqual(result.messages.map((m) => m.text), ['真正的訊息']);
 });
+
+// ---- 1.51.2 ----
+
+test('備用選擇器抓到明顯更多文字（≥1.3 倍）時，即使設定的選擇器兩種角色都有也改用它', async () => {
+  const u1 = userNode('問題');
+  const step = makeNode('Ran 3 commands');
+  const prose = makeNode('這是 AI 真正的回覆正文，內容比較長，比步驟標題多很多字。');
+  const byTurn = {
+    '.u, .step': [u1, step],
+    '.u, .prose': [u1, prose],
+  };
+  const result = await runCapture([], {
+    cfg: { turn: '.u, .step', userHint: 'data-who=user', fallbacks: [{ turn: '.u, .prose', userHint: 'data-who=user' }] },
+    doc: { querySelectorAll: (sel) => byTurn[sel] || [] },
+  });
+  assert.equal(result.debug.selectorUsed, '.u, .prose');
+  assert.match(result.messages[1].text, /真正的回覆正文/);
+});
+
+test('文字差不多時沿用設定的選擇器（不亂換）', async () => {
+  const u1 = userNode('問題');
+  const a1 = makeNode('回答甲乙丙');
+  const a2 = makeNode('回答甲乙丙丁');
+  const byTurn = { '.u, .a': [u1, a1], '.u, .b': [u1, a2] };
+  const result = await runCapture([], {
+    cfg: { turn: '.u, .a', userHint: 'data-who=user', fallbacks: [{ turn: '.u, .b', userHint: 'data-who=user' }] },
+    doc: { querySelectorAll: (sel) => byTurn[sel] || [] },
+  });
+  assert.equal(result.debug.selectorUsed, '.u, .a');
+});
+
+test('零寬字元與「9 minutes ago」「Claude is AI and can make mistakes」這類雜訊不算訊息', async () => {
+  const result = await runCapture([
+    makeNode('​​'),
+    makeNode('9 minutes ago'),
+    makeNode('Claude is AI and can make mistakes. Please double-check responses.'),
+    makeNode('真正的內容'),
+  ]);
+  assert.deepEqual(result.messages.map((m) => m.text), ['真正的內容']);
+});
+
+test('擷取結果帶 pageProbe，EMPTY_RESULT 時可判斷頁面狀況', async () => {
+  const result = await runCapture([]);
+  assert.equal(result.error, 'EMPTY_RESULT');
+  assert.ok(result.debug.pageProbe && 'bodyTextLength' in result.debug.pageProbe);
+});

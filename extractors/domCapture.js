@@ -170,8 +170,13 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       }
       // innerText 在「沒有被渲染」的節點（帳號視圖被隱藏／未顯示、display:none 的祖先）會是空字串，
       // 這時改讀 textContent，避免整頁被判成 EMPTY_RESULT
-      return String(el.innerText || el.textContent || '').trim();
+      // 零寬字元（Claude 會塞空的 span）不算文字，否則「看起來空白」的節點會被當成一則訊息
+      return String(el.innerText || el.textContent || '')
+        .replace(/[\u200B-\u200D\u2060\uFEFF]/g, '')
+        .trim();
     };
+    // 平台頁面上的雜訊（相對時間、免責聲明、額度用完橫幅）：不是對話內容
+    const NOISE_TEXT = /^(\d+\s*(seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago|just now|(Claude|ChatGPT|Gemini|Grok) (is AI and )?can make mistakes\b.*|You are out of free messages\b.*)$/i;
 
     // 平台在訊息文字前面塞的角色標籤／思考時間（Grok 的「您」「Grok 運作了5s」、Gemini 的「你說了」）
     const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
@@ -214,12 +219,16 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         el,
         role: isUserMessage(el, hint) ? 'user' : 'assistant',
         text: stripLabels(textOf(el)),
-      }));
-      return { cfg, nodeCount: nodes.length, chromeSkipped, chromeFallback, items };
+      })).filter((x) => !NOISE_TEXT.test(x.text));
+      const chars = items.reduce((n, x) => n + x.text.length, 0);
+      return { cfg, nodeCount: nodes.length, chromeSkipped, chromeFallback, items, chars };
     };
     const hasBoth = (items) =>
       items.some((x) => x.role === 'user') && items.some((x) => x.role === 'assistant');
     const scoreOf = (r) => (hasBoth(r.items) ? 1000000 : 0) + r.items.length;
+    // 設定的選擇器兩種角色都有時優先沿用；但備用選擇器抓到明顯更多文字（≥1.3 倍）就改用它——
+    // 例如 Claude 的 .font-claude-response 只抓到「Ran 18 commands」這類步驟標題，正文在別的元素裡
+    const RICHER = 1.3;
 
     // ---- 3. 選擇器：設定的先試；沒有同時抓到兩種角色就試備用，挑最好的 ----
     const tried = [];
@@ -227,12 +236,15 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
     let bestIndex = 0;
     for (let i = 0; i < candidates.length; i += 1) {
       const r = extract(candidates[i]);
-      tried.push({ turn: candidates[i].turn, nodes: r.nodeCount, messages: r.items.length, both: hasBoth(r.items) });
-      if (!best || scoreOf(r) > scoreOf(best)) {
+      tried.push({ turn: candidates[i].turn, nodes: r.nodeCount, messages: r.items.length, chars: r.chars, both: hasBoth(r.items) });
+      let better;
+      if (!best) better = true;
+      else if (hasBoth(best.items) && hasBoth(r.items)) better = r.chars > best.chars * RICHER;
+      else better = scoreOf(r) > scoreOf(best);
+      if (better) {
         best = r;
         bestIndex = i;
       }
-      if (i === 0 && hasBoth(r.items)) break; // 設定的選擇器沒問題，不用再試
     }
 
     // ---- 4. 檔案收集 ----
@@ -353,6 +365,15 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         chromeFallback: best.chromeFallback,
         scrollRounds,
         candidateIndex: bestIndex,
+        // 頁面探針：全部擷取不到時用來判斷是「選擇器不對」還是「頁面根本沒內容／不在對話頁」
+        pageProbe: {
+          title: document.title || '',
+          bodyTextLength: document.body ? String(document.body.innerText || '').length : -1,
+          mains: document.querySelectorAll('main').length,
+          articles: document.querySelectorAll('article').length,
+          roleNodes: document.querySelectorAll('[data-message-author-role]').length,
+          iframes: document.querySelectorAll('iframe').length,
+        },
         candidatesTried: tried,
         attachmentCount:
           messages.reduce((n, m) => n + (m.attachments ? m.attachments.length : 0), 0) +
