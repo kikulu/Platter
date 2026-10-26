@@ -42,6 +42,7 @@
 | `1.51.2` | Claude 匯出只抓到步驟標題：備用選擇器文字明顯更多（≥1.3 倍）時改用；零寬字元、相對時間、免責聲明不算訊息；EMPTY_RESULT 回報頁面探針（pageProbe）並顯示在匯出提示 |
 | `1.51.3` | 擷取零命中（EMPTY_RESULT）時，主控台日誌自動附頁面網址、pageProbe 與完整結構診斷報告（不含對話文字），不必另外操作 |
 | `1.51.4` | 1.51.3 的診斷只印在主控台，日誌匯出檔看不到：改成網址、pageProbe 併入錯誤日誌訊息，自動診斷報告以 `conversation:diagnose` 範圍寫進持久化日誌 |
+| `1.51.5` | 依診斷報告修 ChatGPT EMPTY_RESULT：新版頁面已沒有 `data-message-author-role`／`article`／`conversation-turn`，備用候選改用 `group/user-message`（使用者）與 `MarkdownRoot`（AI）class |
 
 ## 1.41.0 以後各版補充說明
 
