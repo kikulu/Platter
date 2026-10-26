@@ -265,15 +265,25 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         .split('\n')
         .map((x) => x.trim())
         .find(Boolean) || '';
+    // 1.52.0：沒有直接網址、要「點下去才會下載」的檔案卡片／連結（ChatGPT 的 sandbox: 連結、Claude 的成品卡片）。
+    // 偵測到的元素會標上 data-platter-file="<序號>"，主行程之後用這個序號回頁面點擊並接住下載。
+    let triggerSeq = 0;
+    const TRIGGER_EXT =
+      'pdf|md|markdown|docx?|xlsx?|pptx?|csv|tsv|txt|zip|json|xml|html?|py|js|ts|png|jpe?g|gif|webp|svg|mp3|wav|mp4|epub|ipynb';
+    const TRIGGER_NAME = new RegExp('([^\\s/\\\\:*?"<>|]{1,80}\\.(?:' + TRIGGER_EXT + '))(?![\\w])', 'i');
+    const TRIGGER_LABEL = new RegExp('(?:^|[·•\\s])(' + TRIGGER_EXT + ')$', 'i');
+    const GENERIC_TYPE = /^(document|code|spreadsheet|presentation|archive|image|text|file|artifact)$/i;
     const collectFiles = (root, cardsOnly) => {
       const out = [];
       const seen = new Set();
-      const add = (url, name, kind) => {
+      const add = (url, name, kind, trigger) => {
         const key = url || 'name:' + name;
         if (!name && !url) return;
         if (seen.has(key)) return;
         seen.add(key);
-        out.push({ url: url || null, name: (name || baseName(url) || '').slice(0, 200), kind });
+        const item = { url: url || null, name: (name || baseName(url) || '').slice(0, 200), kind };
+        if (trigger) item.trigger = trigger;
+        out.push(item);
       };
       const okScheme = (u) => /^(https?|blob|data):/i.test(u || '');
       if (!cardsOnly) root.querySelectorAll('a[href]').forEach((a) => {
@@ -303,6 +313,51 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         const src = m.src;
         if (okScheme(src)) add(src, baseName(src) || 'media', 'media');
       });
+      if (!cardsOnly && typeof root.querySelectorAll === 'function') {
+        let clickCount = 0;
+        root.querySelectorAll('a[href^="sandbox:"], a[href], button, [role="button"]').forEach((el) => {
+          if (clickCount >= 20) return;
+          if (typeof el.hasAttribute !== 'function' || el.hasAttribute('data-platter-file')) return;
+          if (typeof el.closest === 'function' && el.closest('[data-platter-file]')) return;
+          if (typeof el.querySelector === 'function' && el.querySelector('[data-platter-file]')) return;
+          if (inChrome(el)) return;
+          const href = (el.getAttribute && el.getAttribute('href')) || '';
+          const isSandbox = /^sandbox:/i.test(href);
+          // 有一般網址的連結已由上面的連結邏輯處理
+          if (href && !isSandbox) return;
+          const text = String(el.innerText || el.textContent || '').trim();
+          if (!isSandbox && text.length > 200) return;
+          const aria = (el.getAttribute && el.getAttribute('aria-label')) || '';
+          let name = '';
+          if (isSandbox) {
+            try {
+              name = decodeURIComponent(href.split('/').pop() || '');
+            } catch (err) {
+              name = href.split('/').pop() || '';
+            }
+            if (!name) name = firstLine(text);
+          } else {
+            const m = TRIGGER_NAME.exec(text) || TRIGGER_NAME.exec(aria);
+            if (m) {
+              name = m[1];
+            } else {
+              const lines = text.split('\n').map((x) => x.trim()).filter(Boolean);
+              const joined = lines.join(' ');
+              const lm = lines.length >= 1 && lines.length <= 3 ? TRIGGER_LABEL.exec(joined) : null;
+              if (lm) {
+                const rawTitle = lines.length > 1 ? lines[0] : joined.slice(0, lm.index);
+                const title = !GENERIC_TYPE.test(rawTitle.trim()) ? rawTitle.replace(/[·•\s]+$/, '').trim() : '';
+                name = (title || 'file') + '.' + lm[1].toLowerCase();
+              }
+            }
+          }
+          if (!name) return;
+          triggerSeq += 1;
+          clickCount += 1;
+          el.setAttribute('data-platter-file', String(triggerSeq));
+          add(null, name, 'click', String(triggerSeq));
+        });
+      }
       if (fileSelector) {
         root.querySelectorAll(fileSelector).forEach((card) => {
           if (inChrome(card)) return;
@@ -316,6 +371,12 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       return out;
     };
 
+    // 清掉上一次擷取留下的點擊標記（同一頁連續匯出時，序號要重新編）
+    if (opts.collectFiles && typeof document.querySelectorAll === 'function') {
+      Array.from(document.querySelectorAll('[data-platter-file]') || []).forEach((e) => {
+        if (e && typeof e.removeAttribute === 'function') e.removeAttribute('data-platter-file');
+      });
+    }
     const rawMessages = best.items
       .map((x) => {
         const attachments = opts.collectFiles ? collectFiles(x.el) : [];
