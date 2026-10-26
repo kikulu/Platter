@@ -337,3 +337,20 @@ test('擷取結果帶 pageProbe，EMPTY_RESULT 時可判斷頁面狀況', async 
   assert.equal(result.error, 'EMPTY_RESULT');
   assert.ok(result.debug.pageProbe && 'bodyTextLength' in result.debug.pageProbe);
 });
+
+// ---- 1.51.5：ChatGPT 新版 DOM（沒有 data-message-author-role／article／conversation-turn，改用 class） ----
+
+test('ChatGPT 新版：用 group/user-message 與 MarkdownRoot 備用候選抓到使用者與 AI', async () => {
+  const user = makeNode('請幫我整理重點', [], { classList: { contains: (c) => c === 'group/user-message' } });
+  const ai = makeNode('以下是重點整理：第一點、第二點。');
+  const fb = JSON.parse(
+    fs.readFileSync(path.join(__dirname, '..', 'extractors', 'capture-fallbacks.json'), 'utf-8')
+  ).chatgpt[0];
+  const result = await runCapture([], {
+    cfg: { turn: '[data-message-author-role]', userHint: 'user', fallbacks: [fb] },
+    doc: { querySelectorAll: (sel) => (sel === fb.turn ? [user, ai] : []) },
+  });
+  assert.equal(result.ok, true);
+  assert.deepEqual(result.messages.map((m) => m.role), ['user', 'assistant']);
+  assert.equal(result.debug.selectorUsed, fb.turn);
+});

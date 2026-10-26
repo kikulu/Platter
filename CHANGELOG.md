@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.51.5]
+
+依使用者貼來的 ChatGPT 診斷報告修正 EMPTY_RESULT。
+
+- **原因（由報告確認）**：ChatGPT 目前的頁面已經沒有 `data-message-author-role`、`article[data-turn]`、`data-testid="conversation-turn-*"`
+  （`article=0`、整頁只有一個 `data-testid`），所以舊選擇器與前幾版的備用都命中 0 個節點。訊息改以 class 標示：
+  使用者訊息有 class `group/user-message`，AI 回覆的內容容器 class 含 `MarkdownRoot`（後綴是建置雜湊，所以用子字串比對）。
+- `extractors/capture-fallbacks.json` 的 chatgpt 第一組備用改為 `[class~="group/user-message"], [class*="MarkdownRoot"]`，userHint `group/user-message`。
+  設定的選擇器命中 0 個時會自動採用，不必手動改設定。
+- 測試：`test/domCapture.test.js` 新增 1 項（共 24 項）。
+- **未實測**：只依診斷報告的 class 名稱推定，尚未在真實 ChatGPT 頁面驗證；`MarkdownRoot` 若同時出現在非訊息區域可能混入雜訊，匯出後請檢查內容。
+
 ## [1.51.4]
 
 修正 1.51.3 的疏漏：自動診斷與頁面探針只印在主控台，使用者匯出的日誌檔（`platter-logs-*.json`）裡完全沒有，ChatGPT 的 EMPTY_RESULT 因此還是無從判斷。
