@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.51.4]
+
+修正 1.51.3 的疏漏：自動診斷與頁面探針只印在主控台，使用者匯出的日誌檔（`platter-logs-*.json`）裡完全沒有，ChatGPT 的 EMPTY_RESULT 因此還是無從判斷。
+
+- 擷取失敗的錯誤日誌訊息現在直接附 `url=` 與 `probe=`（頁面網址、body 文字長度、`main`／`article`／`roleNodes`／`iframes` 數量）。
+- 零命中時自動跑的結構診斷改以 `logError('conversation:diagnose', …)` 寫進持久化日誌，日誌匯出檔的 `errors` 裡會有（只含結構資訊，不含對話文字）。
+- 使用方式：升級後在 ChatGPT 對話頁匯出一次（會失敗），再匯出日誌檔貼回來。
+
 ## [1.51.3]
 
 ChatGPT 的日誌顯示所有候選選擇器命中 0 個節點（`article[data-turn]`、`conversation-turn-`、`[data-message-author-role]` 全部 0），
