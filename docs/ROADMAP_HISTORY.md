@@ -45,6 +45,7 @@
 | `1.51.5` | 依診斷報告修 ChatGPT EMPTY_RESULT：新版頁面已沒有 `data-message-author-role`／`article`／`conversation-turn`，備用候選改用 `group/user-message`（使用者）與 `MarkdownRoot`（AI）class |
 | `1.51.6` | 依第二份 ChatGPT 診斷報告：`group/user-message` 每則使用者訊息出現兩次（巢狀），最內層可能沒文字，另補 `text-user-message`、`bg-user-message` 兩組備用候選 |
 | `1.52.0` | 對話中沒有直接網址、要點擊才會下載的檔案（pdf／md／docx…）：擷取時標記 `data-platter-file`，匯出時回頁面點擊並由 session `will-download` 接住存進 `<檔名>_files/`；診斷報告新增「檔案」區段 |
+| `1.52.1` | 托盤快速匯出新增「匯出時一併下載對話中的檔案」勾選（與匯出對話框共用 `ui.exportDownloadFiles`） |
 
 ## 1.41.0 以後各版補充說明
 
