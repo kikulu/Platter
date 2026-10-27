@@ -27,6 +27,7 @@
   "tray.noMatch": "No matching prompts found",
   "tray.copied": "Copied \"{title}\"",
   "tray.exportShort": "Export chat",
+  "tray.exportFilesShort": "Also download files from the conversation on export",
   "tray.exportNoAccount": "No active account to export a conversation from",
   "sidebar.knowledgeBase": "Knowledge Base",
   "sidebar.teamConsole": "Virtual Team",

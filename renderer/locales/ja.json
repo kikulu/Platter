@@ -27,6 +27,7 @@
   "tray.noMatch": "一致するプロンプトが見つかりません",
   "tray.copied": "「{title}」をコピーしました",
   "tray.exportShort": "会話を出力",
+  "tray.exportFilesShort": "エクスポート時に会話内のファイルも一緒にダウンロード",
   "tray.exportNoAccount": "エクスポートできるアクティブなアカウントがありません",
   "sidebar.knowledgeBase": "ナレッジベース",
   "sidebar.teamConsole": "バーチャルチーム",

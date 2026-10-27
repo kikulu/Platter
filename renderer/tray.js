@@ -231,7 +231,10 @@
     await window.workspaceAPI.trayToggleExpanded(false);
   }
 
-  collapsedBtn.addEventListener('click', expand);
+  collapsedBtn.addEventListener('click', () => {
+    syncExportFilesCb();
+    expand();
+  });
   closeBtn.addEventListener('click', collapse);
   searchInput.addEventListener('input', renderList);
   openKnowledgeBtn.addEventListener('click', () => {
@@ -240,6 +243,20 @@
   // 匯出當前對話：一鍵以 Markdown 匯出主視窗目前作用中的帳號對話。沿用設定裡的儲存路徑／略過存檔對話框，
   // 以及匯出對話框記住的「同時加入知識庫」偏好；要選格式或另存路徑請用主視窗側邊欄的匯出。
   const exportBtn = document.getElementById('btn-tray-export');
+  // 「匯出時一併下載對話中的檔案」勾選：跟匯出對話框共用同一個偏好（ui.exportDownloadFiles）
+  const exportFilesCb = document.getElementById('tray-export-files-cb');
+  async function syncExportFilesCb() {
+    try {
+      const ui = await window.workspaceAPI.getUIState();
+      exportFilesCb.checked = ui.exportDownloadFiles !== false;
+    } catch (err) {
+      // 讀不到就維持預設（勾選）
+    }
+  }
+  syncExportFilesCb();
+  exportFilesCb.addEventListener('change', () => {
+    window.workspaceAPI.setExportDownloadFiles(exportFilesCb.checked);
+  });
   exportBtn.addEventListener('click', async () => {
     if (exportBtn.disabled) return;
     exportBtn.disabled = true;
@@ -247,7 +264,7 @@
       const ui = await window.workspaceAPI.getUIState();
       const result = await window.workspaceAPI.exportCurrentConversation('md', {
         addToKnowledge: !!ui.autoAddToKnowledgeOnExport,
-        downloadFiles: ui.exportDownloadFiles !== false,
+        downloadFiles: exportFilesCb.checked,
       });
       if (result.ok) {
         const fileName = String(result.filePath).split(/[\\/]/).pop();

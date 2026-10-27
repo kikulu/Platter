@@ -27,6 +27,7 @@
   "tray.noMatch": "找不到符合的提示詞",
   "tray.copied": "已複製「{title}」",
   "tray.exportShort": "匯出對話",
+  "tray.exportFilesShort": "匯出時一併下載對話中的檔案",
   "tray.exportNoAccount": "目前沒有作用中的帳號，無法匯出對話",
   "sidebar.knowledgeBase": "知識庫",
   "sidebar.teamConsole": "虛擬團隊",
