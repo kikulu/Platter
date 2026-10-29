@@ -114,6 +114,30 @@ async function diagnosePage(platform, selectorConfig) {
       });
     out('');
 
+    // 2.6 檔案面板（1.52.8）：標題列右側的「檔案數量」按鈕，以及面板展開時標題列的按鈕結構（只列標籤／aria／位置，不列檔名）
+    out('## Outputs 面板');
+    const vis = (b) => !!(b.offsetWidth || b.offsetHeight || b.getClientRects().length);
+    const desc = (b) => {
+      const r = b.getBoundingClientRect();
+      return `<${b.tagName.toLowerCase()}> aria="${String(b.getAttribute('aria-label') || '').slice(0, 30)}" title="${String(b.getAttribute('title') || '').slice(0, 30)}" ` +
+        `textLen=${String(b.innerText || '').trim().length} svg=${b.querySelectorAll('svg').length} rect=${Math.round(r.left)},${Math.round(r.top)},${Math.round(r.width)}x${Math.round(r.height)}`;
+    };
+    const topRight = Array.from(document.querySelectorAll('button, [role="button"]')).filter((b) => vis(b) && b.getBoundingClientRect().top < 110 && b.getBoundingClientRect().left > window.innerWidth / 2);
+    out(`標題列右半邊的按鈕 ${topRight.length} 個：`);
+    topRight.slice(0, 8).forEach((b, i) => out(`  ${i + 1}. ${desc(b)}`));
+    const heads = Array.from(document.querySelectorAll('h1, h2, h3, h4, div, span')).filter((e) => e.children.length === 0 && /^(outputs|輸出|输出|出力)$/i.test(String(e.innerText || '').trim()) && vis(e));
+    out(`「Outputs」標題元素 ${heads.length} 個（面板沒展開時應為 0）`);
+    heads.slice(0, 3).forEach((h, i) => {
+      let up = h.parentElement;
+      for (let k = 0; up && k < 4; k += 1, up = up.parentElement) {
+        const btns = Array.from(up.querySelectorAll('button, [role="button"]')).filter(vis);
+        out(`  標題 ${i + 1} 往外第 ${k} 層 <${up.tagName.toLowerCase()}>：按鈕 ${btns.length} 個`);
+        btns.slice(0, 6).forEach((b, n) => out(`    - ${n + 1}. ${desc(b)}`));
+        if (btns.length >= 2) break;
+      }
+    });
+    out('');
+
     // 3. 設定的選擇器命中的前幾個節點：祖先鏈、是否被視為外殼、文字長度（不輸出內容）
     out('## 設定的選擇器命中的節點（前 4 個）');
     let nodes = [];

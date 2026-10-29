@@ -4,6 +4,7 @@
     chatgpt: 'ChatGPT',
     gemini: 'Gemini',
     grok: 'Grok',
+    copilot: 'Copilot',
   };
 
   const listEl = document.getElementById('conv-list');

@@ -413,3 +413,73 @@ test('收集要點擊才會下載的檔案：sandbox: 連結、含檔名的按�
   assert.equal(named.getAttribute('data-platter-file'), '2');
   assert.equal(plain.hasAttribute('data-platter-file'), false);
 });
+
+// ---- 1.52.2：沒有 button／role 的檔案卡片（例如使用者上傳的 zip）也要收集 ----
+
+test('data-testid 含 file 的 div 卡片（上傳的 zip）會收集並標上點擊標記；fileSelector 無網址卡片也有 trigger', async () => {
+  const zipCard = clickEl({ tag: 'div', text: 'Platter-1.52.1.zip\nZIP' });
+  const msg = makeNode('這是檔案', [], {
+    querySelectorAll: (sel) => (/data-testid\*="file"/.test(sel) ? [zipCard] : []),
+  });
+  const result = await runCapture([msg], { options: { loadAll: false } });
+  assert.deepEqual(
+    result.messages[0].attachments.map((a) => [a.name, a.kind, a.trigger]),
+    [['Platter-1.52.1.zip', 'click', '1']]
+  );
+  assert.equal(zipCard.getAttribute('data-platter-file'), '1');
+
+  const card = clickEl({ tag: 'div', text: '報告.docx\nDOCX' });
+  card.matches = () => false;
+  const msg2 = makeNode('文字', [], { querySelectorAll: (sel) => (sel === '.card' ? [card] : []) });
+  const r2 = await runCapture([msg2], {
+    cfg: { turn: 'x', userHint: '', fileSelector: '.card' },
+    doc: { querySelectorAll: (sel) => (sel === '.card' ? [] : [msg2]) },
+  });
+  assert.deepEqual(r2.messages[0].attachments, [{ url: null, name: '報告.docx', kind: 'card', trigger: '1' }]);
+});
+
+// ---- 1.52.3：外層容器不搶標記、空按鈕從卡片取名、同名檔案不合併 ----
+
+test('file-card-stack 裡多張卡片各自收集；空文字按鈕從外層卡片取名；同名檔案不合併', async () => {
+  const mk = (tag, text, { parent = null, inner = false, testid = '' } = {}) => {
+    const attrs = {};
+    return makeNode(text, [], {
+      tagName: tag.toUpperCase(),
+      parentElement: parent,
+      getAttribute: (n) => (n === 'data-testid' ? testid : attrs[n] ?? null),
+      hasAttribute: (n) => n in attrs,
+      setAttribute: (n, v) => { attrs[n] = v; },
+      closest: () => null,
+      querySelector: () => (inner ? {} : null),
+    });
+  };
+  const stack = mk('div', 'a.md\nMD\nb.md\nMD', { inner: true, testid: 'file-card-stack' });
+  const card1 = mk('div', 'a.md\nMD', { parent: stack });
+  const btn1 = mk('button', '', { parent: card1 });
+  const card2 = mk('div', 'ZIP', { parent: stack });
+  const btn2 = mk('button', '', { parent: card2 });
+  const card3 = mk('div', 'ZIP', { parent: stack });
+  const btn3 = mk('button', '', { parent: card3 });
+  const msg = makeNode('回覆', [], {
+    querySelectorAll: (sel) => (/button/.test(sel) ? [stack, btn1, btn2, btn3] : []),
+  });
+  const result = await runCapture([msg], { options: { loadAll: false } });
+  assert.deepEqual(
+    result.messages[0].attachments.map((a) => [a.name, a.trigger]),
+    [['a.md', '1'], ['file.zip', '2'], ['file.zip', '3']]
+  );
+});
+
+// ---- 1.52.10：程式碼區塊的語言標籤不是檔案 ----
+
+test('程式碼區塊裡的元素與只有「json」字樣的語言標籤不當成檔案', async () => {
+  const inPre = clickEl({ text: 'notes.md' });
+  inPre.closest = (sel) => (sel === 'pre' ? {} : null);
+  const label = clickEl({ text: 'json' });
+  const real = clickEl({ text: 'ZIP' });
+  const msg = makeNode('程式碼', [], {
+    querySelectorAll: (sel) => (/button/.test(sel) ? [inPre, label, real] : []),
+  });
+  const result = await runCapture([msg], { options: { loadAll: false } });
+  assert.deepEqual(result.messages[0].attachments.map((a) => a.name), ['file.zip']);
+});

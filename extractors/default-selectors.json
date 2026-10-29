@@ -18,5 +18,10 @@
     "turn": "[data-testid=\"conversation-turn\"]",
     "userHint": "user",
     "fileSelector": ""
+  },
+  "copilot": {
+    "turn": "[data-content=\"user-message\"], [data-content=\"ai-message\"]",
+    "userHint": "data-content=user-message",
+    "fileSelector": ""
   }
 }

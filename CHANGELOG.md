@@ -1,5 +1,111 @@
 # Changelog
 
+## [1.53.1]
+
+日誌匯出依類型分檔名；右下角浮動托盤修正點擊沒反應與位置問題，並可拖曳到指定位置。
+
+- **日誌匯出分類型**：日誌視窗的「匯出」按鈕依目前分頁匯出對應類型——`platter-errors-YYYY-MM-DD.json`（錯誤日誌）、`platter-audits-…`（稽核日誌）、`platter-console-…`（主控台，原本無法匯出）；另有「匯出全部（錯誤＋稽核）」→ `platter-logs-all-…`（沿用舊格式 `{ errors, audits }`）。單一類型檔案內容為 `{ type, exportedAt, count, entries }`。檔名日期改用本地日期（原為 UTC）。寫檔失敗會回報錯誤而不是丟例外。
+- **托盤按了沒反應**：
+  - 托盤用 `showInactive()` 顯示、平常不是 key window，macOS 預設第一下點擊只會「啟用視窗」不會送給頁面 → 托盤視窗加上 `acceptFirstMouse: true`。
+  - 展開／收起改成依序排隊執行，並先調整視窗大小再顯示面板（收起則相反），通知 main process 失敗時畫面還原成實際狀態，連點或快捷鍵連按不會讓視窗大小與畫面狀態錯開。
+  - 顯示托盤前先校正位置並 `moveTop()`，確保蓋在帳號頁面之上；視窗事件監聽只綁一次（原本每次重開托盤視窗會重複綁）。
+- **托盤位置**：改用主視窗「內容區」∩ 螢幕工作區當邊界（原用含 Windows 隱形邊框的 `getBounds()`，最大化時圓鈕會被推到螢幕邊緣／工作列底下）；補上最大化、全螢幕、螢幕解析度／縮放改變時的重新定位。
+- **可拖曳**：按住圓鈕（或展開面板的標題列）拖到任意位置，位置存在 `appState.ui.tray.position`（相對容器右下角的距離），會跟著主視窗移動／縮放並夾在可視範圍內；展開面板依圓鈕所在位置往內側長。展開面板標題列新增「⟲」重設為預設右下角。
+- 新增 `lib/trayLayout.js`、`lib/logExport.js`（純函式）與 `test/tray-layout-log-export.test.js`；`normalizeTrayPrefs` 新增 `position` 欄位（`null` 表示預設位置）。新增 i18n 鍵（三語系）：`logs.export.*`、`logs.exportAll`、`main.logs.kind.*`、`tray.resetPosition`，`tray.open` 文案補上「可拖曳」。
+- **未實測**：此環境無法執行 Electron 圖形介面，拖曳與點擊行為尚未在實機驗證（Windows／macOS）；位置計算與檔名以單元測試涵蓋。
+
+## [1.53.0]
+
+新增 **Microsoft Copilot** 平台；「Download all」相關邏輯限定只對 Claude 執行。
+
+- **Copilot**（`https://copilot.microsoft.com`）：`lib/constants.js` 的 `PLATFORM_URLS`、新增帳號平台下拉選單、選擇器設定分頁、各視窗的平台標籤、
+  `extractors/default-selectors.json`（`[data-content="user-message"], [data-content="ai-message"]`）、`extractors/capture-fallbacks.json` 的 copilot 備用清單三組，
+  以及擷取時的角色標籤／免責聲明雜訊過濾（Copilot／Copilot said）。既有安裝升級時會自動補上 copilot 的預設選擇器（`applyIncrementalSelectorDefaults`）。
+- **未實測**：Copilot 的選擇器是依其網頁常見的 `data-content` 屬性推定，尚未在真實登入頁面驗證；若擷取不到或只抓到單一角色，請在 Copilot 帳號上跑診斷並貼報告。
+  檔案下載走通用規則（下載連結、圖片、`fileSelector`），沒有專屬處理。
+- **Download all 只限 Claude**：開啟 Outputs 面板、點面板標題列「Download all」、以及頁面上找「Download all／全部下載」按鈕這三個步驟，現在只在 `platform === 'claude'` 時執行。
+  ChatGPT／Gemini／Grok／Copilot 沒有這個按鈕，不再去找，避免誤點頁面上其他按鈕。
+
+## [1.52.10]
+
+ChatGPT 匯出對話後日誌出現 `click-download failed → file.json: no-download | element-missing …`（4 筆）。
+
+- **原因**：`file.json` 不是真的檔案。ChatGPT 程式碼區塊標頭的「json」語言標籤被當成「只有類型標籤的檔案卡片」，每筆回頁面點擊都沒有下載，各白等 20 秒。
+- `domCapture.js`：`pre`（程式碼區塊）內的按鈕／標籤不算檔案；沒有標題、只有 json／js／py／sh 等字樣的標籤視為程式碼語言標籤，不收集。
+- `conversationCapture.js`：個別點擊連續失敗 2 次就停止，剩下的標為 `skipped-after-failures`，不再逐一白等。
+
+## [1.52.9]
+
+依 `filesTrace` 日誌：Outputs 面板的「Download all」（`aria-label="Download all"`，在「Outputs」標題旁）按一下會**連續觸發多個下載**（每個檔案各一個，不是 zip）。
+
+- 新增 `clickDownloadMany()`：監聽器保持到所有下載完成且 2.5 秒沒有新的下載事件才結束（之前第一個檔案完成就移除監聽，晚幾毫秒才來的檔案會被漏掉、甚至跳出另存對話框）。
+- 每個檔案各自存進 `<檔名>_files/`；附件依名稱對到實際檔案（正規化後相等或互相包含），對不到的指向第一個。
+- 日誌加記 `outputs-panel saved N files: …`。
+- 面板列出的是對話全部檔案，可能比目前頁面上偵測到的卡片多，這是預期行為。
+
+## [1.52.8]
+
+1.52.7 回報「一個檔案都沒下載、日誌也沒有錯誤」：先補上能看出卡在哪一步的追蹤，並把可能造成退步的改動還原。
+
+- **還原 1.52.6 的預覽面板「下載」比對與下拉選單展開**：1.52.6 之後原本能下載的 zip 反而沒下載，推測是比對放寬／亂點選單造成；回到 1.52.5 的做法。
+- **逐步追蹤**寫進稽核日誌（`filesTrace`）：開面板結果、找到的下載圖示（層級／按鈕數／aria／位置）、點擊結果、`will-download` 事件（檔名、大小）、最終狀態。成功也會記，匯出日誌檔就能看出卡在哪一步。
+- 面板打包下載後會確認檔案真的寫進資料夾，沒寫進去就視為失敗並退回逐一點擊。
+- 「Outputs」標題與面板開啟判斷要求位置在視窗右側（避免誤認頁面其他文字）。
+- **診斷報告**新增「Outputs 面板」區段：標題列右半邊的按鈕（標籤／aria／位置）、面板展開時標題列的按鈕結構。請在面板展開時跑診斷。
+
+## [1.52.7]
+
+依截圖：Claude 右上角「檔案數量」按鈕開出的 Outputs 面板，標題列（Outputs ＋ 下載圖示 ＋ X）有「全部下載」，且面板列出全部 11 個檔案。
+
+- 匯出時**優先**開面板、點標題列的下載圖示，接住打包檔存進 `<檔名>_files/`；成功就不再逐一點擊卡片（1.52.6 以前逐一點擊會因卡片重複／預覽面板狀態互相干擾，導致原本能下載的 zip 反而沒下載）。
+- 找下載圖示：標題「Outputs」往外 4 層內含 2 個以上按鈕的容器；先找 aria-label／title 含 download 的，否則取「沒有文字的圖示按鈕」倒數第二個（最後一個是關閉）。
+- 打包檔等候上限 60 秒；此步驟不再套用「找預覽面板下載按鈕」的第二步，避免誤點。
+- 面板抓不到才退回逐一點擊（1.52.0～1.52.6 的做法）。
+- **未實測**：圖示按鈕靠位置判斷；失敗原因會寫進日誌（`outputs-panel download failed` 或 `click-download failed`）。
+
+## [1.52.6]
+
+依第三份診斷報告：頁面有 3 張成品卡片（`file-card-open ×3`），只偵測到 2 張，且 md 沒下載成功。
+
+- `domCapture.js`：`data-testid` 為 `file-card-open` 的按鈕一律視為檔案卡片；取不到副檔名時以外層卡片第一行文字命名（之前副檔名不在清單內的卡片會被略過）。
+- 預覽面板找「下載」：比對改為文字含 download／下載（不限開頭）；找不到時依序展開右上方有 `aria-haspopup`／`aria-expanded` 的按鈕（排除 Share）再找。
+- 個別下載失敗會把「檔名: 原因」寫進錯誤日誌（`conversation:files`），日誌匯出檔就能看到為什麼沒抓到。
+- **未實測**：md 的下載按鈕實際位置未知；若仍失敗，請貼日誌裡的 `click-download failed` 那行，以及預覽面板展開時的診斷報告。
+
+## [1.52.5]
+
+Claude 的檔案集中在右上角「檔案數量」按鈕開出的 Outputs 面板，沒點開時找不到 Download all。
+
+- `downloadAllBundles()` 先開面板：找標題列右半邊、文字只有數字的按鈕（如「4」）點開，等標題 Outputs 出現；面板已開則不再點。
+- **未實測**：按鈕判斷是依截圖推定（頂端 100px 內、右半邊、純數字）；若沒點到，日誌不會報錯，請貼面板展開時的診斷報告。
+
+## [1.52.4]
+
+匯出時，個別點擊沒抓到的檔案會改驅動平台自己的「Download all／全部下載」按鈕。
+
+- `lib/conversationCapture.js`：`downloadAllBundles()` 找頁面上文字為 Download all／全部下載／すべてダウンロード 的可見按鈕（最多 10 個），逐一點擊並用 `will-download` 接住，存進 `<檔名>_files/`；
+  個別點擊失敗的項目標成 `saved`（`localName` 為打包檔、`reason: 'bundle'`）。只在有檔案個別下載失敗時才會觸發，不會重複下載。
+- **未實測**：若按鈕藏在「⋯」選單裡（要先展開才看得到），目前找不到；請回報該按鈕的位置或貼診斷報告。
+
+## [1.52.3]
+
+依診斷報告補強 1.52.2：頁面有 2 個上傳 zip 與多個 md 成品卡片，卻只偵測到 1 個。
+
+- 診斷報告顯示 Claude 的檔案卡片是 `file-card-stack／file-card-block／file-card-open`（成品）與 `file-thumbnail`（上傳檔案）。
+- **外層容器搶標記**：`file-card-stack` 這類外層元素先被標記，裡面其他卡片因「在已標記元素內」全被略過；現在外層若含有可點擊的卡片／按鈕就不算，由裡層各自處理。
+- **同名合併**：點擊式檔案原本以名稱去重，兩個都叫 `file.zip` 的會被當成同一個；現在以點擊序號去重。
+- **按鈕沒有文字**：`file-card-open` 是 sr-only 空按鈕，取不到檔名；現在往外最多 4 層找卡片上的檔名／類型標籤。
+- **未實測**：仍需真實登入頁面驗證點擊下載。
+
+## [1.52.2]
+
+修正匯出對話時只下載到圖片（如 webp），壓縮檔等其他檔案沒有一起匯出。
+
+- **原因**：圖片有直接網址所以能下載；zip／文件這類檔案卡片沒有網址，要靠回頁面點擊下載，但偵測點擊目標只認 `a／button／[role=button]`，
+  使用者上傳的檔案卡片多半是一般 `div`，根本沒被收集，匯出檔裡連名稱都沒有。
+- `extractors/domCapture.js`：偵測範圍新增 `data-testid` 含 `file`／`attachment`／`artifact` 的元素；`fileSelector` 命中但沒有網址的卡片也會標上 `data-platter-file`，匯出時比照點擊下載。
+- **未實測**：需要真的登入平台才能驗證點擊下載；若仍漏檔，請貼診斷報告「檔案」區段與日誌。
+
 ## [1.52.1]
 
 托盤（右下角浮動視窗）的一鍵匯出補上「匯出時一併下載對話中的檔案」勾選。

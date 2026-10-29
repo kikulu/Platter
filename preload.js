@@ -154,6 +154,10 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   setActiveAccountViewVisible: (visible) =>
     ipcRenderer.invoke('window:setActiveAccountViewVisible', visible),
   trayToggleExpanded: (expanded) => ipcRenderer.invoke('tray:setExpanded', expanded),
+  trayDragStart: () => ipcRenderer.send('tray:dragStart'),
+  trayDragMove: () => ipcRenderer.send('tray:dragMove'),
+  trayDragEnd: () => ipcRenderer.send('tray:dragEnd'),
+  trayResetPosition: () => ipcRenderer.invoke('tray:resetPosition'),
 
   // 專案計畫管理
   listProjects: () => ipcRenderer.invoke('projects:list'),
@@ -294,7 +298,7 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   // 日誌主控台（錯誤日誌、稽核日誌）
   listLogs: () => ipcRenderer.invoke('logs:list'),
   clearLogs: (kind) => ipcRenderer.invoke('logs:clear', kind),
-  exportLogs: () => ipcRenderer.invoke('logs:export'),
+  exportLogs: (kind) => ipcRenderer.invoke('logs:export', kind),
   onLogsChanged: (cb) => {
     const handler = () => cb();
     ipcRenderer.on('logs:changed', handler);

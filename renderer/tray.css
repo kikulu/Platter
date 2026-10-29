@@ -63,6 +63,16 @@ body.expanded #collapsed-view {
 #btn-tray-open:hover {
   filter: brightness(1.1);
 }
+/* 圓鈕與展開面板標題列都可以按住拖曳（見 renderer/tray.js 的 makeDraggable） */
+#btn-tray-open,
+#tray-header {
+  cursor: grab;
+  touch-action: none;
+}
+body.dragging,
+body.dragging * {
+  cursor: grabbing !important;
+}
 
 /* --- 展開狀態：搜尋 + 清單面板，填滿整個視窗 --- */
 #expanded-view {
@@ -92,6 +102,12 @@ body.expanded #expanded-view {
   font-size: 13px;
   font-weight: 600;
 }
+#tray-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+#btn-tray-reset,
 #btn-tray-close {
   background: transparent;
   border: none;
@@ -99,6 +115,7 @@ body.expanded #expanded-view {
   font-size: 14px;
   padding: 2px 6px;
 }
+#btn-tray-reset:hover,
 #btn-tray-close:hover {
   color: var(--text-primary);
 }

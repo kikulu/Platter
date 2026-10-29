@@ -176,10 +176,10 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         .trim();
     };
     // 平台頁面上的雜訊（相對時間、免責聲明、額度用完橫幅）：不是對話內容
-    const NOISE_TEXT = /^(\d+\s*(seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago|just now|(Claude|ChatGPT|Gemini|Grok) (is AI and )?can make mistakes\b.*|You are out of free messages\b.*)$/i;
+    const NOISE_TEXT = /^(\d+\s*(seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago|just now|(Claude|ChatGPT|Gemini|Grok|Copilot) (is AI and )?can make mistakes\b.*|You are out of free messages\b.*)$/i;
 
     // 平台在訊息文字前面塞的角色標籤／思考時間（Grok 的「您」「Grok 運作了5s」、Gemini 的「你說了」）
-    const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
+    const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Copilot|Copilot said|Copilot 說|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
     const THINK_LABEL = /^(運作了|已運作|思考了|已思考|Thought for|Worked for|Thinking)\s*[\d.]*\s*(s|秒|seconds?|分鐘|min)?$/i;
     const stripLabels = (text) => {
       const lines = text.split('\n');
@@ -277,7 +277,7 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       const out = [];
       const seen = new Set();
       const add = (url, name, kind, trigger) => {
-        const key = url || 'name:' + name;
+        const key = url || (trigger ? 'trigger:' + trigger : 'name:' + name);
         if (!name && !url) return;
         if (seen.has(key)) return;
         seen.add(key);
@@ -315,12 +315,23 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
       });
       if (!cardsOnly && typeof root.querySelectorAll === 'function') {
         let clickCount = 0;
-        root.querySelectorAll('a[href^="sandbox:"], a[href], button, [role="button"]').forEach((el) => {
+        // 1.52.2：除了連結／按鈕，也納入 data-testid 含 file／attachment／artifact 的卡片（使用者上傳的 zip、
+        // 文件常是沒有 button／role 的 div，之前偵測不到所以匯出時整個被漏掉）
+        const CARD_SEL = '[data-testid*="file" i], [data-testid*="attachment" i], [data-testid*="artifact" i]';
+        const CAND_SEL = 'a[href^="sandbox:"], a[href], button, [role="button"], ' + CARD_SEL;
+        root.querySelectorAll(CAND_SEL).forEach((el) => {
           if (clickCount >= 20) return;
           if (typeof el.hasAttribute !== 'function' || el.hasAttribute('data-platter-file')) return;
           if (typeof el.closest === 'function' && el.closest('[data-platter-file]')) return;
           if (typeof el.querySelector === 'function' && el.querySelector('[data-platter-file]')) return;
           if (inChrome(el)) return;
+          // 1.52.10：程式碼區塊（pre）裡的按鈕／標籤（「json」語言標籤、複製按鈕）不是檔案
+          if (typeof el.closest === 'function' && el.closest('pre')) return;
+          // 1.52.3：外層容器（例如 file-card-stack 裡放了好幾張卡片）不算，交給裡面的卡片／按鈕各自處理，
+          // 否則外層先被標記，裡面其他檔案就全被略過
+          const tag = String(el.tagName || '').toUpperCase();
+          const isCardEl = tag !== 'A' && tag !== 'BUTTON' && el.getAttribute('role') !== 'button';
+          if (isCardEl && typeof el.querySelector === 'function' && el.querySelector(CAND_SEL)) return;
           const href = (el.getAttribute && el.getAttribute('href')) || '';
           const isSandbox = /^sandbox:/i.test(href);
           // 有一般網址的連結已由上面的連結邏輯處理
@@ -337,19 +348,46 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
             }
             if (!name) name = firstLine(text);
           } else {
-            const m = TRIGGER_NAME.exec(text) || TRIGGER_NAME.exec(aria);
+            let m = TRIGGER_NAME.exec(text) || TRIGGER_NAME.exec(aria);
+            let labelText = text;
+            if (!m && !text) {
+              // 1.52.3：按鈕本身沒有文字（例如 sr-only 的「開啟」按鈕），往外找最近一層有檔名／類型標籤的卡片
+              let up = el.parentElement;
+              for (let i = 0; up && i < 4 && !m && !labelText; i += 1, up = up.parentElement) {
+                const t = String(up.innerText || up.textContent || '').trim();
+                const a2 = (up.getAttribute && up.getAttribute('aria-label')) || '';
+                if (t.length > 0 && t.length <= 200) {
+                  labelText = t;
+                  m = TRIGGER_NAME.exec(t);
+                } else if (a2) {
+                  m = TRIGGER_NAME.exec(a2);
+                }
+              }
+            }
             if (m) {
               name = m[1];
             } else {
-              const lines = text.split('\n').map((x) => x.trim()).filter(Boolean);
+              const lines = labelText.split('\n').map((x) => x.trim()).filter(Boolean);
               const joined = lines.join(' ');
               const lm = lines.length >= 1 && lines.length <= 3 ? TRIGGER_LABEL.exec(joined) : null;
               if (lm) {
                 const rawTitle = lines.length > 1 ? lines[0] : joined.slice(0, lm.index);
                 const title = !GENERIC_TYPE.test(rawTitle.trim()) ? rawTitle.replace(/[·•\s]+$/, '').trim() : '';
-                name = (title || 'file') + '.' + lm[1].toLowerCase();
+                // 1.52.10：沒有標題、只有一個「json／js／py…」字樣，是程式碼語言標籤，不是檔案（ChatGPT 的 code block 標頭）
+                const codeLabelOnly = !title && /^(json|xml|html?|js|ts|py|css|sh|sql|yaml|yml)$/i.test(lm[1]);
+                if (!codeLabelOnly) name = (title || 'file') + '.' + lm[1].toLowerCase();
               }
             }
+          }
+          // 1.52.5：Claude 的 file-card-open 一定是檔案卡片，即使取不到副檔名（.sh／.yml／.sql 等不在清單內）也收集，
+          // 名稱取外層卡片第一行文字
+          if (!name && /file-card-open/i.test(el.getAttribute('data-testid') || '')) {
+            let up = el.parentElement;
+            for (let i = 0; up && i < 4 && !name; i += 1, up = up.parentElement) {
+              const t = firstLine(up.innerText || up.textContent || '');
+              if (t && t.length <= 120 && !GENERIC_TYPE.test(t)) name = t;
+            }
+            if (!name) name = 'file';
           }
           if (!name) return;
           triggerSeq += 1;
@@ -365,7 +403,18 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
           const img = card.querySelector && card.querySelector('img');
           const url = a && okScheme(a.href) ? a.href : img && okScheme(img.src) ? img.src : null;
           const name = (a && (a.getAttribute('download') || firstLine(a.innerText))) || firstLine(card.innerText) || card.getAttribute('aria-label') || '';
-          add(url, name, 'card');
+          // 1.52.2：沒有網址的卡片也標上點擊標記，匯出時回頁面點擊下載，不再只列名稱
+          let trigger;
+          if (!url && name && typeof card.setAttribute === 'function' && typeof card.hasAttribute === 'function') {
+            const marked = card.hasAttribute('data-platter-file') ? card.getAttribute('data-platter-file') : '';
+            if (marked) trigger = marked;
+            else {
+              triggerSeq += 1;
+              card.setAttribute('data-platter-file', String(triggerSeq));
+              trigger = String(triggerSeq);
+            }
+          }
+          add(url, name, 'card', trigger);
         });
       }
       return out;

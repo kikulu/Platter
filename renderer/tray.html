@@ -23,9 +23,18 @@
     <div id="expanded-view">
       <div id="tray-header">
         <span id="tray-title" data-i18n="tray.title">快速提示詞</span>
-        <button id="btn-tray-close" title="收起" data-i18n-title="tray.collapse">
-          ✕
-        </button>
+        <span id="tray-header-actions">
+          <button
+            id="btn-tray-reset"
+            title="重設位置"
+            data-i18n-title="tray.resetPosition"
+          >
+            ⟲
+          </button>
+          <button id="btn-tray-close" title="收起" data-i18n-title="tray.collapse">
+            ✕
+          </button>
+        </span>
       </div>
       <input
         id="tray-search"

@@ -30,7 +30,15 @@
   // 分頁切換
   // ---------------------------------------------------------------------
   const TAB_IDS = ['errors', 'audits', 'console'];
+  let activeTab = 'errors';
+  const exportBtnEl = document.getElementById('btn-export-logs');
+  // 「匯出」按鈕依目前分頁顯示並匯出對應類型（錯誤／稽核／主控台）
+  function updateExportButtonLabel() {
+    exportBtnEl.textContent = window.i18n.t(`logs.export.${activeTab}`);
+  }
   function switchTab(tab) {
+    activeTab = tab;
+    updateExportButtonLabel();
     TAB_IDS.forEach((id) => {
       document.getElementById(`tab-${id}`).classList.toggle('active', id === tab);
       document.getElementById(`panel-${id}`).classList.toggle('active', id === tab);
@@ -288,14 +296,18 @@
   // ---------------------------------------------------------------------
   // 匯出
   // ---------------------------------------------------------------------
-  document.getElementById('btn-export-logs').addEventListener('click', async () => {
-    const result = await window.workspaceAPI.exportLogs();
+  async function exportLogs(kind) {
+    const result = await window.workspaceAPI.exportLogs(kind);
     if (result.ok) {
       alert(window.i18n.t('export.success', { path: result.filePath }));
     } else if (result.error) {
       alert(`${window.i18n.t('export.fail')}: ${result.error}`);
     }
-  });
+  }
+  exportBtnEl.addEventListener('click', () => exportLogs(activeTab));
+  document
+    .getElementById('btn-export-all-logs')
+    .addEventListener('click', () => exportLogs('all'));
 
   // ---------------------------------------------------------------------
   // 即時同步 + 初始化
@@ -312,6 +324,7 @@
 
   (async () => {
     await window.i18n.init();
+    updateExportButtonLabel();
     const logs = await window.workspaceAPI.listLogs();
     allErrors = logs.errors;
     allAudits = logs.audits;

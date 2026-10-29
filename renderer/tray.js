@@ -218,20 +218,87 @@
     }
   }
 
-  async function expand() {
-    document.body.classList.add('expanded');
-    await window.workspaceAPI.trayToggleExpanded(true);
-    searchInput.value = '';
-    renderList();
-    searchInput.focus();
+  // 展開／收起：main process 的視窗大小是唯一真相，renderer 只負責對應的畫面。
+  // 排成一條佇列依序執行，連點或快捷鍵連按時不會讓「視窗大小」與「畫面狀態」錯開
+  // （錯開就是「圓鈕卡住、按了沒反應」的典型樣子）。
+  let transition = Promise.resolve();
+  function setExpanded(next) {
+    transition = transition.then(async () => {
+      const isExpanded = document.body.classList.contains('expanded');
+      if (isExpanded === next) return;
+      try {
+        if (next) {
+          // 先把視窗變大，再顯示面板，避免面板被擠在 56px 的小視窗裡閃一下
+          await window.workspaceAPI.trayToggleExpanded(true);
+          document.body.classList.add('expanded');
+          searchInput.value = '';
+          renderList();
+          searchInput.focus();
+        } else {
+          document.body.classList.remove('expanded');
+          await window.workspaceAPI.trayToggleExpanded(false);
+        }
+      } catch (err) {
+        // 通知 main 失敗：畫面還原成目前視窗實際的狀態
+        document.body.classList.toggle('expanded', !next);
+      }
+    });
+    return transition;
   }
+  const expand = () => setExpanded(true);
+  const collapse = () => setExpanded(false);
 
-  async function collapse() {
-    document.body.classList.remove('expanded');
-    await window.workspaceAPI.trayToggleExpanded(false);
+  // 拖曳：在圓鈕（收起）或標題列（展開）上按住移動超過幾 px 就算拖曳，放開時由
+  // main process 把位置存起來；沒移動就當成一般點擊。座標由 main process 讀游標位置。
+  const DRAG_THRESHOLD = 5;
+  let suppressClick = false;
+  function makeDraggable(el) {
+    el.addEventListener('pointerdown', (e) => {
+      if (e.button !== 0) return;
+      if (e.target.closest('button') && e.target.closest('button') !== el) return;
+      const startX = e.screenX;
+      const startY = e.screenY;
+      let dragging = false;
+      el.setPointerCapture(e.pointerId);
+      window.workspaceAPI.trayDragStart();
+      const onMove = (ev) => {
+        if (!dragging) {
+          if (Math.hypot(ev.screenX - startX, ev.screenY - startY) < DRAG_THRESHOLD) return;
+          dragging = true;
+          document.body.classList.add('dragging');
+        }
+        window.workspaceAPI.trayDragMove();
+      };
+      const onEnd = (ev) => {
+        el.removeEventListener('pointermove', onMove);
+        el.removeEventListener('pointerup', onEnd);
+        el.removeEventListener('pointercancel', onEnd);
+        try {
+          el.releasePointerCapture(ev.pointerId);
+        } catch (err) {
+          // 已經被釋放就算了
+        }
+        document.body.classList.remove('dragging');
+        window.workspaceAPI.trayDragEnd();
+        if (dragging) {
+          // 拖曳結束後緊接著會觸發 click，不要把它當成「展開／收起」
+          suppressClick = true;
+          setTimeout(() => (suppressClick = false), 0);
+        }
+      };
+      el.addEventListener('pointermove', onMove);
+      el.addEventListener('pointerup', onEnd);
+      el.addEventListener('pointercancel', onEnd);
+    });
   }
+  makeDraggable(collapsedBtn);
+  makeDraggable(document.getElementById('tray-header'));
+  document.getElementById('btn-tray-reset').addEventListener('click', () => {
+    window.workspaceAPI.trayResetPosition();
+  });
 
   collapsedBtn.addEventListener('click', () => {
+    if (suppressClick) return;
     syncExportFilesCb();
     expand();
   });
@@ -331,10 +398,8 @@
   // 'toggle' 展開／收合切換；'expand' 只展開（Platter 剛從背景被帶到前景時）
   window.workspaceAPI.onTrayHotkey((action) => {
     const isExpanded = document.body.classList.contains('expanded');
-    if (action === 'expand') {
-      if (!isExpanded) expand();
-    } else if (isExpanded) collapse();
-    else expand();
+    if (action === 'expand') expand();
+    else setExpanded(!isExpanded);
   });
 
   (async () => {

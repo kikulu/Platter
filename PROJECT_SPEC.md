@@ -12,7 +12,7 @@
 開發一款基於 **Electron** 的桌面應用程式，讓使用者能在同一個視窗內：
 
 1. 透過左側側邊欄（多層可收合清單）切換管理多個 AI 平台（Claude、ChatGPT、
-   Gemini、Grok）的不同帳號，每個帳號擁有完全獨立的登入狀態（Session
+   Gemini、Grok、Microsoft Copilot）的不同帳號，每個帳號擁有完全獨立的登入狀態（Session
    Isolation）。
 2. 為每個帳號指定一個「角色」（職務／人設），角色可配置專屬的預設提示詞。
 3. 手動觸發、擷取畫面上目前可見對話，存成 Markdown 或 JSON。
@@ -92,7 +92,7 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   `WebContentsView`，`mainWindow.contentView.addChildView(view)` 掛進
   主視窗，`loadURL()` 載入對應平台網址（`https://claude.ai`、
   `https://chatgpt.com`、`https://gemini.google.com`、
-  `https://grok.com`）。
+  `https://grok.com`、`https://copilot.microsoft.com`）。
 - **本地端 AI 服務**（`platform === 'local'`，例如 Ollama、LM Studio、
   Stable Diffusion WebUI、ComfyUI）：跟上面四個雲端平台共用同一套
   `WebContentsView` / session partition 機制，唯一差異是網址不是
@@ -1181,7 +1181,7 @@ function openChildWindow({
 
 ### 9.1 新增帳號視窗（`account.html` / `account.js`）
 
-平台下拉選單（Claude/ChatGPT/Gemini/Grok/本地端 AI 服務）+ 帳號名稱
+平台下拉選單（Claude/ChatGPT/Gemini/Grok/Copilot/本地端 AI 服務）+ 帳號名稱
 輸入框 + 角色（可選）下拉選單 + 取消/確認新增按鈕。選「本地端 AI
 服務」時多顯示服務類型（LLM／文生圖／自訂）跟網址輸入框（含 Ollama／
 SD WebUI／ComfyUI 範例網址提示），確認前檢查網址格式（必須以

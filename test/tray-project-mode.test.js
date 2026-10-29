@@ -117,6 +117,7 @@ test('normalizeTrayPrefs：缺欄位、型別錯、超出範圍都退回預設',
     hotkey: 'CommandOrControl+Shift+P',
     recentLimit: 5,
     recent: [],
+    position: null,
   });
   const bad = normalizeTrayPrefs({
     projectMode: 'x',
