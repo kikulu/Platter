@@ -401,3 +401,16 @@ test('settings:importBackup：舊備份（沒有 schemaVersions）匯入的專�
   const conv = stores.loadConversations().find((c) => c.id === 'conv_legacy');
   assert.deepEqual([conv.tags, conv.linkedDocumentIds], [[], []]);
 });
+
+test('sanitizeBackupDocument：名稱中的路徑字元被清掉（資安稽核 N-2）', () => {
+  const { sanitizeBackupDocument } = require('../lib/backupSanitize');
+  const r = sanitizeBackupDocument(
+    { id: 'd1', name: 'x/../../../evil', originalName: '..\\..\\y.pdf', filePath: '' },
+    '/tmp/docs'
+  );
+  assert.ok(!/[\\/]/.test(r.doc.name));
+  assert.ok(!/[\\/]/.test(r.doc.originalName));
+  const plain = sanitizeBackupDocument({ id: 'd2', name: '報告.pdf' }, '/tmp/docs');
+  assert.equal(plain.doc.name, '報告.pdf');
+  assert.equal('originalName' in plain.doc, false);
+});

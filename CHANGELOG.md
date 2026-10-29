@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.53.2]
+
+資安稽核 N-2：專案／文件名稱未清理就組成檔名，可寫到文件庫資料夾之外。
+
+- **問題**：`projects:workflow:saveStepOutputAsDocument` 只清步驟標題、沒清 `project.name`；`documents:pdfExtractPages` 直接用 `doc.name`；備份匯入的文件名稱只限制長度。名稱如 `x/../../../evil` 會讓 `path.join` 跳出 `documents/`（固定副檔名 `.md`／`.pdf`，可覆蓋同名既有檔）。
+- **修正**：兩處寫檔都改用 `sanitizeFileName()`（`lib/attachments.js`）清理名稱、並在寫入前以 `isPathInside(destPath, documentsDir())` 再確認，失敗回 `UNSAFE_PATH`；備份匯入（`lib/backupSanitize.js`）同樣清掉 `name`／`originalName` 的路徑字元（一般名稱不變）。新增測試於 `test/backup-sanitize.test.js`。
+- 其他資安稽核發現（N-1、N-3～N-5）尚未處理。
+
 ## [1.53.1]
 
 日誌匯出依類型分檔名；右下角浮動托盤修正點擊沒反應與位置問題，並可拖曳到指定位置。
