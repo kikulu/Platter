@@ -675,6 +675,8 @@
   "conversations.importMarkdown": "Markdown ファイルをインポート",
   "settings.about.title": "このアプリについて",
   "settings.about.version": "Platter v{version}",
+  "settings.about.disclaimer": "Platter は個人が開発する非公式のオープンソースプロジェクトで、Anthropic、OpenAI、Google、xAI、Microsoft などとは提携・推奨の関係になく、MIT ライセンスのもと「現状のまま・無保証」で提供されます。各プラットフォームの利用規約の確認と遵守、AI 生成内容の確認、エクスポート・復元・削除前のバックアップはご自身で行ってください。",
+  "settings.about.disclaimerLink": "免責事項の全文を見る",
   "search.openPalette": "クイック検索",
   "search.placeholder": "ナレッジベース／ドキュメント／会話／プロジェクトを検索…",
   "search.noResults": "一致する結果がありません",

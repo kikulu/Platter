@@ -675,6 +675,8 @@
   "conversations.importMarkdown": "Import Markdown File",
   "settings.about.title": "About",
   "settings.about.version": "Platter v{version}",
+  "settings.about.disclaimer": "Platter is an unofficial, individually developed open-source project with no affiliation with or endorsement by Anthropic, OpenAI, Google, xAI, Microsoft or other platforms; it is provided \"as is\" without warranty under the MIT License. Check and follow each platform's terms of service, verify AI-generated content, and back up before exporting, restoring or deleting.",
+  "settings.about.disclaimerLink": "View full disclaimer",
   "search.openPalette": "Quick Search",
   "search.placeholder": "Search knowledge base / documents / conversations / projects…",
   "search.noResults": "No matching results",

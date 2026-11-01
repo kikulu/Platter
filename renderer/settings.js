@@ -769,6 +769,14 @@
     );
   });
 
+  // 完整免責聲明放在專案的 DISCLAIMER.md（不打包進安裝檔），這裡開 GitHub 上的版本，
+  // 經過主程序的 app:openExternal 驗證後交給系統瀏覽器。
+  document.getElementById('btn-open-disclaimer').addEventListener('click', () => {
+    window.workspaceAPI.openExternal(
+      'https://github.com/kikulu/Platter/blob/master/DISCLAIMER.md'
+    );
+  });
+
   // --- 初始化 ---
   (async () => {
     await window.i18n.init();

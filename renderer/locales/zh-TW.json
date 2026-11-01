@@ -675,6 +675,8 @@
   "conversations.importMarkdown": "匯入 Markdown 檔案",
   "settings.about.title": "關於",
   "settings.about.version": "Platter v{version}",
+  "settings.about.disclaimer": "Platter 是非官方的個人開源專案，與 Anthropic、OpenAI、Google、xAI、Microsoft 等平台沒有隸屬或背書關係；軟體依 MIT 授權「依現狀提供、不附擔保」。各平台服務條款請自行確認並遵守，AI 產出內容請自行查證，匯出、還原、刪除前請先備份。",
+  "settings.about.disclaimerLink": "查看完整免責聲明",
   "search.openPalette": "快速搜尋",
   "search.placeholder": "搜尋知識庫／文件庫／對話庫／專案…",
   "search.noResults": "沒有符合的結果",

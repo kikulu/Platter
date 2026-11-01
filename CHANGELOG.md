@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.53.4]
+
+設定視窗「關於」加入免責聲明。
+
+- 「設定 → 關於」顯示免責聲明摘要（非官方、無隸屬、依現狀提供不附擔保、服務條款自行遵守、AI 內容自行查證、操作前先備份），並新增「查看完整免責聲明」按鈕，經 `app:openExternal`（主程序驗證 http／https）在系統瀏覽器開啟 GitHub 上的 `DISCLAIMER.md`（該檔不打包進安裝檔）。
+- 新增 i18n 鍵（三語系）：`settings.about.disclaimer`、`settings.about.disclaimerLink`。
+- **未實測**：此環境無法執行 Electron 圖形介面，按鈕與版面尚未在實機確認。
+
 ## [1.53.3]
 
 新增免責聲明（文件變更，程式碼不變）。
