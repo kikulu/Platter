@@ -1,6 +1,6 @@
 # Roadmap
 
-> 最後更新：`1.53.2`（2026-10-28）。這份只放「**還沒做的事**」與「**版本檢核表**」；
+> 最後更新：`1.53.3`（2026-10-28）。這份只放「**還沒做的事**」與「**版本檢核表**」；
 > 每個版本改了什麼見 [`docs/ROADMAP_HISTORY.md`](./docs/ROADMAP_HISTORY.md)（摘要）與 [`CHANGELOG.md`](./CHANGELOG.md)（逐項細節）。
 > 更深入的優化與改版評估見 [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
 >
@@ -124,5 +124,6 @@
 - [x] `1.53.0`　新增 Microsoft Copilot 平台；Download all／Outputs 面板邏輯限定只對 Claude 執行
 - [x] `1.53.1`　日誌匯出依類型分檔名（錯誤／稽核／主控台）；右下角浮動托盤修正點擊沒反應與位置，並可拖曳、記住位置
 - [x] `1.53.2`　資安稽核 N-2：專案／文件名稱清理並限制寫檔位置，避免路徑穿越
+- [x] `1.53.3`　新增免責聲明 DISCLAIMER.md（三語）與 README 免責聲明段落
 
 > 下一版：從上面的待辦檢核表挑項目，完成後在此補一行 `- [x]`。

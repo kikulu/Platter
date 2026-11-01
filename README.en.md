@@ -60,6 +60,7 @@ bundled into a backup file.
 - [Config File Locations](#config-file-locations)
 - [Documentation Index](#documentation-index)
 - [Contributing](#contributing)
+- [Disclaimer](#disclaimer)
 - [License](#license)
 
 ## Features
@@ -367,6 +368,7 @@ actual login cookies/localStorage.
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | Optimization and redesign proposals (reliability/security, docs upkeep, product direction, suggested release cadence) |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | Security audit report (findings, severity, remediation order) |
 | [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | Security fix checklist (1.42.0, per-item status) |
+| [DISCLAIMER.md](./DISCLAIMER.md)                                   | Disclaimer (繁體中文 / English / 日本語)                                                                                          |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | Prompt template for starting a new chat with only the docs attached, no source code                                               |
 
 ## Contributing
@@ -380,6 +382,10 @@ Forks and PRs are welcome. Before submitting a PR, please make sure:
 4. New features that violate any of the three [Design Principles](#design-principles)
    above (calling undocumented APIs, circumventing site protections,
    bundling login credentials into backups) won't be accepted
+
+## Disclaimer
+
+Platter is an **unofficial**, individually developed open-source project with no affiliation with or endorsement by Anthropic, OpenAI, Google, xAI, Microsoft or other platforms. The software is provided "as is" without warranty under the MIT License. You are responsible for checking and following each platform's terms of service, for verifying AI-generated content, and for backing up important data before exporting, restoring or deleting. See [DISCLAIMER.md](./DISCLAIMER.md) for the full text.
 
 ## License
 

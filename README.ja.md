@@ -60,6 +60,7 @@ Claude、ChatGPT、Gemini、Grok、Microsoft Copilot を一日中行き来して
 - [設定ファイルの保存場所](#設定ファイルの保存場所)
 - [ドキュメント一覧](#ドキュメント一覧)
 - [コントリビューション](#コントリビューション)
+- [免責事項](#免責事項)
 - [ライセンス](#ライセンス)
 
 ## 機能一覧
@@ -367,6 +368,7 @@ Cookie・localStorage は**含まれません**。
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 最適化・改修の提案（信頼性／セキュリティ、ドキュメント保守、製品方向、リリース計画案） |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | セキュリティ監査レポート（発見事項、重大度、修正の順序） |
 | [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | セキュリティ修正チェックリスト（1.42.0、項目ごとの状態） |
+| [DISCLAIMER.md](./DISCLAIMER.md)                                   | 免責事項（繁體中文／English／日本語）                                                                                          |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | ソースコードを添付せず、ドキュメントのみで新しい会話を始める際に使うプロンプトテンプレート                                          |
 
 ## コントリビューション
@@ -381,6 +383,10 @@ Cookie・localStorage は**含まれません**。
 4. 上記の[設計原則](#設計原則)の 3 つ（非公開 API の呼び出し、サイトの
    保護機構の回避、ログイン情報をバックアップに含めること）に反する
    新機能は受け付けられません
+
+## 免責事項
+
+Platter は個人が開発する**非公式**のオープンソースプロジェクトであり、Anthropic、OpenAI、Google、xAI、Microsoft などのプラットフォームとは提携・推奨の関係にありません。本ソフトウェアは MIT ライセンスのもと「現状のまま・無保証」で提供されます。各プラットフォームの利用規約の確認と遵守、AI 生成内容の確認、エクスポート・復元・削除の前のバックアップはご自身の責任で行ってください。全文は [DISCLAIMER.md](./DISCLAIMER.md) をご覧ください。
 
 ## ライセンス
 

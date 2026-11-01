@@ -55,6 +55,7 @@ AI做越多，人需要喝的咖啡就越少。
 - [設定檔位置](#設定檔位置)
 - [文件索引](#文件索引)
 - [貢獻](#貢獻)
+- [免責聲明](#免責聲明)
 - [License](#license)
 
 ## 功能總覽
@@ -325,6 +326,7 @@ extensions.json         # 已安裝的擴充功能清單
 | [docs/OPTIMIZATION_PROPOSAL.md](./docs/OPTIMIZATION_PROPOSAL.md)  | 優化與改版建議（可靠性／安全、文件維護、產品方向、建議版本節奏） |
 | [docs/SECURITY_AUDIT_REPORT.md](./docs/SECURITY_AUDIT_REPORT.md)  | 資安檢查報告（發現、嚴重度、修補順序） |
 | [docs/SECURITY_FIX_CHECKLIST.md](./docs/SECURITY_FIX_CHECKLIST.md) | 資安修補清單檢核表（1.42.0，逐項狀態） |
+| [DISCLAIMER.md](./DISCLAIMER.md)                                   | 免責聲明（繁體中文／English／日本語）                                                                 |
 | [SPEC_ONLY_BUILD_PROMPT.md](./SPEC_ONLY_BUILD_PROMPT.md)           | 開新對話只附文件、不附原始碼時用的提示詞模板                                                          |
 
 ## 貢獻
@@ -342,6 +344,10 @@ extensions.json         # 已安裝的擴充功能清單
    機制、把登入憑證放進備份檔案），不會被接受
 5. 如果順手跑了 `npm run format`，記得跟功能改動分開成不同的 commit/PR，
    方便 review（格式化 diff 會很大，混在一起不好看變更內容）
+
+## 免責聲明
+
+Platter 是**非官方**的個人開源專案，與 Anthropic、OpenAI、Google、xAI、Microsoft 等平台沒有任何隸屬或背書關係。軟體依 MIT 授權「依現狀提供、不附擔保」；各平台的服務條款由使用者自行確認與遵守，AI 產出的內容請自行查證，匯出、備份、刪除前請先保存重要資料。完整內容見 [DISCLAIMER.md](./DISCLAIMER.md)。
 
 ## License
 
