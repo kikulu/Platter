@@ -156,6 +156,30 @@ const fakeElectron = {
   BrowserWindow: { getAllWindows: () => [] },
   Notification: class { static isSupported() { return false; } },
   clipboard: { writeText() {} },
+  // 附件下載改用 net.request（不自動跟隨重導向，資安稽核 N-1）；這裡用假的，依網址回傳檔案內容
+  net: {
+    request: ({ url }) => {
+      const { EventEmitter } = require('events');
+      const { Readable } = require('stream');
+      const req = new EventEmitter();
+      req.abort = () => {};
+      req.end = () => {
+        setImmediate(() => {
+          if (url.includes('missing')) {
+            const r404 = Object.assign(Readable.from([]), { statusCode: 404, headers: {} });
+            req.emit('response', r404);
+            return;
+          }
+          const res = Object.assign(Readable.from([Buffer.from('FILE:' + url)]), {
+            statusCode: 200,
+            headers: { 'content-type': 'application/pdf' },
+          });
+          req.emit('response', res);
+        });
+      };
+      return req;
+    },
+  },
   dialog: { showSaveDialog: async () => ({ canceled: !fake.save, filePath: fake.save }) },
 };
 Module._load = function (request, ...rest) {

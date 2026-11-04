@@ -68,11 +68,25 @@
 
 - [-] **H-2** Electron 30 → 支援中的版本：本環境連不上 npm 套件庫，無法安裝與驗證，盲改版本號風險大於收益。
   建議在完成冒煙測試後單獨一版升級。
-- [-] **L-6** `package-lock.json` 與 `npm ci`：同上，需要在有網路的環境產生並提交。
+- [x] **L-6** `package-lock.json` 與 `npm ci`：`1.55.0` 完成（見 G 節）。
 - [-] **L-6** GitHub Actions 釘 commit SHA：無法在這裡查到正確的 SHA，亂填會讓 CI 壞掉；交給 Dependabot 維護。
 - [-] **L-6** 替換或隔離 `pdf-lib`：需要評估替代方案與回歸測試，列入 ROADMAP。
 - [-] **資訊** 程式碼簽章、資料明文存放：屬於發佈流程與產品決策，已記在報告，不是程式修補。
 - [-] **新增依賴**：不引入 DOMPurify 等新套件（同樣裝不了），改用自寫的白名單淨化器並以測試固定行為。
+
+## G. 後續修補（`1.53.2`～`1.55.0`，第二輪稽核 N-1～N-5）
+
+- [x] **N-1**（中）附件下載：逐跳檢查重導向＋DNS 解析結果；`lib/attachments.js` `isUrlAllowedForFetch`／`fetchWithGuard`
+- [x] **N-2**（中）專案／文件名稱清理並限制寫檔位置（`1.53.2`）
+- [x] **N-3**（低）`lib/permissions.js`：第三方網頁權限預設拒絕，只放行麥克風、複製、全螢幕
+      **取捨**：視訊（鏡頭）、定位、通知等網站功能不可用。
+- [x] **N-4**（低）`package-lock.json`、CI `npm ci --ignore-scripts`、Electron fuses（`runAsNode`、`NODE_OPTIONS`、`--inspect`）
+      **未做**：程式碼簽章（需要憑證）、cookie 加密 fuse（不可回退）、ASAR 完整性（未實機驗證）。
+- [x] **N-5**（低）`lib/ipcValidate.js`＋`lib/ipc/schemas.js`：`guardIpc` 檢查 payload 形狀（涵蓋 64 個寫入／刪除／開啟類頻道）
+      **限制**：未列入規格的頻道仍只有來源檢查；規格只擋型別與長度，不取代各 handler 的業務檢查。
+- [x] 測試：`test/security-n-fixes.test.js`
+- [ ] 實機驗證：匯出對話並下載檔案（含重導向的附件）、語音輸入、OAuth 彈窗登入、打包後 fuses 是否生效
+- [ ] `npm audit`：開發相依 19 個 moderate（`minimatch`），等上游升級；正式相依 0 個
 
 ## 自動化驗證結果（1.42.0 發版前）
 

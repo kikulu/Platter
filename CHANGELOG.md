@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.55.0]
+
+資安稽核 N-1、N-3、N-4、N-5 修補（至此 N-1～N-5 全數處理）。
+
+- **N-1 附件下載內網防護**（`lib/attachments.js`、`lib/conversationCapture.js`）：下載改用 `net.request` 的 `redirect: 'manual'`，**每一跳重導向都重新檢查**（最多 5 跳）；非同源的目的地除了「https＋主機名稱不是私有」之外，還要 **DNS 解析出來的每個位址都不是私有位址**（擋 `127.0.0.1.nip.io`、`localtest.me` 這類網域）；`isPrivateHost` 另外把 224.0.0.0 以上的位址視為不可下載。與頁面同源者（本地端 AI 服務帳號）照舊放行。已知限制：檢查與實際連線之間仍有 DNS rebinding 的時間差，只降低風險、無法根除。
+- **N-3 第三方網頁權限**（新增 `lib/permissions.js`）：帳號 session 與預設 session 都設 `setPermissionRequestHandler`／`setPermissionCheckHandler`，預設拒絕。只放行：僅麥克風的 `media`（語音輸入）、`clipboard-sanitized-write`（複製按鈕）、`fullscreen`；請求來源須為 https（或 localhost）。**行為變更**：網站要求定位、通知、鏡頭、螢幕擷取、剪貼簿讀取等現在一律被拒，視訊功能（例如即時鏡頭對話）會無法使用。
+- **N-4 供應鏈**：提交 `package-lock.json`；CI 改 `npm ci --ignore-scripts`；`build.electronFuses` 關閉 `runAsNode`、`NODE_OPTIONS` 環境變數、`--inspect` 參數（打包版本才生效）。**刻意沒開**：`enableCookieEncryption`（一旦開啟無法回退，且可能影響既有登入的 cookie）、ASAR 完整性驗證與 `onlyLoadAppFromAsar`（`asarUnpack` 了擷取腳本，未實機驗證前不冒險）。**程式碼簽章**需要憑證，屬發佈流程，未處理。
+- **N-5 IPC payload 驗證**（新增 `lib/ipcValidate.js`、`lib/ipc/schemas.js`）：`guardIpc` 在來源檢查後再依頻道規格檢查參數形狀（型別、長度、識別碼不得含控制字元或路徑分隔符），不符丟出 `INVALID_PAYLOAD` 並寫入錯誤日誌。目前涵蓋 64 個會寫檔、刪檔、開外部程式、改設定的頻道；其餘頻道未列入規格，仍只有來源檢查。
+- 新增 `test/security-n-fixes.test.js`（10 項）；`test/attachments.test.js` 的假 Electron 補上 `net.request`。新增 i18n 鍵 `main.security.log.ipcInvalid`（三語系）。
+- **未實測**：`net.request` 的 `redirect: 'manual'`、權限處理器、fuses 都沒有在真實 Electron／打包版本上驗證（此環境無法執行 Electron 圖形介面）；請實機確認「匯出對話並下載檔案」、語音輸入、OAuth 登入彈窗都正常。
+- `npm audit`（含 lockfile）：正式相依 0 個漏洞；開發相依有 19 個 moderate，來源是 `minimatch`（經 `electron-builder`、`eslint` 帶入的 ReDoS／DoS 類）。只影響建置與 lint 階段，不進入打包後的程式；等上游升級，未用 `--force` 強升。
+
 ## [1.54.0]
 
 啟動優化 P0：低記憶體時開機不再一片空白，渲染行程消失後可復原。
@@ -34,7 +46,7 @@
 
 - **問題**：`projects:workflow:saveStepOutputAsDocument` 只清步驟標題、沒清 `project.name`；`documents:pdfExtractPages` 直接用 `doc.name`；備份匯入的文件名稱只限制長度。名稱如 `x/../../../evil` 會讓 `path.join` 跳出 `documents/`（固定副檔名 `.md`／`.pdf`，可覆蓋同名既有檔）。
 - **修正**：兩處寫檔都改用 `sanitizeFileName()`（`lib/attachments.js`）清理名稱、並在寫入前以 `isPathInside(destPath, documentsDir())` 再確認，失敗回 `UNSAFE_PATH`；備份匯入（`lib/backupSanitize.js`）同樣清掉 `name`／`originalName` 的路徑字元（一般名稱不變）。新增測試於 `test/backup-sanitize.test.js`。
-- 其他資安稽核發現（N-1、N-3～N-5）尚未處理。
+- 其他資安稽核發現（N-1、N-3～N-5）於 1.55.0 處理。
 
 ## [1.53.1]
 

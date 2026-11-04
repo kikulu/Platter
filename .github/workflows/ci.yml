@@ -35,7 +35,7 @@ jobs:
         # electron 本身平台安裝檔的下載，避免拖慢/卡住 CI。
         # --ignore-scripts：相依套件的 install／postinstall 腳本不執行（供應鏈風險）；
         # 測試與 lint 只用純 JS 套件，不需要這些腳本。
-        run: npm install --ignore-scripts
+        run: npm ci --ignore-scripts
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1'
 

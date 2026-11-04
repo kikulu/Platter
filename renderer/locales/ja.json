@@ -588,6 +588,7 @@
   "main.search.untitled": "（無題）",
   "main.search.untitledGroup": "（無題のセット）",
   "main.security.log.ipcRejected": "信頼できない送信元からの IPC 呼び出しを拒否しました：{channel}（{source}）",
+  "main.security.log.ipcInvalid": "不正な形式のデータを含む IPC 呼び出しを拒否しました：{channel}",
   "main.security.noSource": "送信元なし",
   "main.process.uncaughtException": "未処理の例外 (uncaughtException)",
   "main.process.unhandledRejection": "未処理の Promise rejection (unhandledRejection)",

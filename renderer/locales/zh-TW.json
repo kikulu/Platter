@@ -588,6 +588,7 @@
   "main.search.untitled": "(未命名)",
   "main.search.untitledGroup": "(未命名套餐)",
   "main.security.log.ipcRejected": "已拒絕來源不明的 IPC 呼叫：{channel}（{source}）",
+  "main.security.log.ipcInvalid": "已拒絕資料格式不正確的 IPC 呼叫：{channel}",
   "main.security.noSource": "無來源",
   "main.process.uncaughtException": "未捕捉的例外 (uncaughtException)",
   "main.process.unhandledRejection": "未處理的 Promise rejection (unhandledRejection)",

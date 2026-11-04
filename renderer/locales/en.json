@@ -588,6 +588,7 @@
   "main.search.untitled": "(Untitled)",
   "main.search.untitledGroup": "(Untitled bundle)",
   "main.security.log.ipcRejected": "Rejected an IPC call from an untrusted source: {channel} ({source})",
+  "main.security.log.ipcInvalid": "Rejected an IPC call with an invalid payload: {channel}",
   "main.security.noSource": "no source",
   "main.process.uncaughtException": "Uncaught exception (uncaughtException)",
   "main.process.unhandledRejection": "Unhandled Promise rejection (unhandledRejection)",

@@ -1,6 +1,6 @@
 # Roadmap
 
-> 最後更新：`1.54.0`（2026-10-28）。這份只放「**還沒做的事**」與「**版本檢核表**」；
+> 最後更新：`1.55.0`（2026-11-04）。這份只放「**還沒做的事**」與「**版本檢核表**」；
 > 每個版本改了什麼見 [`docs/ROADMAP_HISTORY.md`](./docs/ROADMAP_HISTORY.md)（摘要）與 [`CHANGELOG.md`](./CHANGELOG.md)（逐項細節）。
 > 更深入的優化與改版評估見 [`docs/OPTIMIZATION_PROPOSAL.md`](./docs/OPTIMIZATION_PROPOSAL.md)。
 >
@@ -30,8 +30,7 @@
   - [ ] 全域快捷鍵（Windows／macOS／Linux X11／Wayland 各自的註冊與焦點行為）、設定頁快捷鍵錄製
   - [ ] 專案階段提示詞編輯、對話擷取預覽、Claude 實際 DOM 的巢狀去重效果
   - [ ] 專案範本匯入／匯出：檔案對話框多選、從系統檔案管理員拖檔進視窗（`1.46.0`～`1.47.0`）
-- [ ] **依賴鎖定**：目前沒有任何 lockfile。在有網路的環境跑 `npm install`、提交 `package-lock.json`，CI 改 `npm ci`；
-      同時確認 CI 在 `master` 上真的有跑起來（`1.40.1` 才補上 `master` 分支）。
+- [ ] **確認 CI 在 `master` 上真的有跑起來**（`1.40.1` 才補上 `master` 分支；`1.55.0` 起 CI 改用 `npm ci`，lockfile 已提交）。
 - [ ] **補上受版控的 `eslint.config.js`**：`README` 與 `package.json` 都寫了 `npm run lint`，但 repo 沒有 ESLint 設定檔
       （`eslint .` 在 ESLint 10 需要 flat config），所以 `1.47.0` 沒跑 lint。`renderer/project/*.js` 要設成 `sourceType: 'script'`，
       各檔頂端的 `/* global */`／`/* exported */` 註解已備好。
@@ -41,7 +40,9 @@
   - [ ] Electron 30 升級（H-2，要在有網路的環境升級並跑冒煙測試）
   - [ ] Actions 釘 commit SHA
   - [ ] 評估替換或隔離 `pdf-lib`（L-6）
-  - [ ] `npm audit`
+  - [x] N-1～N-5（`1.53.2`～`1.55.0` 完成；N-4 的程式碼簽章除外）
+  - [x] `npm audit`（`1.55.0`：正式相依 0 個；開發相依 19 個 moderate 來自 `minimatch`，等上游升級）
+  - [ ] 實機驗證 `1.55.0`：附件下載（含重導向）、語音輸入、OAuth 彈窗、打包版 fuses
   - [ ] 程式碼簽章
   - [ ] 檢核清單末尾的人工驗證項目
 
@@ -127,5 +128,6 @@
 - [x] `1.53.3`　新增免責聲明 DISCLAIMER.md（三語）與 README 免責聲明段落
 - [x] `1.53.4`　設定視窗「關於」加入免責聲明摘要與完整版連結
 - [x] `1.54.0`　啟動優化 P0：帳號頁面狀態機與載入／崩潰提示、render-process-gone 復原、低記憶體延後載入、分階段啟動
+- [x] `1.55.0`　資安稽核 N-1／N-3／N-4／N-5：附件下載逐跳檢查＋DNS、第三方權限預設拒絕、lockfile＋`npm ci`＋Electron fuses、IPC payload 驗證層
 
 > 下一版：從上面的待辦檢核表挑項目，完成後在此補一行 `- [x]`。

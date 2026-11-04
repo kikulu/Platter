@@ -1,4 +1,4 @@
-const { app, ipcMain, Menu, BrowserWindow } = require('electron');
+const { app, ipcMain, Menu, BrowserWindow, session } = require('electron');
 // 覆蓋全域 console.*（見 lib/console.js 內的說明）：這行必須在最前面就
 // require，讓之後所有模組（含下面這些 lib/** 的 require）的 console.log
 // 都會被攔截記錄進「主控台」即時緩衝區。
@@ -8,6 +8,7 @@ const state = require('./lib/state');
 const { initLogsDatabase, saveLogsDatabase, logError } = require('./lib/logs');
 const { loadAppState } = require('./lib/stores');
 const { createMainWindow } = require('./lib/windows');
+const { applyPermissionPolicy } = require('./lib/permissions');
 const { registerIpcHandlers } = require('./lib/ipc');
 const { startDueTaskReminders } = require('./lib/reminders');
 const { applyTrayHotkey, unregisterTrayHotkey } = require('./lib/trayHotkey');
@@ -56,6 +57,8 @@ if (!gotSingleInstanceLock) {
 
   app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
+    // 資安稽核 N-3：自己的視窗用的預設 session 也套上權限政策（帳號 session 在 lib/windows.js 套用）
+    applyPermissionPolicy(session.defaultSession);
     // 日誌資料庫（sql.js：載入 WASM + 把整個檔案讀進記憶體）不擋住開機：初始化完成前寫入的日誌
     // 會先排進 pendingLogEntries（見 lib/logs.js），完成後補寫。
     initLogsDatabase().catch((err) => console.error('[logs] 初始化失敗', err));
