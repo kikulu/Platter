@@ -136,6 +136,17 @@ contextBridge.exposeInMainWorld('workspaceAPI', {
   openCurrentDevTools: () => ipcRenderer.invoke('settings:openCurrentDevTools'),
   clearAppCache: () => ipcRenderer.invoke('settings:clearCache'),
   clearBackupFiles: () => ipcRenderer.invoke('settings:clearBackupFiles'),
+  getAccountStatuses: () => ipcRenderer.invoke('accounts:getStatuses'),
+  reloadAccount: (accountId) => ipcRenderer.invoke('accounts:reload', accountId),
+  continueWaitingAccount: (accountId) =>
+    ipcRenderer.invoke('accounts:continueWaiting', accountId),
+  onAccountStatus: (cb) => {
+    const handler = (e, payload) => cb(payload);
+    ipcRenderer.on('account:status', handler);
+    return () => ipcRenderer.removeListener('account:status', handler);
+  },
+  getStartupLoad: () => ipcRenderer.invoke('settings:getStartupLoad'),
+  setStartupLoad: (mode) => ipcRenderer.invoke('settings:setStartupLoad', mode),
   getPageConsole: () => ipcRenderer.invoke('settings:getPageConsole'),
   setPageConsole: (enabled) => ipcRenderer.invoke('settings:setPageConsole', enabled),
 

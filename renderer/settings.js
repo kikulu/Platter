@@ -438,6 +438,14 @@
     alert(window.i18n.t('settings.troubleshoot.clearBackupsDone', { count: result.count }));
   });
 
+  const startupLoadSelect = document.getElementById('sel-startup-load');
+  window.workspaceAPI.getStartupLoad().then((mode) => {
+    startupLoadSelect.value = mode;
+  });
+  startupLoadSelect.addEventListener('change', () => {
+    window.workspaceAPI.setStartupLoad(startupLoadSelect.value);
+  });
+
   const pageConsoleCheckbox = document.getElementById('chk-page-console');
   window.workspaceAPI.getPageConsole().then((on) => {
     pageConsoleCheckbox.checked = on === true;

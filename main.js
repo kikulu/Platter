@@ -13,6 +13,7 @@ const { startDueTaskReminders } = require('./lib/reminders');
 const { applyTrayHotkey, unregisterTrayHotkey } = require('./lib/trayHotkey');
 const { getTrayPrefs } = require('./lib/stores');
 const { t } = require('./lib/i18n');
+const { REMINDERS_DELAY_MS } = require('./lib/startupPolicy');
 
 // ---------------------------------------------------------------------------
 // main.js（App 入口）
@@ -55,7 +56,9 @@ if (!gotSingleInstanceLock) {
 
   app.whenReady().then(async () => {
     Menu.setApplicationMenu(null);
-    await initLogsDatabase();
+    // 日誌資料庫（sql.js：載入 WASM + 把整個檔案讀進記憶體）不擋住開機：初始化完成前寫入的日誌
+    // 會先排進 pendingLogEntries（見 lib/logs.js），完成後補寫。
+    initLogsDatabase().catch((err) => console.error('[logs] 初始化失敗', err));
     loadAppState();
     registerIpcHandlers(ipcMain);
     createMainWindow();
@@ -63,7 +66,7 @@ if (!gotSingleInstanceLock) {
     applyTrayHotkey(getTrayPrefs());
     // 開機先立刻檢查一次到期任務/issue，之後每小時再檢查一次（見
     // lib/reminders.js），不用等使用者去開專案視窗才知道有東西過期了。
-    startDueTaskReminders();
+    setTimeout(startDueTaskReminders, REMINDERS_DELAY_MS); // 延後，不跟開機搶資源
   });
 
   app.on('window-all-closed', () => {

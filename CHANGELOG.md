@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.54.0]
+
+啟動優化 P0：低記憶體時開機不再一片空白，渲染行程消失後可復原。
+
+- **帳號頁面狀態機**（`lib/windows.js`）：每個帳號有 `unloaded／loading／ready／unresponsive／crashed／failed` 狀態；頁面不是 `ready` 時把原生 view 藏起來，主視窗（`index.html` 的 `#account-status`）改顯示「載入中／尚未載入／記憶體不足／無回應／載入失敗」與「載入／重新載入／繼續等待」按鈕。網站載入超過 8 秒會先亮出頁面。
+- **崩潰復原**：帳號頁面與所有自己的視窗（主視窗、子視窗、托盤）都處理 `render-process-gone`，原因寫進錯誤日誌。一般崩潰自動重載一次（60 秒內再崩潰不再自動重載，避免迴圈）；`oom`／`memory-eviction` 不自動重載，改顯示提示讓使用者先關其他程式。自己的視窗連續崩潰會跳對話框（重新載入／關閉）。崩潰過的帳號頁面按「重新載入」會整個重建 view。
+- **低記憶體偵測**：開機時用 `process.getSystemMemoryInfo()`，可用記憶體低於 1 GB 或不到總量 8% 時，不自動載入上次使用的帳號頁面（顯示「尚未載入」，按一下才載入）。「設定 → 疑難排解」新增選項：自動（預設）／一律延後／一律載入，下次開機生效。Linux 上 `free` 可能不含可回收快取而偏低，誤判時改成「一律載入」。
+- **分階段啟動**：主視窗改 `show: false`，`ready-to-show` 才顯示（3 秒保險）；托盤視窗等主視窗載入完成後才建立（記憶體吃緊時再延後到 8 秒）；到期提醒延後 5 秒；日誌資料庫初始化（sql.js）不再擋住開機（初始化前的日誌排進既有的 `pendingLogEntries`）；`lastActiveAccountId` 沒變就不重寫設定檔。
+- 帳號頁面尚未載入時匯出對話會回 `NOT_LOADED` 並提示先載入（主視窗與托盤）。
+- 新增 `lib/startupPolicy.js`（純函式）與 `test/startup-policy.test.js`；`test/account-view-visibility.test.js` 配合新的顯示規則更新。新增 IPC：`accounts:getStatuses`、`accounts:reload`、`accounts:continueWaiting`、`settings:getStartupLoad`／`setStartupLoad`，事件 `account:status`。新增 i18n 鍵（三語系）。
+- **未實測**：此環境無法執行 Electron 圖形介面，也沒有低記憶體的真機；狀態切換、提示畫面與實際記憶體改善尚未實測，決策規則以單元測試涵蓋。後續 P1（閒置帳號回收、托盤瘦身）見評估建議。
+
 ## [1.53.4]
 
 設定視窗「關於」加入免責聲明。

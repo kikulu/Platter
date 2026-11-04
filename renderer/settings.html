@@ -317,6 +317,17 @@
       <div class="settings-hint" data-i18n="settings.troubleshoot.clearBackupsHint">
         每次存檔都會留下上一版的備份檔，刪掉的內容可能還殘留在裡面。確定不需要還原時可以清除。
       </div>
+      <div class="settings-hint" style="margin-top: 8px">
+        <span data-i18n="settings.troubleshoot.startupLoad">開機時載入上次使用的帳號頁面</span>
+        <select id="sel-startup-load">
+          <option value="auto" data-i18n="settings.troubleshoot.startupLoadAuto">自動（記憶體吃緊時延後）</option>
+          <option value="defer" data-i18n="settings.troubleshoot.startupLoadDefer">一律延後（按一下才載入）</option>
+          <option value="load" data-i18n="settings.troubleshoot.startupLoadLoad">一律載入</option>
+        </select>
+      </div>
+      <div class="settings-hint" data-i18n="settings.troubleshoot.startupLoadHint">
+        記憶體吃緊的電腦建議用「自動」或「一律延後」，可避免開機時畫面空白；下次開機生效。
+      </div>
       <label class="settings-hint" style="display: block; margin-top: 8px">
         <input type="checkbox" id="chk-page-console" />
         <span data-i18n="settings.troubleshoot.pageConsole">收集第三方頁面的 console 輸出（診斷用，預設關閉）</span>

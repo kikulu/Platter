@@ -28,22 +28,28 @@ Module._load = function (request, ...rest) {
   if (request === 'electron') return fakeElectron;
   return originalLoad.call(this, request, ...rest);
 };
-const { setActiveAccountViewVisible } = require('../lib/windows');
+const {
+  setActiveAccountViewVisible,
+  switchAccount,
+  getAccountStatusSnapshot,
+  continueWaitingAccount,
+} = require('../lib/windows');
 const state = require('../lib/state');
 Module._load = originalLoad;
 
-function fakeView() {
+function fakeView(status = 'ready') {
   const calls = [];
-  return { view: { setVisible: (v) => calls.push(v) }, calls };
+  return { view: { setVisible: (v) => calls.push(v) }, status, calls };
 }
 
 test.after(() => {
   fs.rmSync(tmpUserData, { recursive: true, force: true });
   state.accountViews.clear();
   state.activeAccountId = null;
+  setActiveAccountViewVisible(true);
 });
 
-test('setActiveAccountViewVisible：只對目前作用中的帳號呼叫 setVisible，不動其他帳號的 view', () => {
+test('setActiveAccountViewVisible：遮罩開啟時隱藏目前帳號，關閉後恢復；其他帳號永遠是隱藏的', () => {
   state.accountViews.clear();
   const a = fakeView();
   const b = fakeView();
@@ -52,12 +58,23 @@ test('setActiveAccountViewVisible：只對目前作用中的帳號呼叫 setVisi
   state.activeAccountId = 'acc_a';
 
   setActiveAccountViewVisible(false);
-  assert.deepEqual(a.calls, [false]);
-  assert.deepEqual(b.calls, []); // 不是目前作用中的帳號，不該被動到
+  assert.equal(a.calls.at(-1), false);
+  assert.equal(b.calls.at(-1), false); // 不是目前作用中的帳號，不該顯示
 
   setActiveAccountViewVisible(true);
-  assert.deepEqual(a.calls, [false, true]);
-  assert.deepEqual(b.calls, []);
+  assert.equal(a.calls.at(-1), true);
+  assert.equal(b.calls.at(-1), false);
+});
+
+test('帳號頁面不是 ready（載入中／崩潰／無回應…）時，遮罩關閉後也不會把 view 亮出來', () => {
+  for (const status of ['loading', 'unloaded', 'crashed', 'unresponsive', 'failed']) {
+    state.accountViews.clear();
+    const a = fakeView(status);
+    state.accountViews.set('acc_a', a);
+    state.activeAccountId = 'acc_a';
+    setActiveAccountViewVisible(true);
+    assert.equal(a.calls.at(-1), false, status);
+  }
 });
 
 test('setActiveAccountViewVisible：沒有任何帳號在用時（activeAccountId 是 null）安全地什麼都不做', () => {
@@ -71,4 +88,29 @@ test('setActiveAccountViewVisible：activeAccountId 指到一個已經被移除�
   state.accountViews.clear();
   state.activeAccountId = 'acc_gone';
   assert.doesNotThrow(() => setActiveAccountViewVisible(false));
+});
+
+test('switchAccount(deferLoad)：開機延後載入時只切成目前帳號，不建立 view，狀態是 unloaded', () => {
+  state.accountViews.clear();
+  state.appState = { accounts: [], ui: { lastActiveAccountId: null }, extensions: [], roles: [] };
+  state.accountViews.set('acc_a', { view: null, platform: 'claude', name: 'A', status: 'unloaded' });
+  assert.equal(switchAccount('acc_a', { deferLoad: true }), true);
+  assert.equal(state.activeAccountId, 'acc_a');
+  assert.equal(state.accountViews.get('acc_a').view, null);
+  const snap = getAccountStatusSnapshot();
+  assert.equal(snap.activeAccountId, 'acc_a');
+  assert.equal(snap.statuses.acc_a.status, 'unloaded');
+  assert.equal(switchAccount('acc_missing', { deferLoad: true }), false);
+});
+
+test('continueWaitingAccount：無回應時選擇繼續等待，會把 view 亮出來', () => {
+  state.accountViews.clear();
+  const a = fakeView('unresponsive');
+  state.accountViews.set('acc_a', { ...a, platform: 'claude', name: 'A' });
+  state.activeAccountId = 'acc_a';
+  setActiveAccountViewVisible(true);
+  assert.equal(a.calls.at(-1), false);
+  assert.equal(continueWaitingAccount('acc_a'), true);
+  assert.equal(a.calls.at(-1), true);
+  assert.equal(continueWaitingAccount('acc_none'), false);
 });

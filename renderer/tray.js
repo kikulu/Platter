@@ -342,6 +342,8 @@
         // 使用者自行取消存檔，不用提示
       } else if (result.error === 'NO_ACTIVE_ACCOUNT') {
         showToast(window.i18n.t('tray.exportNoAccount'), 3500, true);
+      } else if (result.error === 'NOT_LOADED') {
+        showToast(window.i18n.t('account.status.exportNotLoaded'), 3500, true);
       } else if (result.error === 'EMPTY_RESULT' || result.error === 'NO_SELECTOR') {
         // 完整說明太長，托盤只提示失敗；詳細診斷請用主視窗的匯出
         showToast(`${window.i18n.t('export.fail')}: ${result.error}`, 4500, true);

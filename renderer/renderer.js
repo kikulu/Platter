@@ -194,7 +194,11 @@
         : '';
       alert(`${window.i18n.t('export.selectorHint')}${detail ? '\n\n' + detail : ''}${tech}`);
     } else {
-      alert(`${window.i18n.t('export.fail')}: ${result.error || ''}`);
+      alert(
+        result.error === 'NOT_LOADED'
+          ? window.i18n.t('account.status.exportNotLoaded')
+          : `${window.i18n.t('export.fail')}: ${result.error || ''}`
+      );
     }
   });
 
@@ -329,6 +333,55 @@
     });
   }
 
+  // --- 帳號頁面狀態提示（載入中／尚未載入／記憶體不足／無回應／失敗） ---
+  // 帳號畫面是原生 view，蓋在這個頁面上；不是 ready 時 main process 會把它藏起來，這裡顯示提示。
+  const accountStatusEl = document.getElementById('account-status');
+  const accountStatusTextEl = document.getElementById('account-status-text');
+  const btnAccountLoad = document.getElementById('btn-account-load');
+  const btnAccountWait = document.getElementById('btn-account-wait');
+  const btnAccountReload = document.getElementById('btn-account-reload');
+  let statusActiveId = null;
+
+  async function refreshAccountStatus() {
+    let snap;
+    try {
+      snap = await window.workspaceAPI.getAccountStatuses();
+    } catch (err) {
+      return;
+    }
+    statusActiveId = snap.activeAccountId;
+    const cur = snap.activeAccountId && snap.statuses[snap.activeAccountId];
+    if (!cur || cur.status === 'ready') {
+      accountStatusEl.hidden = true;
+      return;
+    }
+    const key =
+      cur.status === 'crashed' && cur.reason === 'oom' ? 'oom' : cur.status;
+    accountStatusTextEl.textContent = window.i18n.t(`account.status.${key}`, {
+      name: cur.name || '',
+      reason: cur.reason || '',
+    });
+    btnAccountLoad.hidden = cur.status !== 'unloaded';
+    btnAccountWait.hidden = cur.status !== 'unresponsive';
+    btnAccountReload.hidden = !['crashed', 'unresponsive', 'failed'].includes(cur.status);
+    btnAccountLoad.textContent = window.i18n.t('account.status.load');
+    btnAccountWait.textContent = window.i18n.t('account.status.wait');
+    btnAccountReload.textContent = window.i18n.t('account.status.reload');
+    accountStatusEl.hidden = false;
+  }
+  btnAccountLoad.addEventListener('click', () => {
+    if (statusActiveId) window.workspaceAPI.reloadAccount(statusActiveId);
+  });
+  btnAccountReload.addEventListener('click', () => {
+    if (statusActiveId) window.workspaceAPI.reloadAccount(statusActiveId);
+  });
+  btnAccountWait.addEventListener('click', () => {
+    if (statusActiveId) window.workspaceAPI.continueWaitingAccount(statusActiveId);
+  });
+  window.workspaceAPI.onAccountStatus(() => {
+    refreshAccountStatus();
+  });
+
   async function refreshAccounts() {
     const [accounts, roles] = await Promise.all([
       window.workspaceAPI.listAccounts(),
@@ -341,6 +394,7 @@
     renderAccounts(accounts.filter((a) => a.platform !== 'local'));
     renderLocalServices(accounts.filter((a) => a.platform === 'local'));
     await refreshPromptList();
+    await refreshAccountStatus();
   }
 
   // --- 本地端 AI 服務清單（側邊欄獨立群組） ---

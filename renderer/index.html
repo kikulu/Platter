@@ -345,6 +345,29 @@
         position: relative;
         background: var(--bg-main);
       }
+      #account-status {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 24px;
+        text-align: center;
+        color: var(--text-secondary);
+        background: var(--bg-main);
+      }
+      #account-status[hidden] {
+        display: none;
+      }
+      #account-status-actions {
+        display: flex;
+        gap: 8px;
+      }
+      #account-status-actions button[hidden] {
+        display: none;
+      }
       #main-content .placeholder {
         position: absolute;
         inset: 0;
@@ -647,6 +670,16 @@
     <div id="main-content">
       <div class="placeholder" id="placeholder" data-i18n="sidebar.noAccounts">
         尚未新增任何帳號
+      </div>
+      <!-- 帳號頁面不是 ready 時（載入中／尚未載入／記憶體不足／無回應／失敗），原生的帳號
+           view 會被藏起來，改顯示這個提示與按鈕；狀態來自 main process 的 account:status。 -->
+      <div id="account-status" hidden>
+        <div id="account-status-text"></div>
+        <div id="account-status-actions">
+          <button id="btn-account-load" class="primary" hidden></button>
+          <button id="btn-account-wait" hidden></button>
+          <button id="btn-account-reload" hidden></button>
+        </div>
       </div>
     </div>
 
