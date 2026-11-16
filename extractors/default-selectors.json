@@ -23,5 +23,10 @@
     "turn": "[data-content=\"user-message\"], [data-content=\"ai-message\"]",
     "userHint": "data-content=user-message",
     "fileSelector": ""
+  },
+  "notebooklm": {
+    "turn": ".from-user-container, .to-user-container",
+    "userHint": "from-user-container",
+    "fileSelector": ""
   }
 }

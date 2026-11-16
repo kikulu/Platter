@@ -15,7 +15,7 @@ Platter 是個人開發、以 MIT 授權釋出的開源軟體。使用、修改�
 
 1. **依現狀提供，不附擔保。** 本軟體以「現狀」提供，不保證可用性、正確性、穩定性、適用於特定用途，或不侵害他人權利。作者與貢獻者不對使用或無法使用本軟體所造成的任何直接或間接損害負責，包括資料遺失、帳號受限、營業損失。
 
-2. **非官方專案，與各平台無隸屬關係。** Platter 與 Anthropic（Claude）、OpenAI（ChatGPT）、Google（Gemini）、xAI（Grok）、Microsoft（Copilot）及其他被整合的服務**沒有任何隸屬、授權、贊助或背書關係**。這些名稱與商標屬於各自權利人，本專案僅以識別為目的提及。
+2. **非官方專案，與各平台無隸屬關係。** Platter 與 Anthropic（Claude）、OpenAI（ChatGPT）、Google（Gemini、NotebookLM）、xAI（Grok）、Microsoft（Copilot）及其他被整合的服務**沒有任何隸屬、授權、贊助或背書關係**。這些名稱與商標屬於各自權利人，本專案僅以識別為目的提及。
 
 3. **第三方服務條款由使用者自行遵守。** Platter 在視窗中載入各平台的網頁，並讀取畫面上已渲染的內容來匯出對話，不呼叫平台未公開的 API（見 README「設計原則」）。但各平台的服務條款、使用政策可能限制自動化、擷取或匯出，且可能隨時變更。你需要自行確認並遵守你所使用平台的條款；作者不保證本軟體的使用方式符合任何平台的條款，對因此產生的警告、限流、停權或其他後果概不負責。
 
@@ -39,7 +39,7 @@ Platter is an open-source project developed by an individual and released under 
 
 1. **Provided "as is", without warranty.** The software is provided as is, with no warranty of availability, accuracy, stability, fitness for a particular purpose or non-infringement. The authors and contributors are not liable for any direct or indirect damage arising from its use or inability to use it, including data loss, account restrictions or lost business.
 
-2. **Unofficial; no affiliation.** Platter is **not affiliated with, authorized, sponsored or endorsed by** Anthropic (Claude), OpenAI (ChatGPT), Google (Gemini), xAI (Grok), Microsoft (Copilot) or any other integrated service. Those names and trademarks belong to their respective owners and are used here for identification only.
+2. **Unofficial; no affiliation.** Platter is **not affiliated with, authorized, sponsored or endorsed by** Anthropic (Claude), OpenAI (ChatGPT), Google (Gemini, NotebookLM), xAI (Grok), Microsoft (Copilot) or any other integrated service. Those names and trademarks belong to their respective owners and are used here for identification only.
 
 3. **You are responsible for third-party terms.** Platter loads each platform's website in a window and exports conversations by reading content already rendered on screen; it does not call undocumented APIs (see "Design Principles" in the README). Still, a platform's terms of service or usage policies may restrict automation, scraping or export, and may change at any time. You must check and comply with the terms of every platform you use. The authors make no promise that your use complies with any platform's terms and are not responsible for warnings, rate limits, suspensions or other consequences.
 
@@ -63,7 +63,7 @@ Platter は個人が開発し、MIT ライセンスで公開しているオー�
 
 1. **現状有姿・無保証。** 本ソフトウェアは「現状のまま」提供され、可用性、正確性、安定性、特定目的への適合性、権利非侵害を含め、一切の保証はありません。使用または使用不能から生じた直接的・間接的な損害（データの消失、アカウントの制限、事業上の損失など）について、作者および貢献者は責任を負いません。
 
-2. **非公式であり、各社とは無関係です。** Platter は Anthropic（Claude）、OpenAI（ChatGPT）、Google（Gemini）、xAI（Grok）、Microsoft（Copilot）その他の連携サービスと**提携・許諾・後援・推奨の関係にありません**。これらの名称および商標は各権利者に帰属し、識別のためにのみ記載しています。
+2. **非公式であり、各社とは無関係です。** Platter は Anthropic（Claude）、OpenAI（ChatGPT）、Google（Gemini、NotebookLM）、xAI（Grok）、Microsoft（Copilot）その他の連携サービスと**提携・許諾・後援・推奨の関係にありません**。これらの名称および商標は各権利者に帰属し、識別のためにのみ記載しています。
 
 3. **第三者の利用規約はご自身で遵守してください。** Platter は各プラットフォームのウェブページをウィンドウに読み込み、画面にすでに描画された内容を読み取って会話をエクスポートします。非公開 API は呼び出しません（README の「設計原則」参照）。ただし、各プラットフォームの利用規約やポリシーは自動化・取得・エクスポートを制限している場合があり、予告なく変更されることがあります。利用するプラットフォームの規約はご自身で確認し、遵守してください。作者は、本ソフトウェアの使い方がいずれかの規約に適合することを保証せず、警告、利用制限、アカウント停止などの結果について責任を負いません。
 

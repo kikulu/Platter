@@ -27,6 +27,8 @@
   const grpStepsListEl = document.getElementById('grp-steps-list');
   const grpAddStepSelect = document.getElementById('grp-add-step-select');
   const grpProgressEl = document.getElementById('grp-progress');
+  const kbSaveStatusEl = document.getElementById('kb-save-status');
+  const grpSaveStatusEl = document.getElementById('grp-save-status');
 
   // --- State ---
   let allItems = [];
@@ -52,6 +54,59 @@
 
   function genLocalId(prefix) {
     return `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+  }
+
+  // ---------------------------------------------------------------------
+  // 儲存回饋：按鈕旁顯示「已新增／已儲存」幾秒後淡出；失敗顯示紅字錯誤且
+  // 不自動消失（直到下次儲存或切換項目），避免使用者以為存好了。
+  // ---------------------------------------------------------------------
+  const saveStatusTimers = new WeakMap();
+
+  function showSaveStatus(el, text, kind) {
+    clearTimeout(saveStatusTimers.get(el));
+    el.textContent = text;
+    el.className = `kb-save-status show ${kind}`;
+    if (kind === 'ok') {
+      saveStatusTimers.set(
+        el,
+        setTimeout(() => el.classList.remove('show'), 2500)
+      );
+    }
+  }
+
+  function clearSaveStatus(el) {
+    clearTimeout(saveStatusTimers.get(el));
+    el.className = 'kb-save-status';
+    el.textContent = '';
+  }
+
+  // IPC 錯誤訊息長這樣：「Error invoking remote method 'knowledge:save': Error: INVALID_PAYLOAD」，
+  // 只留最後的原因給使用者看。
+  function saveErrorText(err) {
+    const msg = (err && err.message) || String(err);
+    return msg
+      .replace(/^Error invoking remote method '[^']*':\s*/, '')
+      .replace(/^Error:\s*/, '');
+  }
+
+  // 執行一次儲存：期間停用按鈕（防連點重複新增），結束後顯示結果。
+  // doSave() 回傳要顯示的成功訊息。
+  async function runSave(btn, statusEl, doSave) {
+    if (btn.disabled) return;
+    btn.disabled = true;
+    try {
+      const okText = await doSave();
+      showSaveStatus(statusEl, okText, 'ok');
+    } catch (err) {
+      console.error('[knowledge] save failed', err);
+      showSaveStatus(
+        statusEl,
+        window.i18n.t('knowledge.saveFailed', { error: saveErrorText(err) }),
+        'error'
+      );
+    } finally {
+      btn.disabled = false;
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -353,6 +408,7 @@
     itemEditorEl.style.display = 'flex';
     groupEditorEl.style.display = 'none';
     emptyEl.style.display = 'none';
+    clearSaveStatus(kbSaveStatusEl);
     if (item) {
       titleInput.value = item.title || '';
       tagsInput.value = (item.tags || []).join(', ');
@@ -380,24 +436,33 @@
     titleInput.focus();
   });
 
-  document.getElementById('btn-save').addEventListener('click', async () => {
-    const item = {
-      id: currentItemId,
-      title: titleInput.value.trim() || window.i18n.t('main.knowledge.untitled'),
-      tags: parseTags(tagsInput.value),
-      content: contentInput.value,
-      systemPrompt: systemPromptInput.value,
-      userPrompt: userPromptInput.value,
-      checklist: editingChecklist,
-      roleIds: editingRoleIds,
-    };
-    const kb = await window.workspaceAPI.saveKnowledge(item);
-    allItems = kb.items;
-    allGroups = kb.groups;
-    if (!currentItemId) currentItemId = allItems[allItems.length - 1].id;
-    rebuildTagOptions();
-    renderList();
-  });
+  const btnSave = document.getElementById('btn-save');
+  btnSave.addEventListener('click', () =>
+    runSave(btnSave, kbSaveStatusEl, async () => {
+      const isNew = !currentItemId;
+      const item = {
+        id: currentItemId,
+        title: titleInput.value.trim() || window.i18n.t('main.knowledge.untitled'),
+        tags: parseTags(tagsInput.value),
+        content: contentInput.value,
+        systemPrompt: systemPromptInput.value,
+        userPrompt: userPromptInput.value,
+        checklist: editingChecklist,
+        roleIds: editingRoleIds,
+      };
+      const kb = await window.workspaceAPI.saveKnowledge(item);
+      allItems = kb.items;
+      allGroups = kb.groups;
+      if (isNew) currentItemId = allItems[allItems.length - 1].id;
+      // 名稱留空時存成「未命名」，編輯器也同步顯示，跟左側清單一致
+      titleInput.value = item.title;
+      rebuildTagOptions();
+      renderList();
+      return window.i18n.t(isNew ? 'knowledge.savedNew' : 'knowledge.saved', {
+        title: item.title,
+      });
+    })
+  );
 
   document.getElementById('btn-delete').addEventListener('click', async () => {
     if (!currentItemId) {
@@ -711,6 +776,7 @@
     groupEditorEl.style.display = 'flex';
     itemEditorEl.style.display = 'none';
     emptyEl.style.display = 'none';
+    clearSaveStatus(grpSaveStatusEl);
     rebuildAddStepSelect();
     if (group) {
       grpTitleInput.value = group.title || '';
@@ -762,26 +828,35 @@
     }
   });
 
-  document.getElementById('btn-save-group').addEventListener('click', async () => {
-    const group = {
-      id: currentGroupId,
-      title: grpTitleInput.value.trim() || window.i18n.t('main.knowledge.untitledBundle'),
-      tags: parseTags(grpTagsInput.value),
-      description: grpDescInput.value,
-      steps: rowsToSteps(),
-    };
-    const kb = await window.workspaceAPI.saveKnowledgeGroup(group);
-    allItems = kb.items;
-    allGroups = kb.groups;
-    if (!currentGroupId) currentGroupId = allGroups[allGroups.length - 1].id;
-    // 沒有任何步驟的空階段不會被存下來，存完用實際存下的內容重畫編輯器，
-    // 畫面才會跟資料檔一致。
-    const saved = allGroups.find((g) => g.id === currentGroupId);
-    if (saved) editingRows = stepsToRows(saved.steps || []);
-    renderSteps();
-    rebuildTagOptions();
-    renderList();
-  });
+  const btnSaveGroup = document.getElementById('btn-save-group');
+  btnSaveGroup.addEventListener('click', () =>
+    runSave(btnSaveGroup, grpSaveStatusEl, async () => {
+      const isNew = !currentGroupId;
+      const group = {
+        id: currentGroupId,
+        title:
+          grpTitleInput.value.trim() || window.i18n.t('main.knowledge.untitledBundle'),
+        tags: parseTags(grpTagsInput.value),
+        description: grpDescInput.value,
+        steps: rowsToSteps(),
+      };
+      const kb = await window.workspaceAPI.saveKnowledgeGroup(group);
+      allItems = kb.items;
+      allGroups = kb.groups;
+      if (isNew) currentGroupId = allGroups[allGroups.length - 1].id;
+      // 沒有任何步驟的空階段不會被存下來，存完用實際存下的內容重畫編輯器，
+      // 畫面才會跟資料檔一致。
+      const saved = allGroups.find((g) => g.id === currentGroupId);
+      if (saved) editingRows = stepsToRows(saved.steps || []);
+      grpTitleInput.value = group.title;
+      renderSteps();
+      rebuildTagOptions();
+      renderList();
+      return window.i18n.t(isNew ? 'knowledge.savedNew' : 'knowledge.saved', {
+        title: group.title,
+      });
+    })
+  );
 
   document.getElementById('btn-delete-group').addEventListener('click', async () => {
     if (!currentGroupId) {

@@ -176,10 +176,10 @@ async function capturePlatformConversation(platform, selectorConfig, options) {
         .trim();
     };
     // 平台頁面上的雜訊（相對時間、免責聲明、額度用完橫幅）：不是對話內容
-    const NOISE_TEXT = /^(\d+\s*(seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago|just now|(Claude|ChatGPT|Gemini|Grok|Copilot) (is AI and )?can make mistakes\b.*|You are out of free messages\b.*)$/i;
+    const NOISE_TEXT = /^(\d+\s*(seconds?|minutes?|hours?|days?|weeks?|months?|years?)\s+ago|just now|(Claude|ChatGPT|Gemini|Grok|Copilot) (is AI and )?can make mistakes\b.*|NotebookLM can be inaccurate\b.*|You are out of free messages\b.*)$/i;
 
     // 平台在訊息文字前面塞的角色標籤／思考時間（Grok 的「您」「Grok 運作了5s」、Gemini 的「你說了」）
-    const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Copilot|Copilot said|Copilot 說|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
+    const ROLE_LABEL = /^(您|你|你說了|You said|You|Grok|ChatGPT|Gemini|Claude|Copilot|Copilot said|Copilot 說|NotebookLM|Gemini 說了|ChatGPT said|ChatGPT 說)$/i;
     const THINK_LABEL = /^(運作了|已運作|思考了|已思考|Thought for|Worked for|Thinking)\s*[\d.]*\s*(s|秒|seconds?|分鐘|min)?$/i;
     const stripLabels = (text) => {
       const lines = text.split('\n');
