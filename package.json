@@ -19,7 +19,7 @@
   "author": "Kikulu",
   "license": "MIT",
   "dependencies": {
-    "docx": "^9.7.2",
+    "docx": "^9.15.3",
     "mammoth": "^1.13.0",
     "pdf-lib": "^1.17.1",
     "sql.js": "^1.14.2"
