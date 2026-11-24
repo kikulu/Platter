@@ -18,6 +18,25 @@ test('Copilot：固定網址、預設選擇器、備用選擇器都存在', () =
   fb.copilot.forEach((c) => assert.ok(c.turn && typeof c.turn === 'string'));
 });
 
+test('NotebookLM：固定網址、預設選擇器、備用選擇器、雜訊過濾都存在', () => {
+  assert.equal(PLATFORM_URLS.notebooklm, 'https://notebooklm.google.com');
+  const sel = readJson('extractors/default-selectors.json');
+  assert.ok(sel.notebooklm && sel.notebooklm.turn && sel.notebooklm.userHint);
+  assert.match(sel.notebooklm.turn, /\.to-user-container/);
+  const fb = readJson('extractors/capture-fallbacks.json');
+  assert.ok(Array.isArray(fb.notebooklm) && fb.notebooklm.length >= 1);
+  fb.notebooklm.forEach((c) => assert.ok(c.turn && typeof c.turn === 'string'));
+  const capture = fs.readFileSync(path.join(root, 'extractors/domCapture.js'), 'utf-8');
+  assert.match(capture, /NotebookLM can be inaccurate/);
+});
+
+test('NotebookLM 在各視窗的平台標籤都有對應', () => {
+  ['renderer.js', 'conversation.js', 'documents.js', 'team.js'].forEach((f) => {
+    const src = fs.readFileSync(path.join(root, 'renderer', f), 'utf-8');
+    assert.ok(src.includes("notebooklm: 'NotebookLM'"), `${f} 缺 NotebookLM 標籤`);
+  });
+});
+
 test('每個平台都有預設選擇器，且帳號新增／選擇器設定的 UI 都列出它', () => {
   const sel = readJson('extractors/default-selectors.json');
   const accountHtml = fs.readFileSync(path.join(root, 'renderer/account.html'), 'utf-8');

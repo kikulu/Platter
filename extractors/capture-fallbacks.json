@@ -85,5 +85,19 @@
       "turn": "[data-testid=\"user-message\"], [data-testid=\"copilot-message\"]",
       "userHint": "data-testid=user-message"
     }
+  ],
+  "notebooklm": [
+    {
+      "turn": ".from-user-container, .to-user-container",
+      "userHint": "from-user-container"
+    },
+    {
+      "turn": "chat-message",
+      "userHint": "has:.from-user-container"
+    },
+    {
+      "turn": ".chat-message-pair .from-user-container, .chat-message-pair .to-user-container",
+      "userHint": "from-user-container"
+    }
   ]
 }

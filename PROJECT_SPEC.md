@@ -12,7 +12,7 @@
 開發一款基於 **Electron** 的桌面應用程式，讓使用者能在同一個視窗內：
 
 1. 透過左側側邊欄（多層可收合清單）切換管理多個 AI 平台（Claude、ChatGPT、
-   Gemini、Grok、Microsoft Copilot）的不同帳號，每個帳號擁有完全獨立的登入狀態（Session
+   Gemini、Grok、Microsoft Copilot、NotebookLM）的不同帳號，每個帳號擁有完全獨立的登入狀態（Session
    Isolation）。
 2. 為每個帳號指定一個「角色」（職務／人設），角色可配置專屬的預設提示詞。
 3. 手動觸發、擷取畫面上目前可見對話，存成 Markdown 或 JSON。
@@ -92,7 +92,8 @@ JavaScript / HTML / CSS（不使用 React/Vue，保持輕量），`electron-buil
   `WebContentsView`，`mainWindow.contentView.addChildView(view)` 掛進
   主視窗，`loadURL()` 載入對應平台網址（`https://claude.ai`、
   `https://chatgpt.com`、`https://gemini.google.com`、
-  `https://grok.com`、`https://copilot.microsoft.com`）。
+  `https://grok.com`、`https://copilot.microsoft.com`、
+  `https://notebooklm.google.com`）。
 - **本地端 AI 服務**（`platform === 'local'`，例如 Ollama、LM Studio、
   Stable Diffusion WebUI、ComfyUI）：跟上面四個雲端平台共用同一套
   `WebContentsView` / session partition 機制，唯一差異是網址不是
@@ -1181,7 +1182,7 @@ function openChildWindow({
 
 ### 9.1 新增帳號視窗（`account.html` / `account.js`）
 
-平台下拉選單（Claude/ChatGPT/Gemini/Grok/Copilot/本地端 AI 服務）+ 帳號名稱
+平台下拉選單（Claude/ChatGPT/Gemini/Grok/Copilot/NotebookLM/本地端 AI 服務）+ 帳號名稱
 輸入框 + 角色（可選）下拉選單 + 取消/確認新增按鈕。選「本地端 AI
 服務」時多顯示服務類型（LLM／文生圖／自訂）跟網址輸入框（含 Ollama／
 SD WebUI／ComfyUI 範例網址提示），確認前檢查網址格式（必須以
@@ -1404,6 +1405,12 @@ Enter 跳到選中的項目，Esc 或點背景關閉。比對範圍跟各自視�
 （包含空字串——代表使用者刻意清空）一律不碰**，用
 `Object.prototype.hasOwnProperty` 判斷「缺少」而不是看值是否為假值，
 避免把使用者刻意清空的欄位誤判成缺少又補回預設值。
+
+**NotebookLM（1.56.0）**：預設 `turn` 為 `.from-user-container, .to-user-container`、
+`userHint` 為 `from-user-container`（class 比對）；`capture-fallbacks.json` 另有
+`chat-message` + `has:.from-user-container` 等備用寫法。擷取的是筆記本頁右側「對話」
+面板裡已渲染的問答；來源清單、Studio 產出（語音摘要、筆記、心智圖等）不在擷取範圍。
+頁尾免責聲明「NotebookLM can be inaccurate…」列入雜訊過濾。
 
 UI：平台下拉選單、「訊息容器 selector」輸入框、「使用者訊息判斷關鍵字」
 輸入框、「重設此平台為預設值」/「儲存」按鈕。

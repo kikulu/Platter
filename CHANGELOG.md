@@ -1,5 +1,28 @@
 # Changelog
 
+## [1.56.0]
+
+新增 **Google NotebookLM** 平台，可以像 Gemini 一樣新增多個 NotebookLM 帳號（各自獨立登入），並擷取對話。
+
+- **NotebookLM**（`https://notebooklm.google.com`）：`lib/constants.js` 的 `PLATFORM_URLS`、新增帳號平台下拉選單、選擇器設定分頁、各視窗的平台標籤（`renderer.js`／`conversation.js`／`documents.js`／`team.js`）。
+- **選擇器**：`extractors/default-selectors.json` 預設 `.from-user-container, .to-user-container`（`userHint`：`from-user-container`）；`extractors/capture-fallbacks.json` 新增 notebooklm 備用清單三組（含 `chat-message` + `has:.from-user-container`）。既有安裝升級時由 `applyIncrementalSelectorDefaults` 自動補上 notebooklm 預設選擇器，不影響其他平台已改過的值。
+- **雜訊過濾**（`extractors/domCapture.js`）：頁尾「NotebookLM can be inaccurate…」免責聲明不當成訊息；`NotebookLM` 角色標籤列入去除清單。
+- 擷取範圍：筆記本頁右側「對話」面板裡目前已渲染的問答。來源清單、Studio 產出（語音摘要、筆記、心智圖等）不擷取；回答中的引用編號（1、2…）是頁面上的按鈕文字，可能會混在匯出的文字裡。
+- 新增測試（`test/platforms.test.js`）：NotebookLM 網址、預設／備用選擇器、雜訊過濾、四個視窗的平台標籤。
+- **未實測**：選擇器依 NotebookLM 網頁常見的 `.from-user-container`／`.to-user-container` class 推定，尚未在真實登入頁面驗證；若擷取不到或只抓到單一角色，請在 NotebookLM 帳號上跑診斷並貼報告。Google 登入沿用 Gemini 相同的帳號視圖規則（一般 http(s) 導覽與 OAuth 彈窗放行），沒有另外處理。
+
+## [1.55.1]
+
+修正：知識庫新增或編輯提示詞／套餐後按「儲存」沒有任何回饋。
+
+- **儲存結果提示**（`renderer/knowledge.js`、`knowledge.html`、`knowledge.css`）：「儲存」與「儲存套餐」按鈕左側新增狀態文字（`role="status"`），新項目顯示「✓ 已新增「名稱」」、既有項目顯示「✓ 已儲存「名稱」」，約 2.5 秒後淡出；切換項目時清除。
+- **錯誤不再被吞掉**：原本 `saveKnowledge`／`saveKnowledgeGroup` 被拒（例如 1.55.0 的 IPC payload 驗證回 `INVALID_PAYLOAD`）時沒有任何提示，畫面看起來像存成功。現在顯示紅字「儲存失敗：原因」且不自動消失，並寫到主控台。
+- **防連點**：儲存期間停用按鈕，避免新項目連按兩次被新增成兩筆。
+- 名稱留空時存成「未命名」，編輯器的名稱欄也同步顯示，與左側清單一致。
+- 新增 i18n 鍵（三語系）：`knowledge.savedNew`、`knowledge.saved`、`knowledge.saveFailed`。
+- `package-lock.json` 的版本號原本停在 1.54.0，一併同步。
+- **未實測**：此環境無法執行 Electron 圖形介面，提示的位置與淡出效果尚未在實機確認。
+
 ## [1.55.0]
 
 資安稽核 N-1、N-3、N-4、N-5 修補（至此 N-1～N-5 全數處理）。

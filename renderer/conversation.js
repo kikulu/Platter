@@ -5,6 +5,7 @@
     gemini: 'Gemini',
     grok: 'Grok',
     copilot: 'Copilot',
+    notebooklm: 'NotebookLM',
   };
 
   const listEl = document.getElementById('conv-list');

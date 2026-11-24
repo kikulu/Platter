@@ -113,6 +113,26 @@ body {
   gap: 8px;
   margin-top: 14px;
   justify-content: flex-end;
+  align-items: center;
+}
+
+/* 儲存結果提示（存完顯示幾秒後自動消失；失敗用紅字且不自動消失） */
+.kb-save-status {
+  margin-right: auto;
+  font-size: 12px;
+  color: var(--text-secondary);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+.kb-save-status.show {
+  opacity: 1;
+}
+.kb-save-status.ok::before {
+  content: '✓ ';
+  color: #30a46c;
+}
+.kb-save-status.error {
+  color: var(--danger);
 }
 
 #kb-empty {
