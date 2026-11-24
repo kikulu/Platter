@@ -1,5 +1,29 @@
 # Changelog
 
+## [1.57.0]
+
+新增 6 組**細分階段**的開發類專案範本，並讓流程步驟可以**跨對話交接**（對話太長、換帳號或換平台時，新的 AI 對話能從目前步驟接手）。
+
+- **新範本**（`extractors/default-project-templates.json`＋`extractors/i18n/{en,ja}/project-templates.json`，三語）：
+  - 行動 App 開發（iOS／Android／跨平台）`proj-tpl-mobile-app`
+  - Web 應用開發（前端＋後端／SaaS）`proj-tpl-web-app`
+  - 桌面應用開發（Windows／macOS／Linux）`proj-tpl-desktop-app`
+  - 後端 API／服務開發 `proj-tpl-backend-api`
+  - 瀏覽器擴充功能開發 `proj-tpl-browser-extension`
+  - AI／LLM 應用開發（RAG／Agent）`proj-tpl-llm-app`
+- 每組 **9 階段、19 步**（既有開發範本是 3-4 階段、7-8 步）：構想與範圍 → 需求規格 → 體驗設計（後端是 API 設計、AI 應用是互動與提示詞設計）→ 技術架構 → 專案骨架與工程基礎 → 實作規劃與開發 → 測試與品質（AI 應用是評測與安全）→ 發布（上架送審／部署上線／打包與發布）→ 上線後維運與迭代。平台相關的步驟各自撰寫（例如 App 的權限與送審、桌面的簽章與自動更新、擴充功能的最小權限、AI 應用的評測集與提示詞注入防護）；問題定義、MVP、使用者故事、CI、任務拆解、單一任務實作、上線監控、下一版規劃是共用骨架，依範本帶入不同的決策清單與檢查項目。
+- 「實作規劃與開發」階段專為跨對話設計：任務拆解要求「一個任務能在一段 AI 對話內完成」並標出交接點；「單一任務實作」可重複使用，結尾固定產出交接摘要；程式碼審查重用知識庫 `kb-default-023`。每個階段都有 2 個知識庫相關提示詞。
+- 提示詞不綁定特定框架或商店政策的細節：版本號、平台政策、模型型號與價格一律要求標「待確認」並以官方文件為準；資安檢查步驟限定只檢查自己的系統。
+- **跨對話交接**（`lib/workflow.js`）：
+  - 每個流程步驟新增 `handoffNote`（交接筆記，舊資料由 `normalizeWorkflow` 補空字串；`projects:workflow:updateStep` 接受此欄位）。
+  - `composeHandoffRequestPrompt()`：貼到**原本的對話**，請 AI 依固定格式（目前進度、已確定的決策、產出與檔案、未完成事項、待確認問題、注意事項、下一個動作）整理交接摘要。
+  - `composeHandoffPrompt()`：貼到**新的對話**的交接包——流程總覽（每一步 ✓／▶／○ 與「目前步驟」標記）、前面步驟的產出（沿用「帶入方式」設定；選「不帶入」時改請 AI 需要再索取）、既有規格（`useBaseContext` 步驟）、交接筆記、本步驟提示詞、接手方式（有交接筆記時要求從未完成處接續、不要重來）。
+  - 新 IPC：`projects:workflow:composeHandoff`、`projects:workflow:composeHandoffRequest`；`projects:workflow:dispatch` 新增 `mode`（`'handoff'` 時剪貼簿改放交接包）。三者都加進 `lib/ipc/schemas.js`。
+- **畫面**（`renderer/project.html`、`project-workflow.js`、`project-workflow-detail.js`、`project.css`）：步驟詳細面板新增可收合的「跨對話交接」區塊（交接筆記離開輸入框即存檔；「複製交接摘要請求」「複製交接包」兩個按鈕，顯示複製字數）；已有筆記時標題顯示「已有交接筆記」。派發面板新增「改複製交接包」勾選。
+- 新增 i18n 鍵（三語系）：`project.wfHandoff*`、`project.wfDispatchHandoff*`、`main.workflow.handoff.*`。
+- 新增 `test/workflow-handoff.test.js`（10 項：交接包／摘要請求內容、contextMode、筆記正規化、IPC 規格、新範本三語展開與無殘留標記）；`test/builtin-content.test.js` 內建範本數改為 13。
+- **未實測**：此環境無法執行 Electron 圖形介面，交接區塊的版面、剪貼簿複製與派發勾選尚未在實機確認。新範本的提示詞只做了結構與展開的單元測試，沒有實際拿去各家 AI 跑過驗證產出品質。
+
 ## [1.56.0]
 
 新增 **Google NotebookLM** 平台，可以像 Gemini 一樣新增多個 NotebookLM 帳號（各自獨立登入），並擷取對話。

@@ -33,6 +33,7 @@ const wfDispatchPanelEl = document.getElementById('wf-dispatch-panel');
 const wfDispatchTargetEl = document.getElementById('wf-dispatch-target');
 const wfDispatchGoBtn = document.getElementById('btn-wf-dispatch-go');
 const wfDispatchLastEl = document.getElementById('wf-dispatch-last');
+const wfDispatchHandoffEl = document.getElementById('wf-dispatch-handoff');
 let allRoles = [];
 const wfPrevBtn = document.getElementById('btn-wf-prev');
 const wfDoneBtn = document.getElementById('btn-wf-done');
@@ -170,10 +171,12 @@ wfDispatchGoBtn.addEventListener('click', async () => {
   const wf = currentWorkflow();
   const step = wf && wf.steps.find((s) => s.id === wfSelectedStepId);
   if (!accountId || !step) return;
+  const handoff = wfDispatchHandoffEl.checked;
   const res = await window.workspaceAPI.dispatchWorkflowStep(
     currentProjectId,
     step.id,
-    accountId
+    accountId,
+    handoff ? 'handoff' : 'prompt'
   );
   if (!res || !res.ok) {
     wfDispatchLastEl.textContent = window.i18n.t('project.wfDispatchFailed');
@@ -188,7 +191,11 @@ wfDispatchGoBtn.addEventListener('click', async () => {
   renderWorkflow();
   wfDispatchPanelEl.style.display = 'flex';
   wfDispatchLastEl.textContent = window.i18n.t(
-    res.copied ? 'project.wfDispatchDone' : 'project.wfDispatchNotCopied',
+    res.copied
+      ? handoff
+        ? 'project.wfDispatchHandoffDone'
+        : 'project.wfDispatchDone'
+      : 'project.wfDispatchNotCopied',
     { name: res.accountName }
   );
   wfDispatchLastEl.className = res.copied ? 'ok' : 'error';

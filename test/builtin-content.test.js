@@ -44,7 +44,7 @@ for (const lang of ['en', 'ja']) {
     assert.equal(base.roles.length, 8);
     assert.equal(base.kb.items.length, 85);
     assert.equal(base.kb.groups.length, 9);
-    assert.equal(base.tpl.length, 7);
+    assert.equal(base.tpl.length, 13);
 
     base.roles.forEach((r, i) => {
       assert.notEqual(tr.roles[i].name, r.name, `role ${r.id} name`);

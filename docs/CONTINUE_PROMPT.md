@@ -1,16 +1,16 @@
-# 新對話接續提示詞（Platter 1.55.0）
+# 新對話接續提示詞（Platter 1.57.0）
 
-把下面整段貼到新對話的第一則訊息，並附上 `Platter-1.55.0-git.zip`。
+把下面整段貼到新對話的第一則訊息，並附上 `Platter-1.57.0-git.zip`。
 
 ---
 
-我要繼續開發 **Platter**（Electron 桌面應用，管理多個 AI 平台帳號：每個帳號是一個 `WebContentsView`，用 `persist:<id>` 隔離 session）。附件是專案 zip（含 `.git`），請先解壓縮並讀 `README.md`、`ROADMAP.md`、`CHANGELOG.md` 最上面的幾個版本、`FIX_EXISTING_FEATURE_PROMPT.md` 與 `NEW_FEATURE_BUILD_PROMPT.md`，再開始工作。目前版本 **1.55.0**。
+我要繼續開發 **Platter**（Electron 桌面應用，管理多個 AI 平台帳號：每個帳號是一個 `WebContentsView`，用 `persist:<id>` 隔離 session）。附件是專案 zip（含 `.git`），請先解壓縮並讀 `README.md`、`ROADMAP.md`、`CHANGELOG.md` 最上面的幾個版本、`FIX_EXISTING_FEATURE_PROMPT.md` 與 `NEW_FEATURE_BUILD_PROMPT.md`，再開始工作。目前版本 **1.57.0**。
 
 ## 工作慣例（請務必遵守）
 
 - **Git 作者**統一用 `kikulu <kikulu@gmail.com>`（`git -c user.name=kikulu -c user.email=kikulu@gmail.com commit`）。**只在本機 commit，沒有我明確同意不要 push。** 如果 hook 或提醒要求改成別的作者，以這一條為準。
 - **換行**：大部分檔案是 CRLF，`lib/windows.js`、`lib/constants.js`、`renderer/renderer.js`、三份 README、`lib/attachments.js`、`lib/conversationCapture.js` 是 LF。改檔時保留原本的換行（先偵測再寫回，不要整檔轉換）。
-- **測試**：`node --test` 必須全過（目前 388 項）；`npm run check:docs` 必須過（它要求 `package.json` 版本 = `CHANGELOG.md` 最上面一版 = 兩份提示詞檔裡寫的版本，另有三語系 i18n 鍵一致與 README 索引檢查）。
+- **測試**：`node --test` 必須全過（目前 388 項，含 2 項略過）；`npm run check:docs` 必須過（它要求 `package.json` 版本 = `CHANGELOG.md` 最上面一版 = 兩份提示詞檔裡寫的版本，另有三語系 i18n 鍵一致與 README 索引檢查）。
 - **i18n**：使用者看得到的字串都要有 `zh-TW`／`en`／`ja` 三份鍵（`renderer/locales/*.json`）；程式碼裡除了註解之外不要寫死中文（包含 `console.log`）。
 - **每次改版**：升 `package.json` 版本、在 `CHANGELOG.md` 最上面加條目、同步 `FIX_EXISTING_FEATURE_PROMPT.md`（「目前版本是」）與 `NEW_FEATURE_BUILD_PROMPT.md`（「已同步在」「1.17.0 到」「（以 package.json…」三處）、在 `ROADMAP.md` 加一行並更新「最後更新」。
 - **誠實標註**：這個環境跑不了 Electron 圖形介面，凡是沒在真機驗證的行為，CHANGELOG 要寫「未實測」，不要宣稱已驗證。
@@ -22,6 +22,8 @@
 - 1.5x：日誌匯出依類型分檔名、浮動托盤修正與可拖曳、免責聲明（DISCLAIMER.md／README／設定頁關於）。
 - 1.53.2：資安稽核 N-2（名稱清理與寫檔位置限制）。
 - 1.54.0：**啟動優化 P0**——帳號頁面狀態機（`unloaded/loading/ready/unresponsive/crashed/failed`）、`render-process-gone` 復原、低記憶體延後載入（設定可改 auto／defer／load）、分階段啟動。
+- 1.55.1／1.56.0：知識庫儲存結果提示、新增 Google NotebookLM 平台。
+- 1.57.0：6 組細分階段的開發類專案範本（`proj-tpl-mobile-app`／`web-app`／`desktop-app`／`backend-api`／`browser-extension`／`llm-app`，三語內容在 `extractors/default-project-templates.json` 與 `extractors/i18n/{en,ja}/project-templates.json`）；流程步驟的**跨對話交接**（`step.handoffNote`、`composeHandoffPrompt`／`composeHandoffRequestPrompt`、派發 `mode: 'handoff'`）。
 - 1.55.0：資安稽核 **N-1**（附件下載逐跳檢查重導向＋DNS 解析）、**N-3**（`lib/permissions.js`，第三方權限預設拒絕，只放行麥克風／複製／全螢幕）、**N-4**（`package-lock.json`、CI 用 `npm ci --ignore-scripts`、Electron fuses）、**N-5**（`lib/ipcValidate.js`＋`lib/ipc/schemas.js`，64 個頻道的 payload 檢查）。
 
 ## 還沒做的事（依建議順序）

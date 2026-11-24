@@ -325,5 +325,803 @@
         "relatedPrompts": [{}, {}, {}]
       }
     ]
+  },
+  "proj-tpl-mobile-app": {
+    "name": "Mobile App Development (iOS / Android / Cross-Platform)",
+    "description": "Take an app idea all the way to store release and post-launch iteration, in 9 stages and 19 steps: problem and MVP, user stories and non-functional requirements (offline, permissions, privacy), navigation and screen specs, native vs. cross-platform choice and architecture, project skeleton and CI, a task breakdown sized at one task per conversation with task-by-task implementation, testing and pre-submission review, store submission and listing assets, and post-launch monitoring and the next version. During implementation you can use \"Hand off to another conversation\" to continue the same task across conversations or accounts.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this app idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- app idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: iOS, Android or both; whether sign-in is needed; whether a backend and cloud sync are needed; whether there are payments or subscriptions; whether push notifications are needed. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Non-Functional Requirements (Performance, Offline, Permissions & Privacy)",
+            "prompt": "# Non-Functional Requirements (Performance, Offline, Permissions & Privacy)\n\n## Role & Goal\nYou are a mobile app architect. Spell out the requirements beyond user stories that determine app quality and whether it can pass store review.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Target platforms and minimum OS versions: [Please fill in]\n- Personal or sensitive data the app will handle: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance targets**: cold start time, screen transitions, list scrolling, battery and data usage targets, and how to measure them\n2. **Offline and poor connectivity**: which features work offline, how data is cached and synced, how conflicts are resolved\n3. **System permissions**: permissions needed (camera, location, notifications...), when to request them, and the fallback if denied\n4. **Privacy and data protection**: data collection inventory, storage location and encryption, account deletion flow, and what the stores' privacy disclosures will require\n5. **Compatibility and accessibility**: supported screen sizes, dark mode, font scaling, screen readers and localization\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: Experience Design",
+        "steps": [
+          {
+            "title": "Information Architecture & User Flows",
+            "prompt": "# Information Architecture & User Flows\n\n## Role & Goal\nYou are a mobile UX designer. Based on the user stories, design the app's navigation structure and main flows, following iOS and Android conventions respectively.\n\n## Input\n- User stories and non-functional requirements: (see the output of the previous steps)\n\n## Output Requirements\n1. **Navigation structure**: tab bar / drawer / stack choices with reasons, and the screen hierarchy tree\n2. **Main flows**: step-by-step flows for first launch and onboarding, sign-up/sign-in, the core task, and payment (if any)\n3. **Screen inventory**: purpose, entry points, main components, and empty / loading / error states for each screen\n4. **Platform differences**: how back gestures, system sharing, and deep links from notifications are handled on each platform\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Screen Specs & Design System",
+            "prompt": "# Screen Specs & Design System\n\n## Role & Goal\nYou are a UI designer. Turn the screen inventory into specs that engineers and AI can implement directly.\n\n## Input\n- Information architecture and screen inventory: (see the output of the previous steps)\n- Brand colors, fonts or existing designs: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Design tokens**: names and values for colors (including dark mode), type scale, spacing, radii and shadows\n2. **Component list**: buttons, inputs, list items, dialogs, etc., with all states and minimum touch target sizes\n3. **Per-screen specs**: layout structure, components used, copy, interactions and transitions\n4. **Copy and localization**: string list and key naming rules, flagging places where longer translations may break the layout\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Technology Choice (Native or Cross-Platform)",
+            "prompt": "# Technology Choice (Native or Cross-Platform)\n\n## Role & Goal\nYou are a mobile development advisor. Compare native and cross-platform options against the requirements and team situation, and give a reasoned recommendation.\n\n## Input\n- Requirements and non-functional requirements: (see the output of the previous steps)\n- Languages and frameworks the team knows: [Please fill in]\n- Device features or third-party SDKs required: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Option comparison**: native (Swift / Kotlin) vs. 2-3 cross-platform frameworks: performance, device feature support, development speed, learning curve, long-term maintenance\n2. **Recommendation and reasons**: which one, and under what conditions you would switch to another\n3. **Supporting choices**: state management, local database, networking, push notifications, crash reporting, analytics\n4. **Backend needs**: build a backend, use a BaaS, or none at all, with trade-offs\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "App Architecture & Data Model",
+            "prompt": "# App Architecture & Data Model\n\n## Role & Goal\nYou are a mobile app architect. Design the code architecture for the chosen stack so features can be built and tested independently.\n\n## Input\n- Technology choice and screen specs: (see the output of the previous steps)\n\n## Output Requirements\n1. **Layering**: responsibilities and dependency direction of the UI / state / domain / data layers\n2. **Modules and directory structure**: feature-based directory tree and naming rules\n3. **Data model**: main entities, fields and relations, local vs. remote mapping, and database migration strategy\n4. **API interface**: endpoints the app needs, request/response formats, error codes and retry strategy\n5. **Key sequence flows**: sequences for sign-in and token refresh, offline sync, and push handling\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Development Conventions",
+            "prompt": "# Project Setup & Development Conventions\n\n## Role & Goal\nYou are a mobile engineer. Set up a project skeleton and conventions based on the architecture so development can start right away.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n- App name and bundle ID / application ID: [Please fill in]\n\n## Output Requirements\n1. **Setup steps**: commands to create the project and tools to install; mark versions as [TBD: ...] for me to verify\n2. **Directory skeleton**: folders and placeholder files following the architecture\n3. **Environment configuration**: how to switch between dev / staging / production, and how API endpoints and keys are managed\n4. **Coding conventions**: formatting, lint, naming, commit messages and branching strategy\n5. **Initial README**: how to run on simulators/emulators and real devices\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: builds for both platforms, UI tests on simulators/emulators, app size changes, keeping signing configuration out of the repo, license and vulnerability scans of dependencies\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this app's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Testing & Quality",
+        "steps": [
+          {
+            "title": "Test Strategy & Test Cases",
+            "prompt": "# Test Strategy & Test Cases\n\n## Role & Goal\nYou are a mobile QA engineer. Design a test strategy covering unit, integration, UI and real-device testing.\n\n## Input\n- User stories, acceptance criteria and architecture: (see the output of the previous steps)\n- Test devices available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Test pyramid**: what each layer covers, which tools, and the suggested ratio\n2. **Device matrix**: OS versions, screen sizes and low-end devices chosen for the target users\n3. **Test cases**: one per acceptance criterion, including interruptions: incoming call, backgrounding, network loss, denied permission, low battery\n4. **Beta test plan**: size, duration and feedback channel for internal and external testing\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Performance, Security & Accessibility Review",
+            "prompt": "# Performance, Security & Accessibility Review\n\n## Role & Goal\nYou are a mobile app quality advisor. Before submission, run a performance, security and accessibility review to find issues that would cause rejection or bad reviews.\n\n## Input\n- Non-functional requirements and current implementation status: (see the output of the previous steps)\n- Performance numbers measured so far or known issues: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance checklist**: startup, memory, jank, app size and background battery use, each with how to measure and pass criteria\n2. **Security checklist**: local storage encryption, credentials and keys, transport security, personal data in logs, third-party SDK permissions\n3. **Accessibility checklist**: screen reader labels, contrast, dynamic type, touch targets, not relying on color alone\n4. **Issue list**: sorted by severity, marking what must be fixed before submission\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Store Submission",
+        "steps": [
+          {
+            "title": "Store Submission Preparation & Checklist",
+            "prompt": "# Store Submission Preparation & Checklist\n\n## Role & Goal\nYou are an app publishing advisor. Help me prepare everything needed before submitting to the App Store and Google Play, to reduce the chance of rejection.\n\n## Input\n- App features, permissions and data collection: (see the output of the previous steps)\n- Developer account status, whether there are payments or subscriptions, whether sign-in is required: [Please fill in]\n\n## Output Requirements\n1. **Submission checklist**: what each store needs: version numbers, signing, privacy disclosures, content rating, a test account for reviewers\n2. **Common rejection risks**: check each against this app's features (permission purpose strings, payment rules, account deletion, reporting for user-generated content, etc.); mark policy details [TBD: ...] for me to check in the official docs\n3. **Build and signing process**: steps for release builds, safekeeping of signing credentials, and automated upload\n4. **Staged rollout**: what percentage to start with, which metrics to watch, when to pause\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Store Listing & Launch Assets",
+            "prompt": "# Store Listing & Launch Assets\n\n## Role & Goal\nYou are an app marketing copywriter and ASO advisor. Prepare the text and asset plan needed for the store listings.\n\n## Input\n- Value proposition and main features: (see the output of the previous steps)\n- Countries / languages to publish in: [Please fill in]\n\n## Output Requirements\n1. **App name and subtitle options**: 3 options with keyword reasoning; mark character limits [TBD: ...]\n2. **Store description**: short and full descriptions; the first three lines must state the value\n3. **Screenshot script**: what each of 5-8 screenshots shows and its caption\n4. **Release notes template**: a format usable for the first version and later updates\n5. **Privacy policy and support page outline**: sections to cover; mark legal content as needing professional review\n\n## Notes\nDo not invent figures, ratings or user testimonials; do not use other apps' names or trademarks for comparison."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: crash and ANR rate, startup time, errors by OS version, key funnel conversion, store ratings and reviews, retention\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
+  },
+  "proj-tpl-web-app": {
+    "name": "Web App Development (Frontend + Backend / SaaS)",
+    "description": "Take a website or SaaS idea through deployment and iteration, in 9 stages and 19 steps: problem and MVP, user stories and non-functional requirements (performance, browsers, SEO, security), sitemap and responsive specs, technology choice and system / data / API design, local development environment and CI, a task breakdown sized at one task per conversation with task-by-task implementation, testing and pre-launch review, deployment process and required launch pages, and post-launch monitoring and the next version. During implementation you can use \"Hand off to another conversation\" to continue the same task.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this web app idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- web app idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: whether accounts and permission levels are needed; whether there are payments or subscriptions; which public pages need SEO; whether an admin back office is needed; whether multiple languages or multi-tenancy are needed. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Non-Functional Requirements (Performance, Browsers, SEO, Security)",
+            "prompt": "# Non-Functional Requirements (Performance, Browsers, SEO, Security)\n\n## Role & Goal\nYou are a web systems architect. Spell out the requirements beyond user stories that determine site quality and running costs.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Estimated users and peak traffic: [Please fill in, or leave blank if none]\n- Personal, payment or sensitive data handled: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance targets**: targets and measurement for first load, interaction latency and API response time, including mobile networks\n2. **Browser and device support**: supported browsers and version range, responsive breakpoints, whether PWA or offline support is needed\n3. **SEO and sharing**: which pages must be indexed, social share previews, URL structure\n4. **Security and compliance**: authentication and authorization, protection against common web vulnerabilities, data retention and deletion, regulations to check such as cookie consent\n5. **Availability and operations**: acceptable downtime, backup and restore, log retention, monthly cloud cost ceiling\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: Experience Design",
+        "steps": [
+          {
+            "title": "Sitemap, Routes & User Flows",
+            "prompt": "# Sitemap, Routes & User Flows\n\n## Role & Goal\nYou are a web UX designer. Based on the user stories, design the site structure, URL routes and main flows.\n\n## Input\n- User stories and non-functional requirements: (see the output of the previous steps)\n\n## Output Requirements\n1. **Sitemap**: hierarchy of public and signed-in pages, marking pages that need SEO\n2. **Route table**: URL, page name, access level (guest / member / admin), main data source\n3. **Main flows**: step-by-step flows for sign-up/sign-in and password reset, the core task, payment or upgrade (if any), and the admin back office\n4. **Page states**: empty, loading, error, unauthorized and not-found handling for each page\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Responsive Screen Specs & Component Library",
+            "prompt": "# Responsive Screen Specs & Component Library\n\n## Role & Goal\nYou are a web UI designer. Turn the page list into responsive specs and a component library that can be implemented directly.\n\n## Input\n- Sitemap and page list: (see the output of the previous steps)\n- Brand colors, fonts, reference sites or existing designs: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Design tokens**: colors, type scale, spacing, breakpoints, radii and shadows, ready to become CSS variables\n2. **Component list**: variants, states (hover, focus, disabled, error) and keyboard behavior for each component\n3. **Per-page layout**: layout differences at desktop, tablet and phone widths\n4. **Form specs**: fields, validation rules, error message copy, feedback after submit\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Technology Choice (Frontend, Backend, Database, Hosting)",
+            "prompt": "# Technology Choice (Frontend, Backend, Database, Hosting)\n\n## Role & Goal\nYou are a web technology advisor. Choose the full stack based on requirements, traffic and team situation, and explain the trade-offs.\n\n## Input\n- Requirements and non-functional requirements: (see the output of the previous steps)\n- Languages and frameworks the team knows: [Please fill in]\n- Budget and preferred cloud providers: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Rendering strategy**: SPA, server-side rendering, static generation or hybrid, with reasons per page type\n2. **Stack comparison**: 2-3 candidates each for frontend framework, backend language/framework and database, compared, with a recommendation\n3. **Hosting and infrastructure**: where the frontend, backend, database and file storage live, with a rough monthly cost marked [TBD: ...]\n4. **Third-party services**: authentication, payments, email, file uploads, error tracking, analytics: build vs. buy trade-offs\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "System Architecture, Data Model & API Design",
+            "prompt": "# System Architecture, Data Model & API Design\n\n## Role & Goal\nYou are a full-stack architect. Design the system architecture, database schema and the API between frontend and backend for the chosen stack.\n\n## Input\n- Technology choice and page specs: (see the output of the previous steps)\n\n## Output Requirements\n1. **Architecture diagram**: browser, frontend, backend, database and external services and how they connect, in text or Mermaid\n2. **Data model**: tables, columns, types, indexes and relations, plus how multi-tenant or permission data is isolated\n3. **API design**: endpoints, methods, request/response examples, error format, pagination and versioning\n4. **Authentication and authorization**: sign-in methods, sessions or tokens, and which layer enforces roles and permissions\n5. **Frontend state and data fetching**: approach to caching, optimistic updates and form state\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Local Development Environment",
+            "prompt": "# Project Setup & Local Development Environment\n\n## Role & Goal\nYou are a full-stack engineer. Set up a project skeleton and conventions based on the architecture that can be started locally with one command.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Repository structure**: monorepo or separate frontend/backend repos, directory tree and naming rules\n2. **Local environment**: how to start the database and dependent services (e.g. containers), seed data, a one-command start\n3. **Environment variables and configuration**: variable list, example file, differences per environment; secrets are never committed\n4. **Database migrations**: migration tool, naming rules, how to roll back\n5. **Coding conventions and README**: formatting, lint, commit messages, branching, and first-day setup steps for new members\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: separate frontend and backend builds, migrations run cleanly on an empty database, end-to-end tests, automatic preview deployments, dependency vulnerability scanning, bundle size changes\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this web app's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Testing & Quality",
+        "steps": [
+          {
+            "title": "Test Strategy & End-to-End Tests",
+            "prompt": "# Test Strategy & End-to-End Tests\n\n## Role & Goal\nYou are a web QA engineer. Design a test strategy covering unit, API integration and end-to-end tests.\n\n## Input\n- User stories, acceptance criteria and API design: (see the output of the previous steps)\n\n## Output Requirements\n1. **Test pyramid**: what each layer covers, which tools, how test data is prepared and cleaned up\n2. **API test cases**: normal, validation failure, unauthorized, not found and concurrency cases for each endpoint\n3. **End-to-end scenarios**: automatable steps for the main flows, noting which browsers and widths to run them on\n4. **Acceptance test list**: check items mapped to each acceptance criterion, with an owner\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Performance, Security & Accessibility Review",
+            "prompt": "# Performance, Security & Accessibility Review\n\n## Role & Goal\nYou are a web quality and security advisor. Run a performance, security and accessibility review before launch.\n\n## Input\n- Non-functional requirements and current implementation status: (see the output of the previous steps)\n- Measurement reports or known issues (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance checklist**: bundle size, images, cache headers, slow database queries, N+1 queries, each with how to measure\n2. **Security checklist**: injection, XSS, CSRF, authorization bypass, sensitive data exposure, security headers, dependency vulnerabilities, rate limiting\n3. **Accessibility checklist**: semantic markup, keyboard operation, focus order, contrast, form labels, alt text\n4. **Issue list**: sorted by severity, marking what must be fixed before launch\n\n## Notes\nDo not provide exploit code usable against other people's systems; only review and suggest fixes for my own system. Mark missing information as [TBD: ...]."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Deployment & Launch",
+        "steps": [
+          {
+            "title": "Deployment Process & Launch Checklist",
+            "prompt": "# Deployment Process & Launch Checklist\n\n## Role & Goal\nYou are a DevOps engineer. Design a repeatable deployment process that can be rolled back, and prepare a launch-day checklist.\n\n## Input\n- Technology choice, architecture and CI: (see the output of the previous steps)\n- Domain, DNS and cloud account status: [Please fill in]\n\n## Output Requirements\n1. **Environment plan**: differences and data isolation between preview, staging and production\n2. **Deployment process**: order of build, database migration, release and health check; zero-downtime or acceptable-downtime approach\n3. **Rollback plan**: how code and database are each rolled back, who decides, and how quickly\n4. **Launch checklist**: HTTPS, domain redirects, backups, monitoring alerts, error pages, robots and sitemap, admin accounts\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Launch Pages, SEO & Help Docs",
+            "prompt": "# Launch Pages, SEO & Help Docs\n\n## Role & Goal\nYou are a web content strategy and SEO advisor. Prepare the page content, search settings and user help the site needs at launch.\n\n## Input\n- Value proposition, sitemap and main features: (see the output of the previous steps)\n- Target keywords or competitor sites (reference only): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Home and feature page copy**: headline, subheading, main sections and calls to action\n2. **SEO settings**: title, description, structured data suggestions and share preview for each public page\n3. **Required page outlines**: privacy policy, terms of service, cookie notice, contact page; mark legal content as needing professional review\n4. **Help docs and FAQ**: getting-started steps and the 10 most common questions\n\n## Notes\nDo not invent figures, customer names or testimonials; mark missing information as [TBD: ...]."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: uptime and response time, error rate and frontend exceptions, slow queries, main conversion funnel, sign-ups and retention, cloud cost\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
+  },
+  "proj-tpl-desktop-app": {
+    "name": "Desktop App Development (Windows / macOS / Linux)",
+    "description": "Take a desktop app idea through packaging, release and iteration, in 9 stages and 19 steps: problem and MVP, user stories and non-functional requirements (OS, file access, offline, install and update), window structure and UI specs, technology choice (Electron, Tauri, native...) and process/data architecture, project skeleton and CI, a task breakdown sized at one task per conversation with task-by-task implementation, cross-platform testing and pre-release review, packaging, signing and auto-update, download page and user guide, and post-launch monitoring and the next version. During implementation you can use \"Hand off to another conversation\" to continue the same task.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this desktop app idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- desktop app idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: which operating systems and CPU architectures; whether accounts and cloud sync are needed; local or cloud data; free, one-time purchase or subscription; whether auto-update is needed. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Non-Functional Requirements (OS, File Access, Offline, Updates)",
+            "prompt": "# Non-Functional Requirements (OS, File Access, Offline, Updates)\n\n## Role & Goal\nYou are a desktop application architect. Spell out the requirements beyond user stories that determine the app's quality and whether it installs and updates smoothly.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Operating systems, versions and CPU architectures to support: [Please fill in]\n- Usage environment (personal PCs, company-managed machines, air-gapped networks): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance and resources**: startup time, memory and CPU ceilings, large file handling, installer size\n2. **File and system integration**: which locations are read/written, file associations and drag-and-drop, system tray, global shortcuts, launch at login, multiple windows\n3. **Offline and data**: what works fully offline, where local data is stored, backup and import/export, cloud sync (if any)\n4. **Installation and updates**: installation methods (installer, portable build, package managers), whether admin rights are required, auto-update and rollback\n5. **Security and privacy**: code signing, protection of local secrets, whether usage data is sent and how consent is obtained\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: Experience Design",
+        "steps": [
+          {
+            "title": "Window Structure & User Flows",
+            "prompt": "# Window Structure & User Flows\n\n## Role & Goal\nYou are a desktop UX designer. Based on the user stories, design the windows, menus and main flows, following Windows and macOS conventions respectively.\n\n## Input\n- User stories and non-functional requirements: (see the output of the previous steps)\n\n## Output Requirements\n1. **Window and panel structure**: how the main window, sidebar, dialogs, preferences and tray menu relate\n2. **Menus and shortcuts**: menu bar items and keyboard shortcuts, noting platform differences (e.g. Ctrl vs. Cmd)\n3. **Main flows**: step-by-step flows for first launch, opening/saving files, the core task, export, and update prompts\n4. **States and errors**: unsaved changes, progress and cancel for long operations, files that are locked or lack permission\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "UI Specs & Design System",
+            "prompt": "# UI Specs & Design System\n\n## Role & Goal\nYou are a desktop UI designer. Turn the window structure into UI specs that can be implemented directly.\n\n## Input\n- Window structure and flows: (see the output of the previous steps)\n- Brand colors, fonts or existing designs: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Design tokens**: colors (following system light/dark), type scale, spacing, icon sizes\n2. **Component list**: toolbars, lists/tables, trees, tabs, dialogs, including keyboard focus and context menus\n3. **Per-window specs**: minimum and default sizes, layout behavior on resize, high-DPI displays\n4. **App icon and system integration assets**: list of icon assets each platform needs; mark sizes [TBD: ...] for me to check in the official docs\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Technology Choice (Electron, Tauri, Native or Other)",
+            "prompt": "# Technology Choice (Electron, Tauri, Native or Other)\n\n## Role & Goal\nYou are a desktop development advisor. Compare technology options for the desktop app against the requirements and team situation, and give a reasoned recommendation.\n\n## Input\n- Requirements and non-functional requirements: (see the output of the previous steps)\n- Languages and frameworks the team knows: [Please fill in]\n\n## Output Requirements\n1. **Option comparison**: web-tech shells (e.g. Electron, Tauri), cross-platform native UI frameworks and per-platform native development, compared on installer size, memory, system integration, development speed and maintenance cost\n2. **Recommendation and reasons**: which one, and under what conditions you would switch to another\n3. **Supporting choices**: local data storage, settings file format, packaging tool, auto-update mechanism, crash reporting\n4. **Platform constraints**: how each OS's sandboxing, permissions and signing requirements affect the choice\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Code Architecture, Process Model & Data Storage",
+            "prompt": "# Code Architecture, Process Model & Data Storage\n\n## Role & Goal\nYou are a desktop application architect. Design the code architecture for the chosen stack, paying special attention to the security boundary between the UI and system access.\n\n## Input\n- Technology choice and UI specs: (see the output of the previous steps)\n\n## Output Requirements\n1. **Processes and layering**: responsibilities of the main and UI processes (or their equivalents), which system functions the UI may call, and how inputs are validated\n2. **Modules and directory structure**: feature-based directory tree and naming rules\n3. **Data storage**: where user data, settings and cache live, format versioning and upgrade migrations, protection against interrupted writes (e.g. atomic writes)\n4. **Long-running work**: background jobs, progress reporting, cancellation and recovery after crashes\n5. **External integrations**: how network requests, external programs or plugins are called, and failure handling\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Development Conventions",
+            "prompt": "# Project Setup & Development Conventions\n\n## Role & Goal\nYou are a desktop engineer. Set up a project skeleton and conventions based on the architecture so development can start right away.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n- Application name and identifier: [Please fill in]\n\n## Output Requirements\n1. **Setup steps**: commands to create the project and tools to install; mark versions as [TBD: ...] for me to verify\n2. **Directory skeleton**: folders and placeholder files following the architecture\n3. **Development mode**: hot reload, developer tools, how to run on each of the three operating systems\n4. **Coding conventions**: formatting, lint, naming, commit messages and branching; cross-platform rules for line endings and path separators\n5. **Initial README**: how to install dependencies, run and package\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: build and test on each of the three operating systems, installer output and size, signing only on protected branches, license and vulnerability scans of dependencies\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this desktop app's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Testing & Quality",
+        "steps": [
+          {
+            "title": "Test Strategy & Cross-Platform Testing",
+            "prompt": "# Test Strategy & Cross-Platform Testing\n\n## Role & Goal\nYou are a desktop QA engineer. Design a test strategy covering unit, integration, UI and real machines on each operating system.\n\n## Input\n- User stories, acceptance criteria and architecture: (see the output of the previous steps)\n- Test machines and operating systems available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Test pyramid**: what each layer covers and which tools; how to isolate file system and system calls in tests\n2. **Platform matrix**: combinations of OS versions, CPU architectures, display scaling, and non-English user names and paths\n3. **Test cases**: one per acceptance criterion, including failure cases: low disk space, locked files, sleep/wake, network loss, reopening after a forced quit\n4. **Install and update tests**: clean install, upgrade from an older version, leftovers after uninstall, data migration\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Performance, Security & Accessibility Review",
+            "prompt": "# Performance, Security & Accessibility Review\n\n## Role & Goal\nYou are a desktop app quality advisor. Run a performance, security and accessibility review before release.\n\n## Input\n- Non-functional requirements and current implementation status: (see the output of the previous steps)\n- Measurements or known issues: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance checklist**: startup time, idle and working memory, CPU wake-ups, large files, installer size\n2. **Security checklist**: whether the UI can run arbitrary code or read arbitrary files, loading of external content, signature verification on the update channel, local secret storage, dependency vulnerabilities\n3. **Accessibility checklist**: full keyboard operation, visible focus, screen readers, high-contrast mode, system font size\n4. **Issue list**: sorted by severity, marking what must be fixed before release\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Packaging & Release",
+        "steps": [
+          {
+            "title": "Packaging, Code Signing & Auto-Update",
+            "prompt": "# Packaging, Code Signing & Auto-Update\n\n## Role & Goal\nYou are a desktop release engineer. Design a repeatable packaging and release process so installs are not blocked by the OS and updates do not break things.\n\n## Input\n- Technology choice, architecture and CI: (see the output of the previous steps)\n- Whether you already have code-signing certificates, and release channels (website, stores, package managers): [Please fill in]\n\n## Output Requirements\n1. **Installer formats per platform**: installers and portable builds to produce for each OS\n2. **Signing and notarization**: signing process per platform, how certificates are stored and used in CI, and what warnings users see if unsigned\n3. **Auto-update**: update source, version check, delta vs. full updates, rollback on failure, conditions for mandatory updates\n4. **Release checklist**: version number, changelog, checksums, test install on a clean machine, checking download links after release\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Download Page, User Guide & Support Channels",
+            "prompt": "# Download Page, User Guide & Support Channels\n\n## Role & Goal\nYou are a technical writing and product communication advisor. Prepare the content users need to download, install, get started and ask for help.\n\n## Input\n- Value proposition, main features and installation methods: (see the output of the previous steps)\n\n## Output Requirements\n1. **Download page copy**: one-line value, download button labels per platform, system requirements, and explanations of common OS warnings during install\n2. **Quick start guide**: steps to finish a first task within 5 minutes of installing\n3. **User guide outline**: chapters, key points per chapter, where screenshots are needed\n4. **Troubleshooting and support**: FAQ, how to report issues (which logs and system info to attach), outline of privacy and license pages (mark legal content as needing professional review)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: crash reports by OS, update success rate and version distribution, startup time, user-reported issues (without collecting personal data), downloads and activations\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
+  },
+  "proj-tpl-backend-api": {
+    "name": "Backend API / Service Development",
+    "description": "Take a service idea through deployment and operations, in 9 stages and 19 steps: problem and MVP, user stories and non-functional requirements (traffic, latency, availability, data), domain model and API contract (OpenAPI / schema, error conventions, versioning), technology choice and service/database architecture, local environment and CI, a task breakdown sized at one task per conversation with task-by-task implementation, contract/load testing and security review, deployment process and API docs, and post-launch monitoring and the next version. During implementation you can use \"Hand off to another conversation\" to continue the same task.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this backend service idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- backend service idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: who the callers are (own frontend, apps, external partners); synchronous API or event-driven; whether multi-tenancy is needed; data retention and deletion rules; whether it is public and needs billing or quotas. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Non-Functional Requirements (Traffic, Latency, Availability, Data)",
+            "prompt": "# Non-Functional Requirements (Traffic, Latency, Availability, Data)\n\n## Role & Goal\nYou are a backend systems architect. Write the non-functional requirements that drive the service architecture and running costs as measurable targets.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Callers (frontend, apps, partners, internal systems) and estimated traffic: [Please fill in]\n- Data types and retention requirements (personal data, payments, audit): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Traffic and latency**: average and peak request rates, latency targets (p50 / p95) per API category\n2. **Availability and recovery**: availability target, acceptable data loss and recovery time, backup frequency\n3. **Consistency and transactions**: which operations need strong consistency vs. eventual consistency, and how duplicate requests are handled (idempotency)\n4. **Security and compliance**: caller authentication, permission model, encryption in transit and at rest, audit logs, regulations to check\n5. **Observability**: logs, metrics and traces needed, and their retention\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: API Design",
+        "steps": [
+          {
+            "title": "Domain Model & API Resource Design",
+            "prompt": "# Domain Model & API Resource Design\n\n## Role & Goal\nYou are an API designer. Organize the domain concepts from the user stories and design API resources that callers find easy to understand and that can evolve.\n\n## Input\n- User stories and non-functional requirements: (see the output of the previous steps)\n- Preferred API style (REST, GraphQL, gRPC or undecided): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Domain glossary**: definitions of core terms and how they relate, so one thing never has two names\n2. **API style recommendation**: recommended style for these callers and use cases, with trade-offs\n3. **Resources and operations**: operations supported by each resource, the user story it serves, and required permissions\n4. **States and events**: state transitions of the main entities, and events other systems need to be notified of\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "API Contract (OpenAPI / Schema) & Error Conventions",
+            "prompt": "# API Contract (OpenAPI / Schema) & Error Conventions\n\n## Role & Goal\nYou are an API designer. Write the resource design as a machine-readable contract so frontend, tests and docs can all be generated from one source.\n\n## Input\n- Domain model and resource list: (see the output of the previous steps)\n\n## Output Requirements\n1. **Draft contract**: OpenAPI or schema definitions in the recommended style (covering the MVP endpoints first)\n2. **Shared conventions**: naming, pagination, sorting and filtering, date and money formats, idempotency keys, rate limit headers\n3. **Error format**: a uniform error structure, list of error codes, which errors are retryable\n4. **Versioning and compatibility**: versioning strategy, what counts as a breaking change, deprecation process\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Technology Choice (Language, Framework, Database, Runtime)",
+            "prompt": "# Technology Choice (Language, Framework, Database, Runtime)\n\n## Role & Goal\nYou are a backend technology advisor. Choose the stack and runtime environment based on requirements, traffic and team situation, and explain the trade-offs.\n\n## Input\n- Non-functional requirements and API contract: (see the output of the previous steps)\n- Languages and frameworks the team knows: [Please fill in]\n- Budget and preferred cloud providers: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Stack comparison**: 2-3 candidates each for language/framework, primary database, cache and message queue, compared, with a recommendation\n2. **Runtime environment**: containers vs. serverless vs. VMs vs. platform services, with a rough monthly cost marked [TBD: ...]\n3. **Monolith or split**: recommended service boundaries at the current scale, and signals that it is time to split\n4. **Third-party services**: authentication, email, file storage, scheduling, monitoring: build vs. buy\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Service Architecture & Database Design",
+            "prompt": "# Service Architecture & Database Design\n\n## Role & Goal\nYou are a backend architect. Design code layering, database schema and asynchronous processing for the chosen stack.\n\n## Input\n- Technology choice and API contract: (see the output of the previous steps)\n\n## Output Requirements\n1. **Architecture diagram**: callers, gateway, services, database, cache, queues and external services and how they connect, in text or Mermaid\n2. **Code layering**: responsibilities of the routing / application service / domain / data access layers, and where transaction boundaries sit\n3. **Database design**: tables, columns, types, indexes and constraints mapped to the main queries; migration and backfill strategy\n4. **Async and scheduled work**: which work runs in the background, retries and dead-letter handling, scheduled jobs\n5. **Caching and consistency**: what to cache, invalidation strategy, how to avoid duplicate writes\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Local Development Environment",
+            "prompt": "# Project Setup & Local Development Environment\n\n## Role & Goal\nYou are a backend engineer. Set up a service skeleton and conventions based on the architecture that can be started locally with one command.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Directory structure**: directory tree and naming rules following the layering\n2. **Local environment**: start database, cache and queue in containers; seed data; one-command start and reset\n3. **Configuration and secrets**: environment variable list, example file, validation of required settings at startup; secrets are never committed\n4. **Foundation pieces**: health check endpoint, structured logging, request trace IDs, unified error handling, input validation\n5. **Coding conventions and README**: formatting, lint, commit messages, branching, and how to generate docs or types from the contract\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: unit and integration tests (including a real database in a container), checking the implementation against the API contract, migrations that can go forward and back, container image build and vulnerability scanning\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this backend service's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Testing & Quality",
+        "steps": [
+          {
+            "title": "Test Strategy & Contract Tests",
+            "prompt": "# Test Strategy & Contract Tests\n\n## Role & Goal\nYou are a backend QA engineer. Design a test strategy covering unit, integration, contract and load testing.\n\n## Input\n- User stories, API contract and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Test pyramid**: what each layer covers and which tools; real database or test doubles for integration tests\n2. **Contract tests**: how to ensure the implementation matches the contract, and how callers are notified of contract changes\n3. **Test cases**: normal, validation failure, unauthorized, conflict, duplicate request and dependency failure cases for each endpoint\n4. **Load test plan**: scenarios, target traffic, pass criteria, bottleneck metrics to watch\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Performance & Security Review",
+            "prompt": "# Performance & Security Review\n\n## Role & Goal\nYou are a backend quality and security advisor. Run a performance and security review before launch.\n\n## Input\n- Non-functional requirements and current implementation status: (see the output of the previous steps)\n- Load test results or known issues (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Performance checklist**: slow queries and missing indexes, N+1, connection pools, timeouts, memory leaks, cold starts\n2. **Security checklist**: injection, object-level authorization, mass assignment, sensitive data exposure, rate limiting, SSRF, dependency vulnerabilities, secrets management\n3. **Resilience checks**: timeouts, retries, circuit breaking and degradation when dependencies slow down or fail\n4. **Issue list**: sorted by severity, marking what must be fixed before launch\n\n## Notes\nDo not provide exploit code usable against other people's systems; only review and suggest fixes for my own system. Mark missing information as [TBD: ...]."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Deployment & Launch",
+        "steps": [
+          {
+            "title": "Deployment Process & Launch Readiness",
+            "prompt": "# Deployment Process & Launch Readiness\n\n## Role & Goal\nYou are a DevOps / SRE engineer. Design a repeatable deployment process that can be rolled back, and confirm the service is ready for launch.\n\n## Input\n- Technology choice, architecture and CI: (see the output of the previous steps)\n- Cloud account, domain and existing infrastructure status: [Please fill in]\n\n## Output Requirements\n1. **Infrastructure as code**: resources to create and how they are managed, differences between environments\n2. **Deployment strategy**: rolling, blue-green or canary; order and compatibility of database migrations and code deploys\n3. **Rollback plan**: how code and data are each rolled back, who decides, and how quickly\n4. **Launch readiness checklist**: monitoring and alerts, backup and restore drill, capacity, access permissions, on-call and incident process\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "API Docs & Integration Guide for Callers",
+            "prompt": "# API Docs & Integration Guide for Callers\n\n## Role & Goal\nYou are a developer experience (DX) and technical writing advisor. Make it possible for callers to integrate without having to ask anyone.\n\n## Input\n- API contract and shared conventions: (see the output of the previous steps)\n\n## Output Requirements\n1. **Quick start**: steps to get credentials, send a first request and see a successful response\n2. **Authentication guide**: credential types, expiry, refresh, common errors\n3. **Common scenario examples**: request/response examples for the main user stories\n4. **Errors and limits**: error code reference, retry guidance, rate limits, webhook verification (if any)\n5. **Changelog and deprecation notice format**: how to announce breaking changes so callers know early\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: request rate, error rate, latency (p50 / p95 / p99), saturation (CPU, memory, connections), queue backlog, dependency health, usage per caller\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
+  },
+  "proj-tpl-browser-extension": {
+    "name": "Browser Extension Development",
+    "description": "Take a browser extension idea through store release and iteration, in 9 stages and 19 steps: problem and MVP, user stories and minimal-permission/privacy requirements, entry points (popup, side panel, context menu, in-page UI) and UI specs, cross-browser technology choice and component/messaging architecture, project skeleton and CI, a task breakdown sized at one task per conversation with task-by-task implementation, cross-browser testing and security/privacy review, packaging, submission and store listing, and post-launch monitoring and the next version. During implementation you can use \"Hand off to another conversation\" to continue the same task.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this extension idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- extension idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: which browsers; all sites or specific domains; whether accounts or a server are needed; local-only data or cloud sync; free or paid. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Permissions, Privacy & Non-Functional Requirements",
+            "prompt": "# Permissions, Privacy & Non-Functional Requirements\n\n## Role & Goal\nYou are a browser extension architect. Spell out the requirements that affect store review, user trust and performance. Extensions can read the pages users visit, so fewer permissions are better.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Browsers to support: [Please fill in]\n- Sites it needs to work on (all sites or specific domains): [Please fill in]\n\n## Output Requirements\n1. **Minimal permission list**: purpose of each permission or host permission and the feature it serves, and which can be requested only when the user acts\n2. **Data handling**: what data is read, stored and sent, whether it stays local or goes to a server, and whether disclosure and consent are needed\n3. **Performance**: maximum impact on page load and scrolling, frequency of background work\n4. **Compatibility**: API differences across browsers, and how to degrade when sites change or other extensions conflict\n5. **Security**: no remote code execution, isolation of injected content, validation of messages exchanged with pages\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: Experience Design",
+        "steps": [
+          {
+            "title": "Entry Points & User Flows",
+            "prompt": "# Entry Points & User Flows\n\n## Role & Goal\nYou are an extension UX designer. Decide where users trigger features and where they see results, and design the main flows.\n\n## Input\n- User stories and permission requirements: (see the output of the previous steps)\n\n## Output Requirements\n1. **Entry point choices**: toolbar popup, side panel, context menu, in-page injected UI, keyboard shortcut, options page: which features each suits\n2. **Main flows**: step-by-step flows for first use after install, the core task, changing settings, and permission requests\n3. **Page contexts**: behavior on unsupported sites, sites that require sign-in, and pages that have not finished loading\n4. **States and errors**: copy for empty, loading, network error and permission-denied states\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "UI Specs (Popup, Panel, Options Page)",
+            "prompt": "# UI Specs (Popup, Panel, Options Page)\n\n## Role & Goal\nYou are a UI designer. Turn the entry points and flows into UI specs that can be implemented directly, making sure they stay clear at small sizes and on all kinds of sites.\n\n## Input\n- Entry points and flows: (see the output of the previous steps)\n- Brand colors, icons or existing designs: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Design tokens**: colors (light/dark), type scale, spacing; how injected UI avoids being affected by site styles\n2. **Spec per surface**: size, layout, components and interactions for the popup, side panel, in-page components and options page\n3. **Icons and badge**: toolbar icon states and badge text rules; mark required sizes [TBD: ...]\n4. **Copy and localization**: string list and key naming rules, plus localized store name and description\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Technology Choice & Cross-Browser Strategy",
+            "prompt": "# Technology Choice & Cross-Browser Strategy\n\n## Role & Goal\nYou are an extension technology advisor. Choose development tooling and a cross-browser strategy based on the requirements.\n\n## Input\n- Requirements and permission list: (see the output of the previous steps)\n- Languages and frameworks the team knows: [Please fill in]\n\n## Output Requirements\n1. **Extension platform version**: the manifest version and background execution model each browser currently requires, and how they limit features; mark details [TBD: ...] for me to check in the official docs\n2. **Development tooling**: build tool, UI framework (or none), type system, comparing 2-3 options\n3. **Cross-browser strategy**: how shared code and per-browser differences are handled\n4. **Backend needs**: whether a server is needed (accounts, sync, AI or payments), and fully local alternatives\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Component Architecture & Messaging",
+            "prompt": "# Component Architecture & Messaging\n\n## Role & Goal\nYou are an extension architect. Design how the background script, content scripts and UI pages divide work and pass messages.\n\n## Input\n- Technology choice and UI specs: (see the output of the previous steps)\n\n## Output Requirements\n1. **Component responsibilities**: what the background, content scripts, popup/panel and options page each handle, and what they must not do\n2. **Message protocol**: message types, fields, response format, sender validation\n3. **Data storage**: what goes in local vs. synced storage, quota limits, data format versions and migration\n4. **Page integration**: how page content is detected and extracted, fault tolerance when sites change, maintaining selectors\n5. **Directory structure**: directory tree by component and naming rules\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Development Environment",
+            "prompt": "# Project Setup & Development Environment\n\n## Role & Goal\nYou are an extension engineer. Set up a project skeleton and conventions based on the architecture that can be loaded into the browser for development right away.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Setup steps**: commands and tools to create the project; mark versions as [TBD: ...] for me to verify\n2. **Draft manifest**: written from the minimal permission list, with the purpose noted beside each permission\n3. **Development workflow**: loading the unpacked build in each browser, auto-reload, and viewing logs for each component\n4. **Coding conventions and README**: formatting, lint, commit messages, branching, and how to build for each browser\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: separate builds per browser, manual sign-off on manifest and permission changes, package size, checks for remote code, dependency vulnerability scanning\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this extension's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Testing & Quality",
+        "steps": [
+          {
+            "title": "Test Strategy & Cross-Browser Testing",
+            "prompt": "# Test Strategy & Cross-Browser Testing\n\n## Role & Goal\nYou are an extension QA engineer. Design a test strategy covering unit tests, component integration and real browsers.\n\n## Input\n- User stories, acceptance criteria and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Test pyramid**: what each layer covers and which tools; how browser APIs are mocked\n2. **Target site test set**: list of representative sites and page types, and how to regression-check when sites change\n3. **Test cases**: one per acceptance criterion, including install, data kept after update, denied permission, background suspended by the browser, multiple tabs\n4. **Browser matrix**: browsers, versions and operating systems to test\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Security, Privacy & Performance Review",
+            "prompt": "# Security, Privacy & Performance Review\n\n## Role & Goal\nYou are an extension security and privacy advisor. Before submission, review permissions, data handling and performance to find issues that would cause rejection or damage user trust.\n\n## Input\n- Permission list, architecture and current implementation status: (see the output of the previous steps)\n\n## Output Requirements\n1. **Permission re-check**: whether each permission is still needed and whether it can be narrowed or made optional\n2. **Security checklist**: no remote code, content security policy, escaping of injected content, origin checks on page messages, dependency vulnerabilities\n3. **Privacy checklist**: whether data actually collected and sent matches what is disclosed, and whether logs contain browsing content\n4. **Performance check**: content script impact on pages, memory, background wake-up frequency\n5. **Issue list**: sorted by severity, marking what must be fixed before submission\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Store Submission",
+        "steps": [
+          {
+            "title": "Packaging & Store Submission Preparation",
+            "prompt": "# Packaging & Store Submission Preparation\n\n## Role & Goal\nYou are an extension publishing advisor. Help me prepare what each browser's store needs for submission, to reduce the chance of rejection.\n\n## Input\n- Features, permissions and data handling: (see the output of the previous steps)\n- Stores to publish in and developer account status: [Please fill in]\n\n## Output Requirements\n1. **Submission checklist**: package files, permission justifications, data use disclosures, privacy policy URL and reviewer notes each store requires\n2. **Common rejection risks**: check each against this extension's permissions and behavior; mark policy details [TBD: ...] for me to check in the official docs\n3. **Build and versioning**: builds per browser, version numbering rules, automated upload\n4. **Staged rollout**: how many users to start with, what to watch, how to stop if something goes wrong\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Store Listing, Privacy Policy & Help",
+            "prompt": "# Store Listing, Privacy Policy & Help\n\n## Role & Goal\nYou are a product copywriting advisor. Prepare the store listing and help content, clearly explaining permissions and data use to build trust.\n\n## Input\n- Value proposition, main features and permission purposes: (see the output of the previous steps)\n\n## Output Requirements\n1. **Name and short description**: 3 options; mark character limits [TBD: ...]\n2. **Full description**: features, how to use it, why permissions are needed, how data is handled\n3. **Screenshot script**: what each screenshot shows and its caption\n4. **Privacy policy and help page outline**: sections and FAQs to cover; mark legal content as needing professional review\n\n## Notes\nDo not invent figures, ratings or testimonials; do not use other products' or sites' trademarks in promotion. Mark missing information as [TBD: ...]."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: store ratings and reviews, installs and uninstalls, error reports (without browsing content), breakage caused by target site changes, browser version distribution\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
+  },
+  "proj-tpl-llm-app": {
+    "name": "AI / LLM App Development (RAG / Agent)",
+    "description": "Take an AI app idea through launch and continuous improvement, in 9 stages and 19 steps: problem and MVP, user stories and quality targets (accuracy, latency, cost, safety), interaction flow and system prompt / tools / output formats, model choice and RAG / agent architecture, project skeleton and CI with evaluations, a task breakdown sized at one task per conversation with task-by-task implementation, evaluation set and safety/cost review, deployment and AI disclosure, and post-launch monitoring and the next version. Information that changes, such as model names and prices, is always marked \"TBD\" instead of invented.",
+    "stages": [
+      {
+        "title": "Stage 1: Concept & Scope",
+        "steps": [
+          {
+            "title": "Problem, Target Users & Value Proposition",
+            "prompt": "# Problem, Target Users & Value Proposition\n\n## Role & Goal\nYou are a senior product manager. Help me narrow this AI app idea into a clear problem statement and value proposition, instead of jumping straight into a feature list.\n\n## Input\n- AI app idea: {{topic}}\n- Target users, and how they solve this problem today: [Please fill in]\n- Known constraints (budget, timeline, team size and skills): [Please fill in]\n\n## Output Requirements\n1. **Problem statement**: one sentence: who, in what situation, faces what problem\n2. **Target user profiles**: 1-3 primary personas, each with usage context and pain points\n3. **Value proposition**: what makes it better than current alternatives and why users would switch\n4. **Key assumptions**: 3-5 assumptions that must be validated first (and would change direction if wrong), each with a way to test it\n5. **Open questions**: information I still need to provide, listed as [TBD: ...]\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "MVP Scope & Success Metrics",
+            "prompt": "# MVP Scope & Success Metrics\n\n## Role & Goal\nYou are a product owner. Based on the problem and users defined so far, decide how far the first version (MVP) should go and how success will be judged.\n\n## Input\n- Problem and value proposition: (see the output of the previous steps)\n- Target launch date and available people: [Please fill in]\n\n## Output Requirements\n1. **Scope list**: first version (Must) / later (Later) / not doing (Won't), each with a one-line reason\n2. **Decisions to make for the first version**: common decisions for this kind of product: the single core task the AI must do; whether answers must cite internal data (RAG); whether the AI can take actions for users (agent); permission isolation for users and data; monthly cost ceiling. Give a recommendation and trade-offs for each\n3. **Success metrics**: 3-5 measurable metrics, with baseline and target values if known\n4. **Draft milestones**: by week, marking time spent waiting on external reviews or approvals\n5. **Scope risks**: the 3 most likely reasons the first version slips, and how to prevent them\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 2: Requirements",
+        "steps": [
+          {
+            "title": "User Stories & Acceptance Criteria",
+            "prompt": "# User Stories & Acceptance Criteria\n\n## Role & Goal\nYou are a requirements analyst. Break the MVP scope into user stories that can be built and accepted.\n\n## Input\n- MVP scope and success metrics: (see the output of the previous steps)\n- Known business rules or regulations to follow: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Epic list**: 3-7 main themes\n2. **User stories**: under each epic, written as \"As a [role], I want [feature] so that [value]\"\n3. **Acceptance criteria**: at least one Given / When / Then per story, including error and edge cases\n4. **Priority and dependencies**: marked with MoSCoW, plus dependencies between stories\n5. **Story map**: arranged left to right along the user journey, with the first-release cut line marked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Quality Targets & Non-Functional Requirements (Accuracy, Latency, Cost, Safety)",
+            "prompt": "# Quality Targets & Non-Functional Requirements (Accuracy, Latency, Cost, Safety)\n\n## Role & Goal\nYou are an AI application architect. Turn \"how good the AI's answers are\" into measurable, acceptable targets, and spell out latency, cost and safety requirements.\n\n## Input\n- User stories and MVP scope: (see the output of the previous steps)\n- Data sources to be used and their sensitivity: [Please fill in]\n- Estimated usage and monthly budget ceiling: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Quality targets**: define a \"good answer\" per task type: correct, grounded (citing sources), well-formatted, and when to decline, each with how it is measured\n2. **Latency and cost**: targets for time to first token and full response, cost ceilings per request and per user\n3. **Safety and abuse**: protection requirements for prompt injection, unauthorized tool use, sensitive data leakage and harmful content\n4. **Data and privacy**: where user inputs and documents are sent, whether they are used for training, retention and deletion, permission isolation (users only retrieve what they are allowed to see)\n5. **Transparency**: how users are told that content is AI-generated, may be wrong, and how to report problems\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 3: Interaction & Prompt Design",
+        "steps": [
+          {
+            "title": "Interaction Flow & Conversation Design",
+            "prompt": "# Interaction Flow & Conversation Design\n\n## Role & Goal\nYou are a conversational and AI product UX designer. Design how users interact with the AI, including what happens when the AI is unsure or wrong.\n\n## Input\n- User stories and quality targets: (see the output of the previous steps)\n\n## Output Requirements\n1. **Interaction pattern**: chat, single command, form plus AI generation, background automation, or a mix, with reasons\n2. **Main flows**: step-by-step flows for first use with example prompts, the core task, follow-ups and corrections, exporting or applying results\n3. **Uncertainty and failure handling**: how the UI and copy handle no data found, out-of-scope requests, model timeouts or refusals\n4. **Human confirmation points**: which AI actions (sending, deleting, paying, writing data) must be confirmed by the user first\n5. **Feedback mechanism**: thumbs up/down, suggested corrections, how cited sources are shown\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "System Prompt, Tools & Output Format Design",
+            "prompt": "# System Prompt, Tools & Output Format Design\n\n## Role & Goal\nYou are a prompt engineer. Design the system prompt, callable tools and structured output formats for this AI app so its behavior is predictable and testable.\n\n## Input\n- Interaction flow and quality targets: (see the output of the previous steps)\n\n## Output Requirements\n1. **Draft system prompt**: role, task scope, tone, required and forbidden behaviors, what to do when information is missing\n2. **Tool definitions**: name, purpose, parameter schema, permission scope and failure response for each tool; mark tools with side effects as needing user confirmation\n3. **Output format**: JSON Schema for responses that code must parse, with examples and handling for validation failures\n4. **Prompt versioning**: where prompts live, how they are versioned, and which evaluations must run before changes\n5. **Edge cases**: 10 inputs most likely to go wrong and the expected behavior, to add to the eval set later\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 4: Technical Architecture",
+        "steps": [
+          {
+            "title": "Model & Technology Choice",
+            "prompt": "# Model & Technology Choice\n\n## Role & Goal\nYou are an AI application technology advisor. Choose models and supporting technology based on quality, latency, cost and data constraints, and explain the trade-offs.\n\n## Input\n- Quality targets, prompt and tool design: (see the output of the previous steps)\n- Model providers or self-hosted environment available, languages the team knows: [Please fill in]\n\n## Output Requirements\n1. **Model selection**: tier by task (e.g. a small model for classification, a large one for generation) and list evaluation criteria; mark specific models, prices and context lengths [TBD: ...] for me to check against current information\n2. **Retrieval and data**: whether RAG is needed; vector database vs. full-text search, embedding model, hybrid retrieval trade-offs\n3. **Application framework**: calling APIs directly vs. using an orchestration framework, avoiding over-abstraction\n4. **Supporting choices**: frontend, backend, evaluation tooling, tracing and logging, caching\n5. **Cost estimate**: a formula based on estimated usage, with unit prices left blank for me to fill in\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "RAG / Agent Architecture & Data Pipeline",
+            "prompt": "# RAG / Agent Architecture & Data Pipeline\n\n## Role & Goal\nYou are an AI systems architect. Design the full flow from data ingestion to answer generation, paying special attention to permission isolation and traceability.\n\n## Input\n- Model and technology choice: (see the output of the previous steps)\n\n## Output Requirements\n1. **Architecture diagram**: users, app service, models, retrieval, tools and data sources and how they connect, in text or Mermaid\n2. **Data pipeline**: document ingestion, cleaning, chunking, embedding, and syncing updates and deletions; recommended chunk size and overlap with reasons\n3. **Request handling flow**: order of query rewriting, retrieval, permission filtering, reranking, context assembly, generation and output validation\n4. **Agent control (if any)**: maximum steps, tool call limits, timeouts, actions requiring human confirmation, where it stops on failure\n5. **Tracing and logging**: what to log per request: prompt version, retrieved results, model, usage and latency; how personal data is masked\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 5: Project Skeleton & Engineering Foundations",
+        "steps": [
+          {
+            "title": "Project Setup & Development Environment",
+            "prompt": "# Project Setup & Development Environment\n\n## Role & Goal\nYou are an AI application engineer. Set up a project skeleton and conventions based on the architecture so development and evaluation can start right away.\n\n## Input\n- Technology choice and architecture: (see the output of the previous steps)\n\n## Output Requirements\n1. **Directory structure**: directory tree that separates app code, prompts, eval data and scripts, and the data pipeline\n2. **Local environment**: start the retrieval store and dependent services, load sample documents, one-command start\n3. **Configuration and secrets**: how model API keys, model names and parameters such as temperature are configured; keys are never committed, and usage caps are set\n4. **Model call wrapper**: a module interface that handles retries, timeouts, rate limits, usage logging and output validation in one place\n5. **Coding conventions and README**: formatting, lint, commit messages, branching, and how to run evaluations\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "CI & Quality Gates",
+            "prompt": "# CI & Quality Gates\n\n## Role & Goal\nYou are a DevOps engineer. Design a continuous integration pipeline so every commit, including AI-generated code, automatically passes the same checks.\n\n## Input\n- Project skeleton and technology choices: (see the output of the previous steps)\n- Code hosting and CI service in use: [Please fill in]\n\n## Output Requirements\n1. **CI pipeline**: triggers and jobs: install, lint, type check, test, build\n2. **Checks specific to this kind of project**: run the eval set automatically and compare with the previous version, force evals when prompts or model settings change, output format validation, no keys in code, usage caps on eval runs to avoid cost spikes\n3. **Quality gates**: which failures block a merge; suggested thresholds (e.g. coverage) with reasons\n4. **Draft CI configuration**: state the assumed service, versions and commands; mark anything I must confirm as [TBD: ...]\n5. **Secrets management**: where keys, credentials and signing files live and who can access them; never in code or commit history\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}]
+      },
+      {
+        "title": "Stage 6: Implementation Planning & Development",
+        "steps": [
+          {
+            "title": "Implementation Task Breakdown (One Conversation per Task)",
+            "prompt": "# Implementation Task Breakdown (One Conversation per Task)\n\n## Role & Goal\nYou are a tech lead. Break the requirements, design and architecture into tasks that can be handed to an AI one at a time. Each task must be small enough to finish and verify within a single AI conversation, so work can be handed off across conversations.\n\n## Input\n- Requirements, design and architecture: (see the output of the previous steps)\n- Number of developers and weekly time available: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Task list**: ID, name, files/modules to add or change, definition of done, size (S/M/L)\n2. **Order and dependencies**: build the thinnest end-to-end slice first, then add features\n3. **Verification**: tests to run or manual checks for each task\n4. **Handoff points**: after which tasks to start a new conversation, and which files, decisions and interface definitions to bring along\n5. **High-risk tasks**: tasks with the most uncertainty that should get a technical spike first, and what the spike must prove\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Implement a Single Task (Reusable)",
+            "prompt": "# Implement a Single Task (Reusable)\n\n## Role & Goal\nYou are a senior engineer familiar with this AI app's tech stack. Implement exactly one task at a time and leave handoff information at the end. This step is reusable: copy it once per task and swap in the task ID.\n\n## Input\n- Task ID and description to implement: [Please fill in]\n- Relevant existing code or files (paste them or describe the directory layout): [Please fill in]\n\n## Output Requirements\n1. **Implementation plan**: list which files you will add or change and why before writing code\n2. **Code**: complete files or clearly located diffs; do not omit key parts\n3. **Tests**: automated tests for the acceptance criteria; list manual checks for anything that cannot be automated\n4. **Self-review**: one-line conclusion each on error handling, edge cases, security and performance\n5. **Handoff summary**: what was done, which files changed, what is still missing, and what the next task needs to know\n\n## Notes\nDo not implement several tasks at once; if the task description is unclear, ask before writing code. Where information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {}
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 7: Evaluation & Safety",
+        "steps": [
+          {
+            "title": "Evaluation Set & Evaluation Method",
+            "prompt": "# Evaluation Set & Evaluation Method\n\n## Role & Goal\nYou are an AI evaluation engineer. Build repeatable evaluations so every prompt change, model swap or retrieval change shows whether quality improved or regressed.\n\n## Input\n- Quality targets, prompt design and edge cases: (see the output of the previous steps)\n- Real user questions or document samples (de-identified, pasted): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Eval set design**: question sources, category mix (common, hard, should-decline, adversarial), suggested size and reference answer format\n2. **Scoring method**: rule checks, comparison with reference answers, model-graded scoring (with the grading prompt) and human spot checks, and which aspect each covers\n3. **Retrieval evaluation**: how retrieval hit rate and ranking quality are measured, separately from answer quality\n4. **Pass thresholds and regression rules**: launch thresholds, and which metric drops block a merge\n5. **Sample eval items**: write 15 items covering every category, with expected behavior\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Safety, Abuse Protection & Cost Review",
+            "prompt": "# Safety, Abuse Protection & Cost Review\n\n## Role & Goal\nYou are an AI safety and operations advisor. Before launch, review the risks of prompt injection, privilege escalation, data leakage and runaway costs, and propose safeguards.\n\n## Input\n- Architecture, tool definitions and evaluation results: (see the output of the previous steps)\n\n## Output Requirements\n1. **Prompt injection defenses**: what happens if retrieved documents, web pages or user uploads are treated as instructions, and the isolation and checks to apply\n2. **Permissions and tools**: tools run as the user rather than the system, least privilege, confirmation for side-effecting actions, retrieval filtered by permission\n3. **Content and privacy**: handling harmful or inappropriate output, personal data masking, scope of log retention\n4. **Cost safeguards**: per-user and global usage caps, alerts on abnormal usage, caching and fallback to smaller models\n5. **Red-team checklist**: attack types to try and pass criteria (against my own system only)\n6. **Issue list**: sorted by severity, marking what must be fixed before launch\n\n## Notes\nDo not provide content usable to attack other people's systems or bypass other services' safeguards; only review and suggest protections for my own system. Mark missing information as [TBD: ...]."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 8: Deployment & Launch",
+        "steps": [
+          {
+            "title": "Deployment & Launch Checklist",
+            "prompt": "# Deployment & Launch Checklist\n\n## Role & Goal\nYou are a DevOps / MLOps engineer. Design the deployment process and launch checklist for the AI app, so you can roll back quickly when something goes wrong.\n\n## Input\n- Technology choice, architecture, evaluation and safety review: (see the output of the previous steps)\n- Deployment environment and cloud account status: [Please fill in]\n\n## Output Requirements\n1. **Deployment process**: how code, prompt versions and the retrieval index are each released; when to rebuild the index\n2. **Gradual rollout**: start with a few users or internal trials, and how to compare old and new versions\n3. **Rollback plan**: how prompts, models, index and code are each rolled back\n4. **Launch checklist**: evals passed, usage caps and alerts, fallback when the model provider fails, log masking, AI disclosure copy\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "User Guide, AI Disclosure & Support",
+            "prompt": "# User Guide, AI Disclosure & Support\n\n## Role & Goal\nYou are an AI product communication advisor. Prepare content that sets correct expectations about the AI's abilities, shows users how to get good results, and explains how to report errors.\n\n## Input\n- Value proposition, interaction flow and quality targets: (see the output of the previous steps)\n\n## Output Requirements\n1. **Getting started**: 3-5 good example prompts and what to expect\n2. **Capabilities and limitations**: what it does well and poorly, when it may be wrong, data coverage and freshness\n3. **AI disclosure and data use notice**: how user data is processed; mark legal content as needing professional review\n4. **Reporting and support**: how to report a wrong answer (what information to include), FAQ\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      },
+      {
+        "title": "Stage 9: Post-Launch Operations & Iteration",
+        "steps": [
+          {
+            "title": "Post-Launch Monitoring & Feedback Triage",
+            "prompt": "# Post-Launch Monitoring & Feedback Triage\n\n## Role & Goal\nYou are a product operations and SRE advisor. Help me see problems and collect feedback after launch, and turn that feedback into an actionable list.\n\n## Input\n- Success metrics and what was released: (see the output of the previous steps)\n- Monitoring, crash/error reporting and analytics tools available: [Please fill in, or leave blank if none]\n- User feedback or error reports received so far (paste them): [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Monitoring checklist**: spot-checked answer quality and thumbs-down rate, rate of no-data or refusals, latency, cost per request and per day, tool call failures, suspected prompt injection or abuse\n2. **Alert rules**: what needs immediate action, who handles it and how they are notified\n3. **Feedback categories**: bug / UX issue / feature request / user misunderstanding, each with how to handle and reply\n4. **Focus for the first two weeks**: numbers to check daily and weekly, and the review schedule\n5. **Feedback and data summary**: if data was pasted, the top 5 issues to address and suggested actions\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          },
+          {
+            "title": "Next Version Plan & Project Handoff Document",
+            "prompt": "# Next Version Plan & Project Handoff Document\n\n## Role & Goal\nYou are a tech lead. Wrap up this round, plan the next version, and produce a handoff document that lets a new team member (or a new AI conversation) get up to speed quickly.\n\n## Input\n- Outputs of the earlier steps: (see the output of the previous steps)\n- Post-launch data and feedback: [Please fill in, or leave blank if none]\n\n## Output Requirements\n1. **Retrospective**: what went well, what to improve, what surprised us\n2. **Next version candidates**: prioritized by impact and cost, with the reasoning\n3. **Technical debt list**: impact of each item and when to address it\n4. **Project handoff document**: project purpose, architecture overview, how to run and test locally, how to release, key decision records (ADRs), known issues\n5. **Briefing for a new conversation**: condense the current state into a short briefing that can be pasted straight into a new AI conversation (under 300 words)\n\n## Notes\nWhere information is missing, mark it [TBD: ...]. Do not invent version numbers, APIs, platform policies or data; platform guidelines, store and privacy policies change often, so defer to the latest official documentation."
+          }
+        ],
+        "relatedPrompts": [{}, {}]
+      }
+    ]
   }
 }

@@ -1142,6 +1142,42 @@ body {
   color: var(--text-secondary);
   border: 1px solid var(--border);
 }
+/* 跨對話交接（1.57.0） */
+#wf-handoff-box {
+  margin: 0 0 8px;
+  padding: 6px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+}
+#wf-handoff-box summary {
+  cursor: pointer;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+#wf-handoff-box[open] summary {
+  margin-bottom: 6px;
+}
+#wf-handoff-hint,
+#wf-handoff-status {
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+#wf-handoff-status {
+  min-height: 16px;
+  margin-bottom: 0;
+}
+#wf-handoff-note {
+  min-height: 110px;
+  font-size: 12px;
+}
+.wf-dispatch-handoff {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: var(--text-secondary);
+}
 #wf-saved-hint,
 #wf-template-saved {
   min-height: 16px;

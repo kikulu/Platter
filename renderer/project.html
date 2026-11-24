@@ -329,6 +329,12 @@
                   派發並切換帳號
                 </button>
               </div>
+              <label class="wf-dispatch-handoff">
+                <input type="checkbox" id="wf-dispatch-handoff" />
+                <span data-i18n="project.wfDispatchHandoff"
+                  >改複製交接包（新對話接手這一步：含流程總覽、前面產出與交接筆記）</span
+                >
+              </label>
               <div id="wf-dispatch-last"></div>
             </div>
             <label class="label" data-i18n="project.wfOutputLabel"
@@ -344,6 +350,35 @@
               </button>
             </div>
             <div id="wf-saved-hint"></div>
+            <!-- 跨對話交接（1.57.0）：對話太長、換帳號或換平台時，讓新對話接手目前步驟。
+                 交接包與交接摘要請求都在主行程組合（projects:workflow:composeHandoff*）。 -->
+            <details id="wf-handoff-box">
+              <summary id="wf-handoff-summary" data-i18n="project.wfHandoff">
+                跨對話交接
+              </summary>
+              <div id="wf-handoff-hint" data-i18n="project.wfHandoffHint">
+                對話太長、要換帳號或換平台時：①在原本的對話貼上「交接摘要請求」，把 AI
+                整理的摘要貼到下面的交接筆記；②複製「交接包」貼到新對話，新的 AI
+                就能從目前步驟接手。
+              </div>
+              <textarea
+                id="wf-handoff-note"
+                data-i18n-placeholder="project.wfHandoffNotePlaceholder"
+              ></textarea>
+              <div class="wf-actions">
+                <button id="btn-wf-handoff-request" data-i18n="project.wfHandoffRequest">
+                  複製交接摘要請求（貼到原對話）
+                </button>
+                <button
+                  id="btn-wf-handoff-copy"
+                  class="primary"
+                  data-i18n="project.wfHandoffCopy"
+                >
+                  複製交接包（貼到新對話）
+                </button>
+              </div>
+              <div id="wf-handoff-status" role="status"></div>
+            </details>
             <div class="wf-actions">
               <button id="btn-wf-prev" data-i18n="project.wfPrev">上一步</button>
               <button id="btn-wf-reset" data-i18n="project.wfReset">重設為待辦</button>

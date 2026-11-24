@@ -7,6 +7,11 @@
 /* global adoptProjects, allDocuments, capitalize, currentProjectId, currentWorkflow, refreshComposedPrompt, refreshOpenSpecInfo, renderPitchBridge, renderStagePrompts, renderWorkflow, renderWorkflowSteps, wfContextEl, wfCopyBtn, wfDetailStageEl, wfDetailTitleEl, wfDispatchPanelEl, wfDoneBtn, wfFlash, wfOutputEl, wfPrevBtn, wfPromptEditEl, wfSavedHintEl, wfSelectedStepId, wfStepNumbers, wfTemplateNameEl, wfTemplateSavedEl, wfTopicEl */
 /* exported renderWorkflowDetail, selectWorkflowStep */
 
+// 跨對話交接（1.57.0）：交接筆記（每一步各自的）、交接摘要請求、交接包
+const wfHandoffNoteEl = document.getElementById('wf-handoff-note');
+const wfHandoffSummaryEl = document.getElementById('wf-handoff-summary');
+const wfHandoffStatusEl = document.getElementById('wf-handoff-status');
+
 function renderWorkflowDetail(wf) {
   const idx = wf.steps.findIndex((s) => s.id === wfSelectedStepId);
   const step = wf.steps[idx];
@@ -24,6 +29,16 @@ function renderWorkflowDetail(wf) {
   renderStagePrompts(wf, step);
   wfPromptEditEl.value = step.prompt || '';
   wfOutputEl.value = step.output || '';
+  wfHandoffNoteEl.value = step.handoffNote || '';
+  wfHandoffSummaryEl.textContent = window.i18n.t(
+    String(step.handoffNote || '').trim()
+      ? 'project.wfHandoffHasNote'
+      : 'project.wfHandoff'
+  );
+  if (wfHandoffStatusEl.dataset.stepId !== step.id) {
+    wfHandoffStatusEl.textContent = '';
+    wfHandoffStatusEl.dataset.stepId = step.id;
+  }
   wfPrevBtn.disabled = idx === 0;
   wfDoneBtn.textContent = window.i18n.t(
     idx === wf.steps.length - 1 ? 'project.wfDoneLast' : 'project.wfDoneNext'
@@ -161,4 +176,53 @@ document.getElementById('btn-wf-save-as-doc').addEventListener('click', async ()
   adoptProjects(result.projects);
   wfFlash(window.i18n.t('project.wfSaveAsDocumentDone'));
   renderPitchBridge(currentWorkflow()); // 剛存的文件不影響簡報橋接內容本身，但穩妥起見刷新一次
+});
+
+// --- 跨對話交接（1.57.0） ---
+wfHandoffNoteEl.addEventListener('change', async () => {
+  adoptProjects(
+    await window.workspaceAPI.updateWorkflowStep(currentProjectId, wfSelectedStepId, {
+      handoffNote: wfHandoffNoteEl.value,
+    })
+  );
+  wfHandoffSummaryEl.textContent = window.i18n.t(
+    wfHandoffNoteEl.value.trim() ? 'project.wfHandoffHasNote' : 'project.wfHandoff'
+  );
+  wfHandoffStatusEl.textContent = window.i18n.t('project.wfHandoffNoteSaved');
+});
+
+async function copyHandoffText(compose, doneKey) {
+  if (!currentProjectId || !wfSelectedStepId) return;
+  try {
+    const text = await compose(currentProjectId, wfSelectedStepId);
+    if (!text) throw new Error('empty');
+    await navigator.clipboard.writeText(text);
+    wfHandoffStatusEl.textContent = window.i18n.t(doneKey, { chars: text.length });
+  } catch (err) {
+    wfHandoffStatusEl.textContent = window.i18n.t('project.wfHandoffCopyFailed');
+    console.error(err);
+  }
+}
+
+document
+  .getElementById('btn-wf-handoff-request')
+  .addEventListener('click', () =>
+    copyHandoffText(
+      window.workspaceAPI.composeWorkflowHandoffRequest,
+      'project.wfHandoffRequestCopied'
+    )
+  );
+
+document.getElementById('btn-wf-handoff-copy').addEventListener('click', async () => {
+  await copyHandoffText(
+    window.workspaceAPI.composeWorkflowHandoff,
+    'project.wfHandoffCopied'
+  );
+  // 交接包貼到新對話 = 這一步繼續進行中（跟「複製提示詞」一致）
+  const wf = currentWorkflow();
+  const step = wf && wf.steps.find((s) => s.id === wfSelectedStepId);
+  if (step && step.status === 'todo') {
+    await setWfStatus(step.id, 'doing');
+    renderWorkflow();
+  }
 });
