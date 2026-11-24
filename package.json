@@ -1,6 +1,6 @@
 {
   "name": "Platter",
-  "version": "1.57.0",
+  "version": "1.57.1",
   "description": "在同一個視窗內管理多個 AI 平台Web帳號的桌面應用程式",
   "main": "main.js",
   "scripts": {
@@ -19,19 +19,19 @@
   "author": "Kikulu",
   "license": "MIT",
   "dependencies": {
-    "docx": "^9.7.2",
+    "docx": "^9.15.4",
     "mammoth": "^1.13.0",
     "pdf-lib": "^1.17.1",
-    "sql.js": "^1.14.2"
+    "sql.js": "^1.16.0"
   },
   "devDependencies": {
     "@eslint/js": "^10.0.0",
-    "electron": "^44.8.0",
+    "electron": "^45.3.3",
     "electron-builder": "^26.15.3",
-    "eslint": "^10.12.0",
+    "eslint": "^10.15.0",
     "globals": "^16.0.0",
     "pdfjs-dist": "^6.3.289",
-    "prettier": "^3.3.3"
+    "prettier": "^3.10.1"
   },
   "build": {
     "appId": "com.kikulu.platter",

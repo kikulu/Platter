@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.57.1]
+
+合併 GitHub 遠端歷史與本地 1.57.0，並併入 5 個 Dependabot 相依升級（沒有功能變更）。
+
+- **併入 `origin/master`（`caabf2b`）**：遠端的 1.56.0（NotebookLM）提交與本地 `eefcd54`（1.55.1＋1.56.0）是同一份變更的兩個不同提交，檔案樹完全相同；以合併提交接上兩邊歷史，衝突一律保留本地 1.57.0 的內容。之後推送是 fast-forward，不需要 force。
+- **相依升級**（對應 Dependabot 分支 `dependabot/npm_and_yarn/*`，一次合併，推送後各 PR 會顯示為已合併）：
+  - `electron` 44.10.2 → **45.3.3**（開發相依，主版本升級）
+  - `docx` 9.15.2 → 9.15.4、`sql.js` 1.15.2 → 1.16.0（正式相依）
+  - `eslint` 10.14.0 → 10.15.0、`prettier` 3.9.10 → 3.10.1（開發相依）
+- **`package-lock.json` 重新產生**：Dependabot 各分支把整份 lockfile 從 CRLF 改寫成 LF（每個 PR 約 4,900 行差異、彼此衝突），所以沒有直接採用，而是在 `package.json` 升級範圍後用 `npm install --package-lock-only --ignore-scripts` 釘到與 Dependabot 相同的版本，保留原本的 CRLF，實際差異約 90 行。
+- **檢查結果**：`npm ci --ignore-scripts` 成功；`node --test` 400 項全過；`npm run check:docs` 通過。`npm audit`：正式相依 0 個漏洞；開發相依從 19 個 moderate 降為 6 個 moderate（仍是 `electron-builder` 帶入的 `minimatch`）。
+- **既有問題，未在此版處理**：`npm run lint` 仍因 repo 沒有 `eslint.config.js` 而失敗；`npm run format:check` 有 64 個舊檔不合格（升級前後相同，與本次升級無關）。CI 的 Lint／Format 步驟因此在 `master` 與 Dependabot PR 上都會失敗，見 `ROADMAP.md` P0。
+- **未實測**：Electron 45 是主版本升級，此環境無法執行 Electron 圖形介面，也沒有打包驗證；請實機跑 `npm start`、`npm run build:dir`，確認帳號視圖、托盤、PDF 預覽（`pdfjs`）、日誌資料庫（`sql.js` WASM）、`.docx` 匯出與打包後 fuses 都正常。
+
 ## [1.57.0]
 
 新增 6 組**細分階段**的開發類專案範本，並讓流程步驟可以**跨對話交接**（對話太長、換帳號或換平台時，新的 AI 對話能從目前步驟接手）。
